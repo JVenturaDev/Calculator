@@ -1,0 +1,244 @@
+// buttonFunctions.ts
+import { stateObject } from "./stateObject.js";
+
+// ----------------------------
+// Toggle panel memoria
+// ----------------------------
+const bntMr = document.querySelector("#btn-mr") as HTMLButtonElement | null;
+const memoryContainer = document.querySelector("#Memory") as HTMLDivElement | null;
+
+if (bntMr && memoryContainer) {
+    bntMr.addEventListener("click", (): void => {
+        memoryContainer.style.display =
+            memoryContainer.style.display === "none" || memoryContainer.style.display === ''
+                ? "flex"
+                : "none";
+    });
+}
+
+// ----------------------------
+// Extensión de Math
+// ----------------------------
+declare global {
+    interface Math {
+        sec(x: number): number;
+        cot(x: number): number;
+        csc(x: number): number;
+        asec(x: number): number;
+        acot(x: number): number;
+        acsc(x: number): number;
+        sech(x: number): number;
+        coth(x: number): number;
+        csch(x: number): number;
+        acoth(x: number): number;
+        asech(x: number): number;
+        acsch(x: number): number;
+    }
+}
+
+Math.sec = (x: number) => 1 / Math.cos(x);
+Math.cot = (x: number) => 1 / Math.tan(x);
+Math.csc = (x: number) => 1 / Math.sin(x);
+
+Math.asec = (x: number) => Math.acos(1 / x);
+Math.acot = (x: number) => Math.atan(1 / x);
+Math.acsc = (x: number) => Math.asin(1 / x);
+
+Math.sech = (x: number) => 1 / Math.cosh(x);
+Math.coth = (x: number) => 1 / Math.tanh(x);
+Math.csch = (x: number) => 1 / Math.sinh(x);
+
+Math.acoth = (x: number) => 0.5 * Math.log((x + 1) / (x - 1));
+Math.asech = (x: number) => Math.log((1 + Math.sqrt(1 - x * x)) / x);
+Math.acsch = (x: number) => Math.log((1 / x) + Math.sqrt(1 + 1 / (x * x)));
+
+// ----------------------------
+// Funciones matemáticas auxiliares
+// ----------------------------
+export function logxy(x: number, y: number): number {
+    return Math.log(x) / Math.log(y);
+}
+
+export function DMS(x: number): string {
+    const grados = Math.floor(x);
+    const minutosDecimal = (x - grados) * 60;
+    const minutos = Math.floor(minutosDecimal);
+    const segundos = (minutosDecimal - minutos) * 60;
+    return `${grados}° ${minutos}' ${segundos.toFixed(2)}"`;
+}
+
+export function DEG(g: number, m: number, s: number): number {
+    return g + m / 60 + s / 3600;
+}
+
+export function mod(a: number, b: number): number {
+    return ((a % b) + b) % b;
+}
+
+export function EXPT(a: number, b: number): number {
+    return a * Math.pow(10, b);
+}
+
+export function factorial(n: number): number {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+// ----------------------------
+// Manejo de modos de ángulo
+// ----------------------------
+let estado: number = 0;
+const btn = document.getElementById("multiBtn") as HTMLButtonElement | null;
+
+if (btn) {
+    btn.addEventListener("click", (): void => {
+        switch (estado) {
+            case 0:
+                btn.textContent = "GRAD";
+                estado = 1;
+                break;
+            case 1:
+                btn.textContent = "DEG";
+                estado = 2;
+                break;
+            case 2:
+                btn.textContent = "RAD";
+                estado = 0;
+                break;
+        }
+    });
+}
+
+export function obtenerModoAngulo(): string | null {
+    return document.getElementById("multiBtn")?.textContent ?? null;
+}
+
+export function transformarArgumentosTrigo(expresion: string): string {
+    const modo = obtenerModoAngulo();
+
+    return expresion.replace(/\b(sin|cos|tan|sec|csc|cot|asin|acos|atan|asec|acsc|acot)\s*\(([^)]+)\)/g,
+        (_match, func: string, arg: string) => {
+            let nuevoArg = arg;
+            let conversionResultado = "";
+
+            if (!func.startsWith("a")) {
+                if (modo === "DEG") nuevoArg = `(${arg})*Math.PI/180`;
+                if (modo === "GRAD") nuevoArg = `(${arg})*Math.PI/200`;
+            }
+
+            if (func.startsWith("a")) {
+                if (modo === "DEG") conversionResultado = `*180/Math.PI`;
+                if (modo === "GRAD") conversionResultado = `*200/Math.PI`;
+            }
+
+            return `${func}(${nuevoArg})${conversionResultado}`;
+        });
+}
+
+// ----------------------------
+// Botón F-E
+// ----------------------------
+const btnFe = document.querySelector("#fBtn") as HTMLButtonElement | null;
+let active: boolean = false;
+
+if (btnFe) {
+    btnFe.addEventListener("click", (): void => {
+        active = !active;
+        console.log("F-E activado:", active);
+    });
+}
+
+// ----------------------------
+// Reemplazos de expresiones
+// ----------------------------
+export function replaceFunction(expresion: string): string {
+    let output: string = expresion;
+    output = output
+        .replaceAll("pow(", "Math.pow(")
+        .replaceAll("xylog(", "logxy(")
+        .replace(/(\d+\.?\d*)→dms/g, "DMS($1)")
+        .replace(/(\d+),(\d+),(\d+)→deg/g, "DEG($1,$2,$3)")
+        .replace(/∛(\d+(\.\d+)?|\([^()]+\))/g, "Math.cbrt($1)")
+        .replace(/²√(\d+(\.\d+)?|\([^()]+\))/g, "Math.sqrt($1)")
+        .replace(/yroot(\d+(\.\d+)?|\([^()]+\))/g, "Math.pow($1)")
+        .replaceAll("MOD(", "mod(")
+
+        // Trigonometría y logaritmos
+        .replace(/\bacoth\b/g, "Math.acoth")
+        .replace(/\bacsch\b/g, "Math.acsch")
+        .replace(/\basech\b/g, "Math.asech")
+        .replace(/\basin\b/g, "Math.asin")
+        .replace(/\bacos\b/g, "Math.acos")
+        .replace(/\batan\b/g, "Math.atan")
+        .replace(/\basec\b/g, "Math.asec")
+        .replace(/\bacsc\b/g, "Math.acsc")
+        .replace(/\bacot\b/g, "Math.acot")
+        .replace(/\basinh\b/g, "Math.asinh")
+        .replace(/\bacosh\b/g, "Math.acosh")
+        .replace(/\batanh\b/g, "Math.atanh")
+        .replace(/\bsinh\b/g, "Math.sinh")
+        .replace(/\bcosh\b/g, "Math.cosh")
+        .replace(/\btanh\b/g, "Math.tanh")
+        .replace(/\bcoth\b/g, "Math.coth")
+        .replace(/\bcsch\b/g, "Math.csch")
+        .replace(/\bsech\b/g, "Math.sech")
+        .replace(/\bsin\b/g, "Math.sin")
+        .replace(/\bcos\b/g, "Math.cos")
+        .replace(/\btan\b/g, "Math.tan")
+        .replace(/\bsec\b/g, "Math.sec")
+        .replace(/\bcot\b/g, "Math.cot")
+
+        // Potencias y raíces
+        .replaceAll("²", "**2")
+        .replaceAll("³", "**3")
+
+        // Logs y exponenciales
+        .replaceAll("exp(", "EXPT(")
+        .replaceAll("ln(", "Math.log(")
+        .replaceAll("log(", "Math.log10(")
+        .replaceAll("e^(", "Math.exp(")
+        .replaceAll("10^", "10**")
+
+        // Otros
+        .replaceAll("|x|(", "Math.abs(")
+        .replaceAll("⌊x⌋(", "Math.floor(")
+        .replaceAll("⌈x⌉(", "Math.ceil(")
+        .replace(/(\d+)!/g, (_: string, num: string) => factorial(Number(num)).toString());
+
+    output = transformarArgumentosTrigo(output);
+    return output;
+}
+
+// ----------------------------
+// Funciones de memoria
+// ----------------------------
+export function calcularInverso(): void {
+    const input = document.querySelector("#input") as HTMLInputElement | null;
+    if (input && input.value !== "" && parseFloat(input.value) !== 0) {
+        input.value = (1 / parseFloat(input.value)).toString();
+        stateObject.expression = input.value;
+    } else {
+        alert("Error: División entre 0");
+    }
+}
+
+export function invertirUltimoNumero(): void {
+    const input = document.querySelector("#input") as HTMLInputElement | null;
+    if (!input) return;
+
+    const expr = input.value;
+    const regex = /(-?\d+(\.\d+)?)(?!.*\d)/;
+    const match = expr.match(regex);
+
+    if (match && match.index !== undefined) {
+        const numero = match[0];
+        const numeroInvertido = numero.startsWith("-") ? numero.slice(1) : "-" + numero;
+
+        input.value =
+            expr.slice(0, match.index) +
+            numeroInvertido +
+            expr.slice(match.index + numero.length);
+
+        stateObject.expression = input.value;
+    }
+}
