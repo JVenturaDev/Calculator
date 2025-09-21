@@ -28,26 +28,18 @@ Math.acsch = (x) => Math.log((1 / x) + Math.sqrt(1 + 1 / (x * x)));
 // ----------------------------
 // Funciones matemáticas auxiliares
 // ----------------------------
-export function logxy(x, y) {
-    return Math.log(x) / Math.log(y);
-}
-export function DMS(x) {
+Math.logxy = (x, y) => Math.log(x) / Math.log(y);
+Math.EXPT = (a, b) => a * Math.pow(10, b);
+Math.mod = (a, b) => ((a % b) + b) % b;
+Math.DEG = (g, m, s) => g + m / 60 + s / 3600;
+Math.DMS = (x) => {
     const grados = Math.floor(x);
     const minutosDecimal = (x - grados) * 60;
     const minutos = Math.floor(minutosDecimal);
     const segundos = (minutosDecimal - minutos) * 60;
     return `${grados}° ${minutos}' ${segundos.toFixed(2)}"`;
-}
-export function DEG(g, m, s) {
-    return g + m / 60 + s / 3600;
-}
-export function mod(a, b) {
-    return ((a % b) + b) % b;
-}
-export function EXPT(a, b) {
-    return a * Math.pow(10, b);
-}
-export function factorial(n) {
+};
+function factorial(n) {
     if (n <= 1)
         return 1;
     return n * factorial(n - 1);
@@ -116,13 +108,13 @@ export function replaceFunction(expresion) {
     let output = expresion;
     output = output
         .replaceAll("pow(", "Math.pow(")
-        .replaceAll("xylog(", "logxy(")
-        .replace(/(\d+\.?\d*)→dms/g, "DMS($1)")
-        .replace(/(\d+),(\d+),(\d+)→deg/g, "DEG($1,$2,$3)")
+        .replaceAll("xylog(", "Math.logxy(")
+        .replace(/(\d+\.?\d*)→dms/g, "Math.DMS($1)")
+        .replace(/(\d+),(\d+),(\d+)→deg/g, "Math.DEG($1,$2,$3)")
         .replace(/∛(\d+(\.\d+)?|\([^()]+\))/g, "Math.cbrt($1)")
         .replace(/²√(\d+(\.\d+)?|\([^()]+\))/g, "Math.sqrt($1)")
         .replace(/yroot(\d+(\.\d+)?|\([^()]+\))/g, "Math.pow($1)")
-        .replaceAll("MOD(", "mod(")
+        .replaceAll("MOD(", "Math.mod(")
         // Trigonometría y logaritmos
         .replace(/\bacoth\b/g, "Math.acoth")
         .replace(/\bacsch\b/g, "Math.acsch")
@@ -151,7 +143,7 @@ export function replaceFunction(expresion) {
         .replaceAll("²", "**2")
         .replaceAll("³", "**3")
         // Logs y exponenciales
-        .replaceAll("exp(", "EXPT(")
+        .replaceAll("exp(", "Math.EXPT(")
         .replaceAll("ln(", "Math.log(")
         .replaceAll("log(", "Math.log10(")
         .replaceAll("e^(", "Math.exp(")

@@ -33,6 +33,11 @@ declare global {
         acoth(x: number): number;
         asech(x: number): number;
         acsch(x: number): number;
+        logxy(x: number, y: number): number;
+        EXPT(a: number, b: number): number;
+        mod(a: number, b: number): number;
+        DMS(x: number): string;
+        DEG(g: number, m: number, s: number): number;
     }
 }
 
@@ -55,31 +60,18 @@ Math.acsch = (x: number) => Math.log((1 / x) + Math.sqrt(1 + 1 / (x * x)));
 // ----------------------------
 // Funciones matemáticas auxiliares
 // ----------------------------
-export function logxy(x: number, y: number): number {
-    return Math.log(x) / Math.log(y);
-}
-
-export function DMS(x: number): string {
+Math.logxy = (x: number, y: number) => Math.log(x) / Math.log(y);
+Math.EXPT = (a: number, b: number) => a * Math.pow(10, b);
+Math.mod = (a: number, b: number) => ((a % b) + b) % b;
+Math.DEG = (g: number, m: number, s: number): number => g + m / 60 + s / 3600;
+Math.DMS = (x: number): string => {
     const grados = Math.floor(x);
     const minutosDecimal = (x - grados) * 60;
     const minutos = Math.floor(minutosDecimal);
     const segundos = (minutosDecimal - minutos) * 60;
     return `${grados}° ${minutos}' ${segundos.toFixed(2)}"`;
-}
-
-export function DEG(g: number, m: number, s: number): number {
-    return g + m / 60 + s / 3600;
-}
-
-export function mod(a: number, b: number): number {
-    return ((a % b) + b) % b;
-}
-
-export function EXPT(a: number, b: number): number {
-    return a * Math.pow(10, b);
-}
-
-export function factorial(n: number): number {
+};
+function factorial(n: number): number {
     if (n <= 1) return 1;
     return n * factorial(n - 1);
 }
@@ -155,13 +147,13 @@ export function replaceFunction(expresion: string): string {
     let output: string = expresion;
     output = output
         .replaceAll("pow(", "Math.pow(")
-        .replaceAll("xylog(", "logxy(")
-        .replace(/(\d+\.?\d*)→dms/g, "DMS($1)")
-        .replace(/(\d+),(\d+),(\d+)→deg/g, "DEG($1,$2,$3)")
+        .replaceAll("xylog(", "Math.logxy(")
+        .replace(/(\d+\.?\d*)→dms/g, "Math.DMS($1)")
+        .replace(/(\d+),(\d+),(\d+)→deg/g, "Math.DEG($1,$2,$3)")
         .replace(/∛(\d+(\.\d+)?|\([^()]+\))/g, "Math.cbrt($1)")
         .replace(/²√(\d+(\.\d+)?|\([^()]+\))/g, "Math.sqrt($1)")
         .replace(/yroot(\d+(\.\d+)?|\([^()]+\))/g, "Math.pow($1)")
-        .replaceAll("MOD(", "mod(")
+        .replaceAll("MOD(", "Math.mod(")
 
         // Trigonometría y logaritmos
         .replace(/\bacoth\b/g, "Math.acoth")
@@ -193,7 +185,7 @@ export function replaceFunction(expresion: string): string {
         .replaceAll("³", "**3")
 
         // Logs y exponenciales
-        .replaceAll("exp(", "EXPT(")
+        .replaceAll("exp(", "Math.EXPT(")
         .replaceAll("ln(", "Math.log(")
         .replaceAll("log(", "Math.log10(")
         .replaceAll("e^(", "Math.exp(")
