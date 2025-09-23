@@ -28,6 +28,13 @@ const btnFe = document.querySelector("#fBtn"); // Botón F-E
 const globalMPlus = document.querySelector("#globalMPlus"); // Botón M+ global
 const globalMMinus = document.querySelector("#globalMMinus"); // Botón M- global
 const btnRecuperarMemoria = document.querySelector("#btnRecuperarMemoria"); // Recuperar memoria
+const menuCalculator = document.querySelector("#menuHamburger");
+const sideBar = document.querySelector(".sidebar");
+menuCalculator.addEventListener("click", () => {
+    sideBar.style.display = sideBar.style.display === "none" || sideBar.style.display === ''
+        ? "flex"
+        : "none";
+});
 // ----------------------------
 // Botones con paneles de memoria
 // ----------------------------

@@ -35,7 +35,14 @@ const btnFe = document.querySelector("#fBtn") as HTMLButtonElement;        // Bo
 const globalMPlus = document.querySelector("#globalMPlus") as HTMLButtonElement;   // Botón M+ global
 const globalMMinus = document.querySelector("#globalMMinus") as HTMLButtonElement; // Botón M- global
 const btnRecuperarMemoria = document.querySelector("#btnRecuperarMemoria") as HTMLButtonElement; // Recuperar memoria
+const menuCalculator = document.querySelector("#menuHamburger") as HTMLButtonElement;
+const sideBar = document.querySelector(".sidebar") as HTMLElement;
 
+menuCalculator.addEventListener("click", ():void => {
+    sideBar.style.display = sideBar.style.display === "none" || sideBar.style.display === ''
+        ? "flex"
+        : "none";
+})
 // ----------------------------
 // Tipos
 // ----------------------------

@@ -462,3 +462,6 @@ h2 {
     text-align: center;
 
 }
+.main-container{
+    position: absolute;
+}
