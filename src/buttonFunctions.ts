@@ -15,12 +15,22 @@ if (bntMr && memoryContainer) {
                 : "none";
     });
 }
+const bntMr1 = document.querySelector("#btn-mr1") as HTMLButtonElement | null;
+if (bntMr1 && memoryContainer) {
+    bntMr1.addEventListener("click", (): void => {
+        memoryContainer.style.display =
+            memoryContainer.style.display === "none" || memoryContainer.style.display === ''
+                ? "flex"
+                : "none";
+    });
+}
 
 // ----------------------------
 // Extensión de Math
 // ----------------------------
 declare global {
     interface Math {
+        ln(x: number): number;
         sec(x: number): number;
         cot(x: number): number;
         csc(x: number): number;
@@ -139,6 +149,9 @@ if (btnFe) {
         console.log("F-E activado:", active);
     });
 }
+if (typeof Math.ln !== "function") {
+    Math.ln = (x: number): number => Math.log(x);
+}
 
 // ----------------------------
 // Reemplazos de expresiones
@@ -186,8 +199,8 @@ export function replaceFunction(expresion: string): string {
 
         // Logs y exponenciales
         .replaceAll("exp(", "Math.EXPT(")
-        .replaceAll("ln(", "Math.log(")
-        .replaceAll("log(", "Math.log10(")
+        .replace(/ln\(/g, "Math.ln(")
+        .replace(/log\(/g, "Math.log10(")
         .replaceAll("e^(", "Math.exp(")
         .replaceAll("10^", "10**")
 
@@ -200,6 +213,8 @@ export function replaceFunction(expresion: string): string {
     output = transformarArgumentosTrigo(output);
     return output;
 }
+
+
 
 // ----------------------------
 // Funciones de memoria

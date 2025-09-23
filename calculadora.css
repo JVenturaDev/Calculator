@@ -1,29 +1,4 @@
-/* /* =====================
-   Variables de colores
-   ===================== 
-:root {
-    --bg-body: #dadff7;
-    --bg-calculation: #090909;
-    --border-color: #6c6a6a;
-    --bg-history: #000000;
-    --text-white: white;
-    --text-black: black;
-    --bg-display: #6c6a6a;
-    --placeholder-color: #9490ac;
-    --bg-delete: #dadff7;
-    --bg-btn-equal: #f9544c;
-    --bg-hover-equal: #f9544ca8;
-    --bg-digit: #373737;
-    --bg-hover-digit: #373737a8;
-    --bg-color-btn: #6c6a6a;
-    --bg-hover-color-btn: #6c6a6aa8;
-    --bg-operation: #f69906;
-    --bg-hover-operation: #f69906a8;
-    --bg-side: #2a2a2a;
-    --bg-hover-side: #2a2a2aa8;
-    --bg-multi-f: #494949;
-    --bg-multi-fe: #494949a8;
-} */
+
 :root {
     --color-bg: #f5f7fa;
     --color-white: #ffffff;
@@ -166,10 +141,6 @@ button {
 }
 
 /* =====================
-   2. Contenedor principal
-   ===================== */
-
-/* =====================
    3. Secciones
    ===================== */
 .calculation {
@@ -185,7 +156,7 @@ button {
     margin-top: 70px;
 }
 
-.grafica {
+.graficaa {
     display: none;
     /* Oculto por defecto */
 }
@@ -312,6 +283,16 @@ h2 {
     align-items: center;
     justify-content: center;
 }
+.show-nt {
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.show-nt-grapic {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
 /* =====================
    10. Secciones de memoria
@@ -342,7 +323,7 @@ h2 {
 }
 
 .specialButtons {
-    display: flex;
+    display: none;
     margin: 0;
     padding: 0;
     transform: translate(-218px, 120px);
@@ -417,6 +398,25 @@ h2 {
 }
 
 .scientific-moreButtons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 90%;
+    margin: 0 10px;
+    transform: translate(0, 20px);
+}
+
+.grafica {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 90%;
+    margin: 5px 10px 0 0;
+}
+
+.grafica-moreButtons {
     display: flex;
     align-items: center;
     justify-content: center;

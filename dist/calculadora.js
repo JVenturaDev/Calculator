@@ -28,21 +28,47 @@ const btnFe = document.querySelector("#fBtn"); // Botón F-E
 const globalMPlus = document.querySelector("#globalMPlus"); // Botón M+ global
 const globalMMinus = document.querySelector("#globalMMinus"); // Botón M- global
 const btnRecuperarMemoria = document.querySelector("#btnRecuperarMemoria"); // Recuperar memoria
-// Botón de mostrar/ocultar memoria
-const bmore = document.querySelector("#clickk");
-const mMore = document.querySelector("#presionar");
-document.getElementById("equal1")?.addEventListener("click", calcularResultado);
-document.getElementById("deleteAll")?.addEventListener("click", eliminarTodo);
-document.getElementById("restoreMemory")?.addEventListener("click", restoreMemory);
-document.getElementById("memoryM")?.addEventListener("click", memoriaMasGlobal);
-document.getElementById("memoryMe")?.addEventListener("click", memoriaMenosGlobal);
-document.getElementById("saveMemory")?.addEventListener("click", almacenarNumero);
-// Solo le dices a TS que existen, no las defines
+// ----------------------------
+// Botones con paneles de memoria
+// ----------------------------
+const memoryButtons = [
+    { btnId: "clickk", panelId: "presionar" },
+    { btnId: "clickk1", panelId: "presionar1" },
+];
+// ----------------------------
+// Listeners de botones
+// ----------------------------
+const listeners = [
+    { id: "equal1", handler: calcularResultado },
+    { id: "deleteAll", handler: eliminarTodo },
+    { id: "restoreMemory", handler: restoreMemory },
+    { id: "memoryM", handler: memoriaMasGlobal },
+    { id: "memoryMe", handler: memoriaMenosGlobal },
+    { id: "saveMemory", handler: almacenarNumero },
+    { id: "equal2", handler: calcularResultado },
+    { id: "deleteAll1", handler: eliminarTodo },
+    { id: "restoreMemory1", handler: restoreMemory },
+    { id: "memoryM1", handler: memoriaMasGlobal },
+    { id: "memoryMe1", handler: memoriaMenosGlobal },
+    { id: "saveMemory1", handler: almacenarNumero },
+];
+// ----------------------------
+// Registrar listeners
+// ----------------------------
+listeners.forEach((listener) => {
+    const el = document.getElementById(listener.id);
+    if (el)
+        el.addEventListener("click", listener.handler);
+});
 // ----------------------------
 // Toggle memoria
 // ----------------------------
-bmore.addEventListener("click", () => {
-    mMore.classList.toggle("memoryButton");
+memoryButtons.forEach((button) => {
+    const btn = document.getElementById(button.btnId);
+    const panel = document.getElementById(button.panelId);
+    if (btn && panel) {
+        btn.addEventListener("click", () => panel.classList.toggle("memoryButton"));
+    }
 });
 // ----------------------------
 // Inicialización de la calculadora al cargar la página
@@ -110,6 +136,11 @@ buttons.forEach((button) => {
 // ----------------------------
 // Función principal: calcular resultado
 // ----------------------------
+if (typeof Math.log10 !== "function") {
+    Math.log10 = function (x) {
+        return Math.log(x) / Math.log(10);
+    };
+}
 function calcularResultado() {
     try {
         stateObject.equalPressed = 1;
@@ -140,6 +171,11 @@ function calcularResultado() {
         }
     }
 }
+function evalExpresion(expresion) {
+    const result = Function('"use strict"; return(' + expresion + ')')();
+    console.log("Expresión evaluada:", expresion);
+    return Number(result);
+}
 // ----------------------------
 // Función auxiliar: mostrar resultado en pantalla
 // ----------------------------
@@ -155,8 +191,3 @@ function showOnInput(result) {
 // ----------------------------
 // Función auxiliar: evaluar expresión matemática
 // ----------------------------
-function evalExpresion(expresion) {
-    const result = Function('"use strict"; return(' + expresion + ')')();
-    console.log("Expresión evaluada:", expresion);
-    return Number(result);
-}

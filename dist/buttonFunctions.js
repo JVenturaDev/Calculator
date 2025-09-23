@@ -13,6 +13,15 @@ if (bntMr && memoryContainer) {
                 : "none";
     });
 }
+const bntMr1 = document.querySelector("#btn-mr1");
+if (bntMr1 && memoryContainer) {
+    bntMr1.addEventListener("click", () => {
+        memoryContainer.style.display =
+            memoryContainer.style.display === "none" || memoryContainer.style.display === ''
+                ? "flex"
+                : "none";
+    });
+}
 Math.sec = (x) => 1 / Math.cos(x);
 Math.cot = (x) => 1 / Math.tan(x);
 Math.csc = (x) => 1 / Math.sin(x);
@@ -101,6 +110,9 @@ if (btnFe) {
         console.log("F-E activado:", active);
     });
 }
+if (typeof Math.ln !== "function") {
+    Math.ln = (x) => Math.log(x);
+}
 // ----------------------------
 // Reemplazos de expresiones
 // ----------------------------
@@ -144,8 +156,8 @@ export function replaceFunction(expresion) {
         .replaceAll("³", "**3")
         // Logs y exponenciales
         .replaceAll("exp(", "Math.EXPT(")
-        .replaceAll("ln(", "Math.log(")
-        .replaceAll("log(", "Math.log10(")
+        .replace(/ln\(/g, "Math.ln(")
+        .replace(/log\(/g, "Math.log10(")
         .replaceAll("e^(", "Math.exp(")
         .replaceAll("10^", "10**")
         // Otros

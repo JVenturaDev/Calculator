@@ -12,7 +12,7 @@
 <body>
     <main class="main-container">
         <!-- Área de gráficas -->
-        <section class="grafica" aria-label="Gráfica de funciones"></section>
+        <section class="graficaa" aria-label="Gráfica de funciones"></section>
 
         <!-- Calculadora principal -->
         <div class="workspace">
@@ -41,7 +41,6 @@
                     <button id="multiBtn">RAD</button>
                     <button style="display: none;" id="fBtn">F-E</button>
                 </div>
-
                 <!-- Contenedor de botones -->
                 <div class="buttons">
                     <div class="center">
@@ -91,113 +90,224 @@
                             </div>
                         </section>
 
-                        <!-- Calculadora científica con todos los botones intactos -->
-                        <section class="scientific-moreButtons">
-                            <div class="blackLite">
-                                <button data-number="acoth(" class="side-button button">coth<sup>-1</sup></button>
-                                <button data-number="acsch(" class="side-button button">csch<sup>-1</sup></button>
-                                <button data-number="asech(" class="side-button button">sech<sup>-1</sup></button>
-                                <button data-number="asin(" class="side-button button">sin<sup>-1</sup></button>
-                                <button data-number="acos(" class="side-button button">cos<sup>-1</sup></button>
-                                <button data-number="atan(" class="side-button button">tan<sup>-1</sup></button>
-                                <button data-number="asec(" class="side-button button">sec<sup>-1</sup></button>
-                                <button data-number="acsc(" class="side-button button">csc<sup>-1</sup></button>
-                            </div>
-                            <div class="blackLite">
-                                <button data-number="acot(" class="side-button button">cot<sup>-1</sup></button>
-                                <button data-number="asinh(" class="side-button button">sinh<sup>-1</sup></button>
-                                <button data-number="acosh(" class="side-button button">cosh<sup>-1</sup></button>
-                                <button data-number="atanh(" class="side-button button">tanh<sup>-1</sup></button>
-                                <button data-number="coth(" class="side-button button">coth</button>
-                                <button data-number="csch(" class="side-button button">csch</button>
-                                <button data-number="sech(" class="side-button button">sech</button>
-                                <button data-number="sinh(" class="side-button button">sinh</button>
-                            </div>
-                            <div class="blackLite">
-                                <button data-number="cosh(" class="side-button button">cosh</button>
-                                <button data-number="tanh(" class="side-button button">tanh</button>
-                                <button data-number="sec(" class="side-button button">sec</button>
-                                <button data-number="cot(" class="side-button button">cot</button>
-                                <button data-number="csc(" class="side-button button">csc</button>
-                                <button data-number="sin(" class="side-button button">sin</button>
-                                <button data-number="cos(" class="side-button button">cos</button>
-                                <button data-number="tan(" class="side-button button">tan</button>
-                            </div>
-                            <div class="blackLite">
-                                <button data-number="e^" class="side-button button">eˣ</button>
-                                <button data-number="xylog(" class="side-button button">log<sub>y</sub>x</button>
-                                <button data-number="2^x" class="side-button button">2 <sup>x</sup></button>
-                                <button data-number="yroot(" class="side-button button">ʸ√x</button>
-                                <button data-number="∛" class="side-button button">∛x</button>
-                                <button data-number="³" class="side-button button">x³</button>
-                                <button data-number="ln(" class="side-button button">ln</button>
-                                <button data-number="log(" class="side-button button">log</button>
-                            </div>
-                            <div class="orange">
-                                <button data-number="10^" class="side-button button">10ˣ</button>
-                                <button data-number="pow(" class="side-button button">xʸ</button>
-                                <button data-number="²√" class="side-button button">²√x</button>
-                                <button data-number="²" class="side-button button">x²</button>
-                                <button data-number="|x|(" class="side-button button">|x|</button>
-                                <button data-number="⌊x⌋(" class="side-button button">⌊x⌋ </button>
-                                <button data-number="⌈x⌉(" class="side-button button">⌈x⌉</button>
-                                <button data-number="→dms" class="side-button button">→dms</button>
-                            </div>
-                        </section>
+                        <section class="show-nt">
 
-                        <!-- Sección científica con memoria -->
-                        <section class="scientific">
-                            <div class="blackLite-memory">
-                                <button class="side-button" id="clickk" onclick="">Memory</button>
-                                <button class="side-button" id="btn-mr">M<span class="material-symbols-outlined">
-                                        arrow_drop_down
-                                    </span></button>
-                                <div id="presionar" class="memoryButton">
-                                    <button class="memoryB" id="deleteAll">MC</button>
-                                    <button class="memoryB" id="restoreMemory">MR</button>
-                                    <button class="memoryB" id="memoryM">M+</button>
-                                    <button class="memoryB" id="memoryMe">M-</button>
-                                    <button class="memoryB" id="saveMemory">MS</button>
+                            <section class="scientific-moreButtons">
+                                <div class="blackLite">
+                                    <button data-number="acoth(" class="side-button button">coth<sup>-1</sup></button>
+                                    <button data-number="acsch(" class="side-button button">csch<sup>-1</sup></button>
+                                    <button data-number="asech(" class="side-button button">sech<sup>-1</sup></button>
+                                    <button data-number="asin(" class="side-button button">sin<sup>-1</sup></button>
+                                    <button data-number="acos(" class="side-button button">cos<sup>-1</sup></button>
+                                    <button data-number="atan(" class="side-button button">tan<sup>-1</sup></button>
+                                    <button data-number="asec(" class="side-button button">sec<sup>-1</sup></button>
+                                    <button data-number="acsc(" class="side-button button">csc<sup>-1</sup></button>
                                 </div>
-                                <button data-number="→deg" class="side-button button">→deg</button>
-                                <button data-number="," class="side-button button">,</button>
-                            </div>
-                            <div class="blackLite">
-                                <button data-number="Math.PI" class="color-button button">π</button>
-                                <button data-number="1/" class="color-button button">1/x</button>
-                                <button data-number="(" class="color-button button">(</button>
-                                <button data-number="7" class="digit-button button">7</button>
-                                <button data-number="4" class="digit-button button">4</button>
-                                <button data-number="1" class="digit-button button">1</button>
-                                <button data-number="+/-" class="digit-button button">+/-</button>
-                            </div>
-                            <div class="blackLite">
-                                <button data-number="Math.E" class="color-button button">|x|</button>
-                                <button data-number="e^(" class="color-button button">e</button>
-                                <button data-number=")" class="color-button button">)</button>
-                                <button data-number="8" class="digit-button button">8</button>
-                                <button data-number="5" class="digit-button button">5</button>
-                                <button data-number="2" class="digit-button button">2</button>
-                                <button data-number="0" id="zero" class="digit-button button">0</button>
-                            </div>
-                            <div class="blackLite">
-                                <button data-number="AC" class="color-button button">CE</button>
-                                <button data-number="exp(" class="color-button button">EXP</button>
-                                <button data-number="!" class="color-button button">!</button>
-                                <button data-number="9" class="digit-button button">9</button>
-                                <button data-number="6" class="digit-button button">6</button>
-                                <button data-number="3" class="digit-button button">3</button>
-                                <button data-number="." class="digit-button button">.</button>
-                            </div>
-                            <div class="orange">
-                                <button data-number="DEL" id="erase" class="color-button button">DEL</button>
-                                <button data-number="MOD(" id="erase" class="color-button button">MOD</button>
-                                <button data-number="/" class="operation-button button">/</button>
-                                <button data-number="*" class="operation-button button">*</button>
-                                <button data-number="-" class="operation-button button">-</button>
-                                <button data-number="+" class="operation-button button">+</button>
-                                <button data-number="=" id="equal1" class="operation-button ">=</button>
-                            </div>
+                                <div class="blackLite">
+                                    <button data-number="acot(" class="side-button button">cot<sup>-1</sup></button>
+                                    <button data-number="asinh(" class="side-button button">sinh<sup>-1</sup></button>
+                                    <button data-number="acosh(" class="side-button button">cosh<sup>-1</sup></button>
+                                    <button data-number="atanh(" class="side-button button">tanh<sup>-1</sup></button>
+                                    <button data-number="coth(" class="side-button button">coth</button>
+                                    <button data-number="csch(" class="side-button button">csch</button>
+                                    <button data-number="sech(" class="side-button button">sech</button>
+                                    <button data-number="sinh(" class="side-button button">sinh</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="cosh(" class="side-button button">cosh</button>
+                                    <button data-number="tanh(" class="side-button button">tanh</button>
+                                    <button data-number="sec(" class="side-button button">sec</button>
+                                    <button data-number="cot(" class="side-button button">cot</button>
+                                    <button data-number="csc(" class="side-button button">csc</button>
+                                    <button data-number="sin(" class="side-button button">sin</button>
+                                    <button data-number="cos(" class="side-button button">cos</button>
+                                    <button data-number="tan(" class="side-button button">tan</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="e^" class="side-button button">eˣ</button>
+                                    <button data-number="xylog(" class="side-button button">log<sub>y</sub>x</button>
+                                    <button data-number="2^x" class="side-button button">2 <sup>x</sup></button>
+                                    <button data-number="yroot(" class="side-button button">ʸ√x</button>
+                                    <button data-number="∛" class="side-button button">∛x</button>
+                                    <button data-number="³" class="side-button button">x³</button>
+                                    <button data-number="ln(" class="side-button button">ln</button>
+                                    <button data-number="log(" class="side-button button">log</button>
+                                </div>
+                                <div class="orange">
+                                    <button data-number="10^" class="side-button button">10ˣ</button>
+                                    <button data-number="pow(" class="side-button button">xʸ</button>
+                                    <button data-number="²√" class="side-button button">²√x</button>
+                                    <button data-number="²" class="side-button button">x²</button>
+                                    <button data-number="|x|(" class="side-button button">|x|</button>
+                                    <button data-number="⌊x⌋(" class="side-button button">⌊x⌋ </button>
+                                    <button data-number="⌈x⌉(" class="side-button button">⌈x⌉</button>
+                                    <button data-number="→dms" class="side-button button">→dms</button>
+                                </div>
+                            </section>
+
+                            <!-- Sección científica con memoria -->
+                            <section class="scientific">
+                                <div class="blackLite-memory">
+                                    <button class="side-button" id="clickk" onclick="">Memory</button>
+                                    <button class="side-button" id="btn-mr">M<span class="material-symbols-outlined">
+                                            arrow_drop_down
+                                        </span></button>
+                                    <div id="presionar" class="memoryButton">
+                                        <button class="memoryB" id="deleteAll">MC</button>
+                                        <button class="memoryB" id="restoreMemory">MR</button>
+                                        <button class="memoryB" id="memoryM">M+</button>
+                                        <button class="memoryB" id="memoryMe">M-</button>
+                                        <button class="memoryB" id="saveMemory">MS</button>
+                                    </div>
+                                    <button data-number="→deg" class="side-button button">→deg</button>
+                                    <button data-number="," class="side-button button">,</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="Math.PI" class="color-button button">π</button>
+                                    <button data-number="1/" class="color-button button">1/x</button>
+                                    <button data-number="(" class="color-button button">(</button>
+                                    <button data-number="7" class="digit-button button">7</button>
+                                    <button data-number="4" class="digit-button button">4</button>
+                                    <button data-number="1" class="digit-button button">1</button>
+                                    <button data-number="+/-" class="digit-button button">+/-</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="Math.E" class="color-button button">|x|</button>
+                                    <button data-number="e^(" class="color-button button">e</button>
+                                    <button data-number=")" class="color-button button">)</button>
+                                    <button data-number="8" class="digit-button button">8</button>
+                                    <button data-number="5" class="digit-button button">5</button>
+                                    <button data-number="2" class="digit-button button">2</button>
+                                    <button data-number="0" id="zero" class="digit-button button">0</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="AC" class="color-button button">CE</button>
+                                    <button data-number="exp(" class="color-button button">EXP</button>
+                                    <button data-number="!" class="color-button button">!</button>
+                                    <button data-number="9" class="digit-button button">9</button>
+                                    <button data-number="6" class="digit-button button">6</button>
+                                    <button data-number="3" class="digit-button button">3</button>
+                                    <button data-number="." class="digit-button button">.</button>
+                                </div>
+                                <div class="orange">
+                                    <button data-number="DEL" id="erase" class="color-button button">DEL</button>
+                                    <button data-number="MOD(" id="erase" class="color-button button">MOD</button>
+                                    <button data-number="/" class="operation-button button">/</button>
+                                    <button data-number="*" class="operation-button button">*</button>
+                                    <button data-number="-" class="operation-button button">-</button>
+                                    <button data-number="+" class="operation-button button">+</button>
+                                    <button data-number="=" id="equal1" class="operation-button ">=</button>
+                                </div>
+                            </section>
+                        </section>
+                        <section class="show-nt-grapic">
+                            <section class="grafica-moreButtons">
+                                <div class="blackLite">
+                                    <button data-number="acoth(" class="side-button button">coth<sup>-1</sup></button>
+                                    <button data-number="acsch(" class="side-button button">csch<sup>-1</sup></button>
+                                    <button data-number="asech(" class="side-button button">sech<sup>-1</sup></button>
+                                    <button data-number="asin(" class="side-button button">sin<sup>-1</sup></button>
+                                    <button data-number="acos(" class="side-button button">cos<sup>-1</sup></button>
+                                    <button data-number="atan(" class="side-button button">tan<sup>-1</sup></button>
+                                    <button data-number="asec(" class="side-button button">sec<sup>-1</sup></button>
+                                    <button data-number="acsc(" class="side-button button">csc<sup>-1</sup></button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="acot(" class="side-button button">cot<sup>-1</sup></button>
+                                    <button data-number="asinh(" class="side-button button">sinh<sup>-1</sup></button>
+                                    <button data-number="acosh(" class="side-button button">cosh<sup>-1</sup></button>
+                                    <button data-number="atanh(" class="side-button button">tanh<sup>-1</sup></button>
+                                    <button data-number="coth(" class="side-button button">coth</button>
+                                    <button data-number="csch(" class="side-button button">csch</button>
+                                    <button data-number="sech(" class="side-button button">sech</button>
+                                    <button data-number="sinh(" class="side-button button">sinh</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="cosh(" class="side-button button">cosh</button>
+                                    <button data-number="tanh(" class="side-button button">tanh</button>
+                                    <button data-number="sec(" class="side-button button">sec</button>
+                                    <button data-number="cot(" class="side-button button">cot</button>
+                                    <button data-number="csc(" class="side-button button">csc</button>
+                                    <button data-number="sin(" class="side-button button">sin</button>
+                                    <button data-number="cos(" class="side-button button">cos</button>
+                                    <button data-number="tan(" class="side-button button">tan</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="e^" class="side-button button">eˣ</button>
+                                    <button data-number="xylog(" class="side-button button">log<sub>y</sub>x</button>
+                                    <button data-number="2^x" class="side-button button">2 <sup>x</sup></button>
+                                    <button data-number="yroot(" class="side-button button">ʸ√x</button>
+                                    <button data-number="∛" class="side-button button">∛x</button>
+                                    <button data-number="³" class="side-button button">x³</button>
+                                    <button data-number="ln(" class="side-button button">ln</button>
+                                    <button data-number="log(" class="side-button button">log</button>
+                                </div>
+                                <div class="orange">
+                                    <button data-number="10^" class="side-button button">10ˣ</button>
+                                    <button data-number="pow(" class="side-button button">xʸ</button>
+                                    <button data-number="²√" class="side-button button">²√x</button>
+                                    <button data-number="²" class="side-button button">x²</button>
+                                    <button data-number="|x|(" class="side-button button">|x|</button>
+                                    <button data-number="⌊x⌋(" class="side-button button">⌊x⌋ </button>
+                                    <button data-number="⌈x⌉(" class="side-button button">⌈x⌉</button>
+                                    <button data-number="→dms" class="side-button button">→dms</button>
+                                </div>
+                            </section>
+
+                            <!-- Sección científica con memoria -->
+                            <section class="grafica">
+                                <div class="blackLite-memory">
+                                    <button class="side-button" id="clickk1">Memory</button>
+                                    <button class="side-button" id="btn-mr1">M<span class="material-symbols-outlined">
+                                            arrow_drop_down
+                                        </span></button>
+                                    <div id="presionar1" class="memoryButton">
+                                        <button class="memoryB" id="deleteAll1">MC</button>
+                                        <button class="memoryB" id="restoreMemory1">MR</button>
+                                        <button class="memoryB" id="memoryM1">M+</button>
+                                        <button class="memoryB" id="memoryMe1">M-</button>
+                                        <button class="memoryB" id="saveMemory1">MS</button>
+                                    </div>
+                                    <button data-number="→deg" class="side-button button">→deg</button>
+                                    <button data-number="," class="side-button button">,</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="Math.PI" class="color-button button">π</button>
+                                    <button data-number="1/" class="color-button button">1/x</button>
+                                    <button data-number="(" class="color-button button">(</button>
+                                    <button data-number="7" class="digit-button button">7</button>
+                                    <button data-number="4" class="digit-button button">4</button>
+                                    <button data-number="1" class="digit-button button">1</button>
+                                    <button data-number="+/-" class="digit-button button">+/-</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="Math.E" class="color-button button">|x|</button>
+                                    <button data-number="e^(" class="color-button button">e</button>
+                                    <button data-number=")" class="color-button button">)</button>
+                                    <button data-number="8" class="digit-button button">8</button>
+                                    <button data-number="5" class="digit-button button">5</button>
+                                    <button data-number="2" class="digit-button button">2</button>
+                                    <button data-number="0" id="zero" class="digit-button button">0</button>
+                                </div>
+                                <div class="blackLite">
+                                    <button data-number="AC" class="color-button button">CE</button>
+                                    <button data-number="exp(" class="color-button button">EXP</button>
+                                    <button data-number="!" class="color-button button">!</button>
+                                    <button data-number="9" class="digit-button button">9</button>
+                                    <button data-number="6" class="digit-button button">6</button>
+                                    <button data-number="3" class="digit-button button">3</button>
+                                    <button data-number="." class="digit-button button">.</button>
+                                </div>
+                                <div class="orange">
+                                    <button data-number="DEL" id="erase" class="color-button button">DEL</button>
+                                    <button data-number="MOD(" id="erase" class="color-button button">MOD</button>
+                                    <button data-number="/" class="operation-button button">/</button>
+                                    <button data-number="*" class="operation-button button">*</button>
+                                    <button data-number="-" class="operation-button button">-</button>
+                                    <button data-number="+" class="operation-button button">+</button>
+                                    <button data-number="=" id="equal2" class="operation-button ">=</button>
+                                </div>
+                            </section>
                         </section>
 
                     </div>

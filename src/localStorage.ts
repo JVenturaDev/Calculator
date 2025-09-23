@@ -24,10 +24,13 @@ export function addToHistory(idi: number, expression: string, result: string | n
 
     // Crear span con la ecuación y resultado
     const span = document.createElement("span") as HTMLSpanElement;
-    span.textContent = `${expression} = ${result}`;
+    const safeResult = result !== null && result !== undefined ? result.toString() : "";
+    span.textContent = `${expression} = ${safeResult}`;
+    span.dataset.userResult = safeResult;
+
     span.style.cursor = "pointer";
     span.dataset.userInput = expression;
-    span.dataset.userResult = result.toString();
+    span.dataset.userResult = safeResult;
     span.addEventListener("click", () => {
         if (input) input.value = span.dataset.userInput ?? "";
     });
@@ -80,10 +83,13 @@ function addHistoryFromStorage(idi: number, expression: string, result: string |
     stateObject.expression = expression;
 
     const span = document.createElement("span") as HTMLSpanElement;
-    span.textContent = `${expression} = ${result}`;
+    const safeResult = result !== null && result !== undefined ? result.toString() : "";
+    span.textContent = `${expression} = ${safeResult}`;
+    span.dataset.userResult = safeResult;
+
     span.style.cursor = "pointer";
     span.dataset.userInput = expression;
-    span.dataset.userResult = result.toString();
+    span.dataset.userResult = safeResult;
     span.addEventListener("click", () => {
         if (input) input.value = span.dataset.userInput ?? "";
     });

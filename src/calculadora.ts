@@ -7,6 +7,7 @@
 //    | |  | '_ \ / _ \      | |    / _` | |/ __| | | | |/ _` | | | / _ \ | ' __|
 //    | |  | | | |  __/      | |___| (_| | | (__| |_| | | (_| | | || (_) ||  |
 //    |_|  |_| |_|\___|       \_____\__,_|_|\___|\__,_|_|\__,_| |_| \___/ |__|
+
 import {
     calcularInverso,
     invertirUltimoNumero,
@@ -35,25 +36,60 @@ const globalMPlus = document.querySelector("#globalMPlus") as HTMLButtonElement;
 const globalMMinus = document.querySelector("#globalMMinus") as HTMLButtonElement; // Botón M- global
 const btnRecuperarMemoria = document.querySelector("#btnRecuperarMemoria") as HTMLButtonElement; // Recuperar memoria
 
-// Botón de mostrar/ocultar memoria
-const bmore = document.querySelector("#clickk") as HTMLButtonElement;
-const mMore = document.querySelector("#presionar") as HTMLDivElement;
-document.getElementById("equal1")?.addEventListener("click", calcularResultado);
-document.getElementById("deleteAll")?.addEventListener("click", eliminarTodo);
-document.getElementById("restoreMemory")?.addEventListener("click", restoreMemory);
-document.getElementById("memoryM")?.addEventListener("click", memoriaMasGlobal);
-document.getElementById("memoryMe")?.addEventListener("click", memoriaMenosGlobal);
-document.getElementById("saveMemory")?.addEventListener("click", almacenarNumero);
-// Solo le dices a TS que existen, no las defines
-
-
-
+// ----------------------------
+// Tipos
+// ----------------------------
+type ButtonPanel = {
+    btnId: string;
+    panelId: string;
+};
+type ListenerConfig = {
+    id: string;
+    handler: (this: HTMLElement, ev: MouseEvent) => any;
+};
+// ----------------------------
+// Botones con paneles de memoria
+// ----------------------------
+const memoryButtons: ButtonPanel[] = [
+    { btnId: "clickk", panelId: "presionar" },
+    { btnId: "clickk1", panelId: "presionar1" },
+];
+// ----------------------------
+// Listeners de botones
+// ----------------------------
+const listeners: ListenerConfig[] = [
+    { id: "equal1", handler: calcularResultado },
+    { id: "deleteAll", handler: eliminarTodo },
+    { id: "restoreMemory", handler: restoreMemory },
+    { id: "memoryM", handler: memoriaMasGlobal },
+    { id: "memoryMe", handler: memoriaMenosGlobal },
+    { id: "saveMemory", handler: almacenarNumero },
+    { id: "equal2", handler: calcularResultado },
+    { id: "deleteAll1", handler: eliminarTodo },
+    { id: "restoreMemory1", handler: restoreMemory },
+    { id: "memoryM1", handler: memoriaMasGlobal },
+    { id: "memoryMe1", handler: memoriaMenosGlobal },
+    { id: "saveMemory1", handler: almacenarNumero },
+];
+// ----------------------------
+// Registrar listeners
+// ----------------------------
+listeners.forEach((listener: ListenerConfig) => {
+    const el = document.getElementById(listener.id);
+    if (el) el.addEventListener("click", listener.handler);
+});
 // ----------------------------
 // Toggle memoria
 // ----------------------------
-bmore.addEventListener("click", () => {
-    mMore.classList.toggle("memoryButton");
+memoryButtons.forEach((button: ButtonPanel) => {
+    const btn = document.getElementById(button.btnId) as HTMLButtonElement | null;
+    const panel = document.getElementById(button.panelId) as HTMLDivElement | null;
+
+    if (btn && panel) {
+        btn.addEventListener("click", () => panel.classList.toggle("memoryButton"));
+    }
 });
+
 
 // ----------------------------
 // Inicialización de la calculadora al cargar la página
@@ -67,7 +103,7 @@ window.onload = () => {
     if (stateObject.bd && stateObject.memoryContainer) {
         cargarHistorialDesdeDB(stateObject);
     }
-    
+
 };
 // Inicialización de la calculadora
 window.addEventListener("load", () => {
@@ -134,6 +170,11 @@ buttons.forEach((button: HTMLButtonElement) => {
 // ----------------------------
 // Función principal: calcular resultado
 // ----------------------------
+if (typeof Math.log10 !== "function") {
+    Math.log10 = function (x: number): number {
+        return Math.log(x) / Math.log(10);
+    };
+}
 function calcularResultado(): void {
     try {
         stateObject.equalPressed = 1;
@@ -171,7 +212,11 @@ function calcularResultado(): void {
         }
     }
 }
-
+function evalExpresion(expresion: string): number {
+    const result: unknown = Function('"use strict"; return(' + expresion + ')')();
+    console.log("Expresión evaluada:", expresion);
+    return Number(result);
+}
 // ----------------------------
 // Función auxiliar: mostrar resultado en pantalla
 // ----------------------------
@@ -187,8 +232,3 @@ function showOnInput(result: string | number): void {
 // ----------------------------
 // Función auxiliar: evaluar expresión matemática
 // ----------------------------
-function evalExpresion(expresion: string): number {
-    const result: unknown = Function('"use strict"; return(' + expresion + ')')();
-    console.log("Expresión evaluada:", expresion);
-    return Number(result);
-}
