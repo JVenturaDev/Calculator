@@ -7,6 +7,7 @@
 //    | |  | '_ \ / _ \      | |    / _` | |/ __| | | | |/ _` | | | / _ \ | ' __|
 //    | |  | | | |  __/      | |___| (_| | | (__| |_| | | (_| | | || (_) ||  |
 //    |_|  |_| |_|\___|       \_____\__,_|_|\___|\__,_|_|\__,_| |_| \___/ |__|
+import { switchBtnCalculator } from "./buttonFunctions.js";
 import { calcularInverso, invertirUltimoNumero, replaceFunction } from "./buttonFunctions.js";
 import { parsear } from "./parser.js";
 import { stateObject } from "./stateObject.js";
@@ -30,11 +31,17 @@ const globalMMinus = document.querySelector("#globalMMinus"); // Botón M- globa
 const btnRecuperarMemoria = document.querySelector("#btnRecuperarMemoria"); // Recuperar memoria
 const menuCalculator = document.querySelector("#menuHamburger");
 const sideBar = document.querySelector(".sidebar");
+const btnBasic = document.querySelector("#btnBasic");
+const btnScientific = document.querySelector("#btnScientific");
+const btnGraphic = document.querySelector("#btnGraphic");
 menuCalculator.addEventListener("click", () => {
     sideBar.style.display = sideBar.style.display === "none" || sideBar.style.display === ''
         ? "flex"
         : "none";
 });
+btnBasic.addEventListener("click", () => switchBtnCalculator("basic"));
+btnScientific.addEventListener("click", () => switchBtnCalculator("sci"));
+btnGraphic.addEventListener("click", () => switchBtnCalculator("graphic"));
 // ----------------------------
 // Botones con paneles de memoria
 // ----------------------------
@@ -46,6 +53,7 @@ const memoryButtons = [
 // Listeners de botones
 // ----------------------------
 const listeners = [
+    { id: "equal", handler: calcularResultado },
     { id: "equal1", handler: calcularResultado },
     { id: "deleteAll", handler: eliminarTodo },
     { id: "restoreMemory", handler: restoreMemory },

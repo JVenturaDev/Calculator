@@ -7,7 +7,7 @@
 //    | |  | '_ \ / _ \      | |    / _` | |/ __| | | | |/ _` | | | / _ \ | ' __|
 //    | |  | | | |  __/      | |___| (_| | | (__| |_| | | (_| | | || (_) ||  |
 //    |_|  |_| |_|\___|       \_____\__,_|_|\___|\__,_|_|\__,_| |_| \___/ |__|
-
+import { switchBtnCalculator } from "./buttonFunctions.js";
 import {
     calcularInverso,
     invertirUltimoNumero,
@@ -37,12 +37,18 @@ const globalMMinus = document.querySelector("#globalMMinus") as HTMLButtonElemen
 const btnRecuperarMemoria = document.querySelector("#btnRecuperarMemoria") as HTMLButtonElement; // Recuperar memoria
 const menuCalculator = document.querySelector("#menuHamburger") as HTMLButtonElement;
 const sideBar = document.querySelector(".sidebar") as HTMLElement;
+const btnBasic = document.querySelector("#btnBasic") as HTMLAnchorElement;
+const btnScientific = document.querySelector("#btnScientific") as HTMLAnchorElement;
+const btnGraphic = document.querySelector("#btnGraphic") as HTMLAnchorElement;
 
-menuCalculator.addEventListener("click", ():void => {
+menuCalculator.addEventListener("click", (): void => {
     sideBar.style.display = sideBar.style.display === "none" || sideBar.style.display === ''
         ? "flex"
         : "none";
 })
+btnBasic.addEventListener("click", () => switchBtnCalculator("basic"));
+btnScientific.addEventListener("click", () => switchBtnCalculator("sci"));
+btnGraphic.addEventListener("click", () => switchBtnCalculator("graphic"));
 // ----------------------------
 // Tipos
 // ----------------------------
@@ -65,6 +71,7 @@ const memoryButtons: ButtonPanel[] = [
 // Listeners de botones
 // ----------------------------
 const listeners: ListenerConfig[] = [
+    { id: "equal", handler: calcularResultado },
     { id: "equal1", handler: calcularResultado },
     { id: "deleteAll", handler: eliminarTodo },
     { id: "restoreMemory", handler: restoreMemory },

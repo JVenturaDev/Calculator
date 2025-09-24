@@ -46,6 +46,7 @@ body {
 
 
 .btn-primary1 {
+    width: 130px;
     background: var(--boton1);
     color: white;
     border: none;
@@ -54,25 +55,20 @@ body {
     cursor: pointer;
     font-weight: 500;
     font-size: .875rem;
-    line-height: 1.25rem;
+
 }
 
 .menuHamburger {
-    width: 50px;
-    background: var(--boton1);
+    width: 60px;
+    background: var(--boton);
     color: white;
-    border: none;
-    padding: 8px 14px;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
-    font-size: .875rem;
-    line-height: 1.25rem;
+    height: 40px;
 }
-/* .logo-height{
-    height: 16.94px;
-    width: 134.8px;
-} */
+
+
 .btn-secondary {
     background: white;
     color: black;

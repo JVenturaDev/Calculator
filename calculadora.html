@@ -14,9 +14,9 @@
     <main class="layout">
         <!-- Barra superior -->
         <header class="topbar">
-            <h2 class="logo"><img class="logo-height" src="" alt=""></h2>
             <button class="menuHamburger" id="menuHamburger">
                 <span class="material-symbols-outlined">menu</span></button>
+            <h2 class="logo"><img class="logo-height" src="" alt=""></h2>
             <div class="auth-buttons">
                 <button class="btn-secondary2">Log In</button>
                 <button class="btn-primary1">Sign Up</button>
@@ -27,9 +27,10 @@
             <aside class="sidebar">
                 <nav>
                     <div class="separador">
-                        <span class="navegar">Navegar</span>
-                        <a class="nose" href="#">All</a>
-                        <a class="nose" href="#">Popular</a>
+                        <span class="navegar">Calculator</span>
+                        <a class="nose" id="btnBasic" href="#">Basic</a>
+                        <a class="nose" id="btnScientific" href="#">Scientific</a>
+                        <a class="nose" id="btnGraphic" href="#">Graphic</a>
                     </div>
 
                     <div class="separador1">
@@ -93,6 +94,10 @@
                                 <section class="basic">
                                     <div class="basic-memory">
                                         <div>
+                                            <button class="side-button" id="btn-mr2">M<span
+                                                    class="material-symbols-outlined" id="fontSize2">
+                                                    arrow_drop_down
+                                                </span></button>
                                             <button class="memoryB" onclick="eliminarTodo()">MC</button>
                                             <button class="memoryB" id="btnRecuperarMemoria">MR</button>
                                             <button class="memoryB" id="globalMPlus">M+</button>
@@ -208,7 +213,7 @@
                                         <div class="blackLite-memory">
                                             <button class="side-button" id="clickk" onclick="">Memory</button>
                                             <button class="side-button" id="btn-mr">M<span
-                                                    class="material-symbols-outlined">
+                                                    class="material-symbols-outlined" id="fontSize1">
                                                     arrow_drop_down
                                                 </span></button>
                                             <div id="presionar" class="memoryButton">
@@ -333,7 +338,7 @@
                                         <div class="blackLite-memory">
                                             <button class="side-button" id="clickk1">Memory</button>
                                             <button class="side-button" id="btn-mr1">M<span
-                                                    class="material-symbols-outlined">
+                                                    class="material-symbols-outlined" id="fontSize">
                                                     arrow_drop_down
                                                 </span></button>
                                             <div id="presionar1" class="memoryButton">

@@ -22,6 +22,15 @@ if (bntMr1 && memoryContainer) {
                 : "none";
     });
 }
+const bntMr2 = document.querySelector("#btn-mr2");
+if (bntMr2 && memoryContainer) {
+    bntMr2.addEventListener("click", () => {
+        memoryContainer.style.display =
+            memoryContainer.style.display === "none" || memoryContainer.style.display === ''
+                ? "flex"
+                : "none";
+    });
+}
 Math.sec = (x) => 1 / Math.cos(x);
 Math.cot = (x) => 1 / Math.tan(x);
 Math.csc = (x) => 1 / Math.sin(x);
@@ -198,3 +207,26 @@ export function invertirUltimoNumero() {
         stateObject.expression = input.value;
     }
 }
+const containerBasic = document.querySelector(".basic");
+const containerScientific = document.querySelector(".show-nt");
+const containerGraphic = document.querySelector(".show-nt-grapic");
+const containerspe = document.querySelector(".specialButtons");
+export function switchBtnCalculator(mode) {
+    containerBasic.style.display = "none";
+    containerScientific.style.display = "none";
+    containerGraphic.style.display = "none";
+    containerspe.style.display = "none";
+    switch (mode) {
+        case "basic":
+            containerBasic.style.display = "flex";
+            break;
+        case "sci":
+            containerScientific.style.display = "flex";
+            containerspe.style.display = "flex";
+            break;
+        case "graphic":
+            containerGraphic.style.display = "flex";
+            break;
+    }
+}
+switchBtnCalculator("basic");
