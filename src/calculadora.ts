@@ -163,13 +163,6 @@ buttons.forEach((button: HTMLButtonElement) => {
                 stateObject.expression = input.value;
                 break;
 
-            case "%":
-                if (input.value !== "") {
-                    input.value = (parseFloat(input.value) / 100).toString();
-                    stateObject.expression = input.value;
-                }
-                break;
-
             case "1/":
                 calcularInverso();
                 stateObject.expression = input.value;

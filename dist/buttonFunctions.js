@@ -170,6 +170,7 @@ export function replaceFunction(expresion) {
         .replaceAll("²", "**2")
         .replaceAll("³", "**3")
         .replaceAll("^", "**")
+        .replace(/-(\d+(\.\d+)?)\*\*/g, "(-$1)**")
         // Logs y exponenciales
         .replace(/log\(/g, "Math.log10(")
         .replace(/(^|[^a-zA-Z0-9_])e\^(\([^)]+\)|\d+(\.\d+)?)/g, (_, pre, val) => `${pre}Math.exp(${val})`)
@@ -179,6 +180,11 @@ export function replaceFunction(expresion) {
         .replaceAll("|x|", "Math.abs(")
         .replaceAll("⌊x⌋(", "Math.floor(")
         .replaceAll("⌈x⌉(", "Math.ceil(")
+        .replace(/(\d+(\.\d+)?)%/g, (_m, num) => {
+        return `(${num}*0.01)`;
+    })
+        .replace(/(\d+(\.\d+)?)%(\d+(\.\d+)?)/g, (_m, a, _dec, b) => `((${a}/${b})*100)`)
+        .replace(/(^|[^(\d])-?\d+(\.\d+)?(?=\*\*)/g, (match) => `(${match})`)
         .replace(/(\d+)!/g, (_, num) => factorial(Number(num)).toString());
     output = transformarArgumentosTrigo(output);
     return output;

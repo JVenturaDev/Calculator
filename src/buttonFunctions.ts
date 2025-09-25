@@ -103,7 +103,6 @@ export function parentesisMulti(expression: string): string {
     result = result.replace(/(\))(\d)/g, "$1*$2");
     return result;
 }
-
 // ----------------------------
 // Manejo de modos de ángulo
 // ----------------------------
@@ -215,18 +214,28 @@ export function replaceFunction(expresion: string): string {
         .replaceAll("²", "**2")
         .replaceAll("³", "**3")
         .replaceAll("^", "**")
+        .replace(/-(\d+(\.\d+)?)\*\*/g, "(-$1)**")
 
         // Logs y exponenciales
 
         .replace(/log\(/g, "Math.log10(")
+
         .replace(/(^|[^a-zA-Z0-9_])e\^(\([^)]+\)|\d+(\.\d+)?)/g, (_, pre, val) => `${pre}Math.exp(${val})`)
         .replace(/(^|[^a-zA-Z0-9_])\be\b/g, (_, pre) => `${pre}Math.E`)
+
         .replaceAll("10^", "10**")
 
         // Otros
         .replaceAll("|x|", "Math.abs(")
         .replaceAll("⌊x⌋(", "Math.floor(")
         .replaceAll("⌈x⌉(", "Math.ceil(")
+
+        .replace(/(\d+(\.\d+)?)%/g, (_m, num) => {
+            return `(${num}*0.01)`;
+        })
+        .replace(/(\d+(\.\d+)?)%(\d+(\.\d+)?)/g,
+            (_m, a, _dec, b) => `((${a}/${b})*100)`
+        )
         .replace(/(\d+)!/g, (_: string, num: string) => factorial(Number(num)).toString());
 
 
