@@ -7,7 +7,8 @@
 //    | |  | '_ \ / _ \      | |    / _` | |/ __| | | | |/ _` | | | / _ \ | ' __|
 //    | |  | | | |  __/      | |___| (_| | | (__| |_| | | (_| | | || (_) ||  |
 //    |_|  |_| |_|\___|       \_____\__,_|_|\___|\__,_|_|\__,_| |_| \___/ |__|
-import { switchBtnCalculator } from "./buttonFunctions.js";
+import { switchBtnCalculator, parentesisMulti } from "./buttonFunctions.js";
+// import { symbolMap,parseSymbols } from "./parser.js";
 import { calcularInverso, invertirUltimoNumero, replaceFunction } from "./buttonFunctions.js";
 import { parsear } from "./parser.js";
 import { stateObject } from "./stateObject.js";
@@ -160,13 +161,14 @@ function calcularResultado() {
     try {
         stateObject.equalPressed = 1;
         const inputValue = input.value;
+        let expresion = inputValue;
         // Guardar expresión actual
         stateObject.expression = inputValue;
         // Validar con parser antes de reemplazos
         if (!parsear(inputValue))
             return;
-        // Reemplazos matemáticos
-        let expresion = replaceFunction(inputValue);
+        expresion = replaceFunction(inputValue);
+        expresion = parentesisMulti(expresion);
         // Evaluar la expresión final
         const result = evalExpresion(expresion);
         // Guardar resultado

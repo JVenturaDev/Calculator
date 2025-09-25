@@ -1,7 +1,7 @@
 // parser.ts
 // Función que valida y tokeniza una ecuación
 function parseEcuacion(input) {
-    const permitidos = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/=!^.,→²³√()∛°'\"";
+    const permitidos = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW⌊⌋XYZ+-*/=!^⌈.⌉,|→π²³√()%∛°'\"";
     // Verificar que cada carácter sea permitido
     for (let i = 0; i < input.length; i++) {
         if (!permitidos.includes(input[i])) {
@@ -9,7 +9,7 @@ function parseEcuacion(input) {
         }
     }
     // Separar números, letras y operadores
-    const regex = /[a-zA-Z]+|\d+(\.\d+)?|['"]|[+\-*/^=()]/g;
+    const regex = /[a-zA-Z]+|\d+(\.\d+)?|['"]|[%+\-*/^=()]/g;
     const tokens = input.match(regex);
     // Revisar que existan tokens válidos
     if (!tokens || tokens.length === 0) {

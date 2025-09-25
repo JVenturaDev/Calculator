@@ -57,10 +57,18 @@ Math.DMS = (x) => {
     const segundos = (minutosDecimal - minutos) * 60;
     return `${grados}° ${minutos}' ${segundos.toFixed(2)}"`;
 };
+if (typeof Math.ln !== "function") {
+    Math.ln = (x) => Math.log(x);
+}
 function factorial(n) {
     if (n <= 1)
         return 1;
     return n * factorial(n - 1);
+}
+export function parentesisMulti(expression) {
+    let result = expression.replace(/(\d)(\()/g, "$1*$2");
+    result = result.replace(/(\))(\d)/g, "$1*$2");
+    return result;
 }
 // ----------------------------
 // Manejo de modos de ángulo
@@ -119,9 +127,6 @@ if (btnFe) {
         console.log("F-E activado:", active);
     });
 }
-if (typeof Math.ln !== "function") {
-    Math.ln = (x) => Math.log(x);
-}
 // ----------------------------
 // Reemplazos de expresiones
 // ----------------------------
@@ -160,17 +165,18 @@ export function replaceFunction(expresion) {
         .replace(/\btan\b/g, "Math.tan")
         .replace(/\bsec\b/g, "Math.sec")
         .replace(/\bcot\b/g, "Math.cot")
+        .replaceAll("exp(", "Math.EXPT(")
         // Potencias y raíces
         .replaceAll("²", "**2")
         .replaceAll("³", "**3")
+        .replaceAll("^", "**")
         // Logs y exponenciales
-        .replaceAll("exp(", "Math.EXPT(")
-        .replace(/ln\(/g, "Math.ln(")
         .replace(/log\(/g, "Math.log10(")
-        .replaceAll("e^(", "Math.exp(")
+        .replace(/(^|[^a-zA-Z0-9_])e\^(\([^)]+\)|\d+(\.\d+)?)/g, (_, pre, val) => `${pre}Math.exp(${val})`)
+        .replace(/(^|[^a-zA-Z0-9_])\be\b/g, (_, pre) => `${pre}Math.E`)
         .replaceAll("10^", "10**")
         // Otros
-        .replaceAll("|x|(", "Math.abs(")
+        .replaceAll("|x|", "Math.abs(")
         .replaceAll("⌊x⌋(", "Math.floor(")
         .replaceAll("⌈x⌉(", "Math.ceil(")
         .replace(/(\d+)!/g, (_, num) => factorial(Number(num)).toString());
