@@ -1,4 +1,5 @@
 // buttonFunctions.ts
+import Complex from "complex.js";
 import { stateObject } from "./stateObject.js";
 // ----------------------------
 // Toggle panel memoria
@@ -127,6 +128,29 @@ if (btnFe) {
         console.log("F-E activado:", active);
     });
 }
+window.raizCompleja = (x) => {
+    if (x >= 0)
+        return x ** 0.5;
+    return new Complex(0, Math.sqrt(-x));
+};
+window.raizCubicaCompleja = (x) => {
+    if (x >= 0)
+        return Math.cbrt(x);
+    return new Complex(x, 0).pow(1 / 3);
+};
+export function evalExpresion(expresion) {
+    try {
+        const result = Function('"use strict"; return (' + expresion + ')')();
+        console.log("Expresión evaluada:", expresion);
+        if (result instanceof Complex)
+            return result.toString();
+        return String(result);
+    }
+    catch (error) {
+        console.error("Error evaluando expresión:", error);
+        return "Syntax ERROR";
+    }
+}
 // ----------------------------
 // Reemplazos de expresiones
 // ----------------------------
@@ -137,8 +161,8 @@ export function replaceFunction(expresion) {
         .replaceAll("xylog(", "Math.logxy(")
         .replace(/(\d+\.?\d*)→dms/g, "Math.DMS($1)")
         .replace(/(\d+),(\d+),(\d+)→deg/g, "Math.DEG($1,$2,$3)")
-        .replace(/∛(\d+(\.\d+)?|\([^()]+\))/g, "Math.cbrt($1)")
-        .replace(/²√(\d+(\.\d+)?|\([^()]+\))/g, "Math.sqrt($1)")
+        .replace(/²√(-?\d+(\.\d+)?)/g, (_m, num) => `raizCompleja(${num})`)
+        .replace(/∛(-?\d+(\.\d+)?)/g, (_m, num) => `raizCubicaCompleja(${num})`)
         .replace(/yroot(\d+(\.\d+)?|\([^()]+\))/g, "Math.pow($1)")
         .replaceAll("MOD(", "Math.mod(")
         // Trigonometría y logaritmos
@@ -184,7 +208,6 @@ export function replaceFunction(expresion) {
         return `(${num}*0.01)`;
     })
         .replace(/(\d+(\.\d+)?)%(\d+(\.\d+)?)/g, (_m, a, _dec, b) => `((${a}/${b})*100)`)
-        .replace(/(^|[^(\d])-?\d+(\.\d+)?(?=\*\*)/g, (match) => `(${match})`)
         .replace(/(\d+)!/g, (_, num) => factorial(Number(num)).toString());
     output = transformarArgumentosTrigo(output);
     return output;

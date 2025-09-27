@@ -9,7 +9,7 @@
 //    |_|  |_| |_|\___|       \_____\__,_|_|\___|\__,_|_|\__,_| |_| \___/ |__|
 import { switchBtnCalculator, parentesisMulti } from "./buttonFunctions.js";
 // import { symbolMap,parseSymbols } from "./parser.js";
-import { calcularInverso, invertirUltimoNumero, replaceFunction } from "./buttonFunctions.js";
+import { calcularInverso, invertirUltimoNumero, replaceFunction, evalExpresion } from "./buttonFunctions.js";
 import { parsear } from "./parser.js";
 import { stateObject } from "./stateObject.js";
 import { agregarId } from "./localStorage.js";
@@ -133,12 +133,6 @@ buttons.forEach((button) => {
                 invertirUltimoNumero();
                 stateObject.expression = input.value;
                 break;
-            // case "%":
-            //     if (input.value !== "") {
-            //         input.value = (parseFloat(input.value) / 100).toString();
-            //         stateObject.expression = input.value;
-            //     }
-            //     break;
             case "1/":
                 calcularInverso();
                 stateObject.expression = input.value;
@@ -187,11 +181,6 @@ function calcularResultado() {
             alert("Error desconocido");
         }
     }
-}
-function evalExpresion(expresion) {
-    const result = Function('"use strict"; return(' + expresion + ')')();
-    console.log("Expresión evaluada:", expresion);
-    return Number(result);
 }
 // ----------------------------
 // Función auxiliar: mostrar resultado en pantalla

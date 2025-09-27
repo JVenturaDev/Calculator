@@ -1,0 +1,30 @@
+{
+  "name": "calculadora",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "complex.js": "^2.0.11"
+  },
+  "devDependencies": {
+    "vite": "^4.4.9",
+    "typescript": "^5.2.2"
+  },
+  "description": "",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Qu3T31MP0RTA/Calculator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Qu3T31MP0RTA/Calculator/issues"
+  },
+  "homepage": "https://github.com/Qu3T31MP0RTA/Calculator#readme"
+}

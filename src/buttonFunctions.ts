@@ -1,6 +1,8 @@
 // buttonFunctions.ts
-import { stateObject } from "./stateObject.js";
 
+import Complex from "complex.js";
+
+import { stateObject } from "./stateObject.js";
 
 // ----------------------------
 // Toggle panel memoria
@@ -60,6 +62,11 @@ declare global {
         DEG(g: number, m: number, s: number): number;
     }
 }
+declare global {
+    var raizCompleja: (x: number) => Complex | number;
+    var raizCubicaCompleja: (x: number) => number | Complex;
+}
+
 
 Math.sec = (x: number) => 1 / Math.cos(x);
 Math.cot = (x: number) => 1 / Math.tan(x);
@@ -168,6 +175,30 @@ if (btnFe) {
 }
 
 
+
+
+window.raizCompleja = (x: number) => {
+    if (x >= 0) return x ** 0.5;
+    return new Complex(0, Math.sqrt(-x));
+};
+window.raizCubicaCompleja = (x: number): number | Complex => {
+    if (x >= 0) return Math.cbrt(x);
+    return new Complex(x, 0).pow(1 / 3);
+};
+
+
+export function evalExpresion(expresion: string): string {
+    try {
+        const result: unknown = Function('"use strict"; return (' + expresion + ')')();
+        console.log("Expresión evaluada:", expresion);
+        if (result instanceof Complex) return result.toString();
+        return String(result);
+    } catch (error) {
+        console.error("Error evaluando expresión:", error);
+        return "Syntax ERROR";
+    }
+}
+
 // ----------------------------
 // Reemplazos de expresiones
 // ----------------------------
@@ -179,8 +210,8 @@ export function replaceFunction(expresion: string): string {
         .replaceAll("xylog(", "Math.logxy(")
         .replace(/(\d+\.?\d*)→dms/g, "Math.DMS($1)")
         .replace(/(\d+),(\d+),(\d+)→deg/g, "Math.DEG($1,$2,$3)")
-        .replace(/∛(\d+(\.\d+)?|\([^()]+\))/g, "Math.cbrt($1)")
-        .replace(/²√(\d+(\.\d+)?|\([^()]+\))/g, "Math.sqrt($1)")
+        .replace(/²√(-?\d+(\.\d+)?)/g, (_m, num) => `raizCompleja(${num})`)
+        .replace(/∛(-?\d+(\.\d+)?)/g, (_m, num) => `raizCubicaCompleja(${num})`)
         .replace(/yroot(\d+(\.\d+)?|\([^()]+\))/g, "Math.pow($1)")
         .replaceAll("MOD(", "Math.mod(")
 
@@ -210,6 +241,7 @@ export function replaceFunction(expresion: string): string {
         .replace(/\bcot\b/g, "Math.cot")
         .replaceAll("exp(", "Math.EXPT(")
 
+
         // Potencias y raíces
         .replaceAll("²", "**2")
         .replaceAll("³", "**3")
@@ -235,6 +267,7 @@ export function replaceFunction(expresion: string): string {
         })
         .replace(/(\d+(\.\d+)?)%(\d+(\.\d+)?)/g,
             (_m, a, _dec, b) => `((${a}/${b})*100)`
+
         )
         .replace(/(\d+)!/g, (_: string, num: string) => factorial(Number(num)).toString());
 

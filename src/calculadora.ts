@@ -7,12 +7,16 @@
 //    | |  | '_ \ / _ \      | |    / _` | |/ __| | | | |/ _` | | | / _ \ | ' __|
 //    | |  | | | |  __/      | |___| (_| | | (__| |_| | | (_| | | || (_) ||  |
 //    |_|  |_| |_|\___|       \_____\__,_|_|\___|\__,_|_|\__,_| |_| \___/ |__|
+
+
+
+
 import { switchBtnCalculator, parentesisMulti } from "./buttonFunctions.js";
 // import { symbolMap,parseSymbols } from "./parser.js";
 import {
     calcularInverso,
     invertirUltimoNumero,
-    replaceFunction
+    replaceFunction, evalExpresion
 } from "./buttonFunctions.js";
 import { parsear } from "./parser.js";
 import { StateObject, stateObject } from "./stateObject.js";
@@ -174,7 +178,6 @@ buttons.forEach((button: HTMLButtonElement) => {
         }
     });
 });
-
 // ----------------------------
 // Función principal: calcular resultado
 // ----------------------------
@@ -198,7 +201,7 @@ function calcularResultado(): void {
         expresion = replaceFunction(inputValue);
         expresion = parentesisMulti(expresion);
         // Evaluar la expresión final
-        const result: number = evalExpresion(expresion);
+        const result: number|string = evalExpresion(expresion);
 
         // Guardar resultado
         stateObject.result = result;
@@ -220,11 +223,7 @@ function calcularResultado(): void {
         }
     }
 }
-function evalExpresion(expresion: string): number {
-    const result: unknown = Function('"use strict"; return(' + expresion + ')')();
-    console.log("Expresión evaluada:", expresion);
-    return Number(result);
-}
+
 // ----------------------------
 // Función auxiliar: mostrar resultado en pantalla
 // ----------------------------
