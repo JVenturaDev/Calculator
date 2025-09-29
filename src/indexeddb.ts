@@ -93,6 +93,7 @@ function Mostrar(): void {
 
     cursor.onsuccess = (evento: any) => {
         const puntero = evento.target.result;
+        const idActual = puntero.value.id;
         if (puntero) {
             const div = document.createElement("div");
             div.className = "contenido";
@@ -115,10 +116,10 @@ function Mostrar(): void {
 
             // Asignar listeners a botones internos
             const borrarBtn = div.querySelector(".borrar") as HTMLButtonElement;
-            borrarBtn.addEventListener("click", () => eliminarNumero(puntero.value.id));
+            borrarBtn.addEventListener("click", () => eliminarNumero(idActual));
 
             const editarBtn = div.querySelector(".editarr") as HTMLButtonElement;
-            editarBtn.addEventListener("click", () => editarEcuacion(puntero.value.id));
+            editarBtn.addEventListener("click", () => editarEcuacion(idActual));
 
             stateObject.memoryContainer!.appendChild(div);
 

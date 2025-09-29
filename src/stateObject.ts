@@ -18,5 +18,6 @@ export const stateObject: StateObject = {
     memoryContainer: null,
     valorOriginalMemoria: 0,
     idUltimoResultado: null,
+    
 
 };
