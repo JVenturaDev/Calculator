@@ -1,5 +1,5 @@
 :root {
-    --color-bg: #f5f7fa;
+    --color-bg: #eff1f4;
     --color-white: #ffffff;
     --color-gray-dark: #424242;
     --color-blue: #1e88e5;
@@ -33,7 +33,7 @@ body {
     background: var(--color-white);
     border-radius: 6px;
     padding: 15px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px #dee4ec;
     display: flex;
     flex-direction: column;
     gap: 15px;
