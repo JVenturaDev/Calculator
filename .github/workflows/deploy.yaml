@@ -28,7 +28,7 @@ jobs:
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.7.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.SSH_LLAVE_PRIVADA}}
 
       - name: Deploy to GitHub Pages
         run: npx gh-pages -d dist -r git@github.com:Qu3T31MP0RTA/Calculator.git
