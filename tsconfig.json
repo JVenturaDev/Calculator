@@ -1,21 +1,22 @@
 {
   "compilerOptions": {
     "target": "ES2021",
-    "module": "ESNext", // o "ES6"
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "lib": [
-      "ES2021",
-      "DOM"
-    ]
+    "lib": ["ES2021", "DOM"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
-    "./**/*.ts"
-, "vite.config.js"  ],
+    "src/**/*.ts",
+    "src/**/*.d.ts"
+  ],
   "exclude": [
     "node_modules",
     "dist"
