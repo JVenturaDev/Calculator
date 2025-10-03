@@ -1,7 +1,7 @@
 // buttonFunctions.ts
 
 import Complex from "complex.js";
-
+import { eliminarTodo } from "./indexeddb.js";
 import { stateObject } from "./stateObject.js";
 
 // ----------------------------
@@ -9,7 +9,8 @@ import { stateObject } from "./stateObject.js";
 // ----------------------------
 const bntMr = document.querySelector("#btn-mr") as HTMLButtonElement | null;
 const memoryContainer = document.querySelector("#Memory") as HTMLDivElement | null;
-
+const deleteAll = document.querySelector(".style-A") as HTMLAnchorElement
+deleteAll.addEventListener("click", eliminarTodo)
 if (bntMr && memoryContainer) {
     bntMr.addEventListener("click", (): void => {
         memoryContainer.style.display =
@@ -29,7 +30,10 @@ if (bntMr1 && memoryContainer) {
 }
 const bntMr2 = document.querySelector("#btn-mr2") as HTMLButtonElement | null;
 if (bntMr2 && memoryContainer) {
-    bntMr2.addEventListener("click", (): void => {
+    bntMr2.addEventListener("click", (e): void => {
+        deleteAll.style.display = deleteAll.style.display === "none" || deleteAll.style.display === ''
+            ? "flex"
+            : "none";
         memoryContainer.style.display =
             memoryContainer.style.display === "none" || memoryContainer.style.display === ''
                 ? "flex"

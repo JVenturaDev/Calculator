@@ -4,6 +4,7 @@ yarn-debug.log*
 yarn-error.log*
 
 dist/
+Robar/
 angular-calculator/
 .vite/
 

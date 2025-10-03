@@ -39,17 +39,6 @@ body {
     gap: 15px;
 }
 
-
-#Memory {
-    display: none;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-    width: 95%;
-    height: 300px;
-    margin: 20px 0 0 10px;
-}
-
 .display {
     background: var(--color-bg);
     padding: 15px;
@@ -207,16 +196,49 @@ h2 {
 /* =====================
    7. Scroll
    ===================== */
-
+#Memory {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    width: 95%;
+    overflow-y: auto;
+    height: 400px;
+    margin: 20px 0 0 10px;
+}
 .scroll1 {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
     max-width: 500px;
-    overflow-y: auto;
+    z-index: 1;
 }
-
+.topBar-memory{
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-evenly;
+}
+.style-A{
+    display: none;
+    color: black;
+    text-decoration: none;
+    align-items: center;
+}
+.style-A:hover{
+   
+    color: var(--color-blue);
+  
+}
+#color-span:hover{
+   
+    color: var(--color-red) !important;
+  
+}
+.height-H{
+    margin: 5px;
+}
 .scroll {
     display: flex;
     flex-direction: column;
@@ -235,7 +257,7 @@ h2 {
 
 /* Oculta scrollbars */
 .scroll::-webkit-scrollbar,
-.scroll1::-webkit-scrollbar {
+#Memory::-webkit-scrollbar {
     display: none;
 }
 
