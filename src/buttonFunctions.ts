@@ -220,6 +220,7 @@ export function replaceFunction(expresion: string): string {
         .replaceAll("MOD(", "Math.mod(")
 
         // Trigonometría y logaritmos
+        .replace("π", "Math.PI")
         .replace(/\bacoth\b/g, "Math.acoth")
         .replace(/\bacsch\b/g, "Math.acsch")
         .replace(/\basech\b/g, "Math.asech")

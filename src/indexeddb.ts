@@ -100,17 +100,25 @@ function Mostrar(): void {
             div.dataset.id = puntero.value.id;
 
             div.innerHTML = `
+                <div class="Flex-container">
                 <div class="Flex-space">
                     <strong>Ecuación:</strong> <div class="ecuacionn">${puntero.value.ecuacion}</div>
                 </div>
                 <div class="Flex-space">
                     <strong>Resultado:</strong> <div class="resultadoo">${puntero.value.resultado}</div>
                 </div>
+                </div>
                 <div class="Flex">
-                    <button class="borrar">Borrar</button>
+                <div class="Flex-left">
+                    <button class="borrar"><span id="color-span1" class="material-symbols-outlined">
+                                    delete
+                                </span></button>
                     <button class="Mmas">M+</button>
                     <button class="Mmenos">M-</button>
-                    <button class="editarr">Editar</button>
+                    <button class="editarr"><span class="material-symbols-outlined">
+                                     edit
+                    </span></button>
+                </div>
                 </div>
             `;
 
