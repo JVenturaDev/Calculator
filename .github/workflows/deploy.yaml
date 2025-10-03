@@ -1,4 +1,3 @@
-# .github/workflows/deploy.yml
 name: Deploy Calculator
 
 on:
@@ -28,7 +27,12 @@ jobs:
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.7.0
         with:
-          ssh-private-key: ${{ secrets.SSH_LLAVE_PRIVADA}}
+          ssh-private-key: ${{ secrets.SSH_LLAVE_PRIVADA }}
+
+      - name: Set up Git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Deploy to GitHub Pages
         run: npx gh-pages -d dist -r git@github.com:Qu3T31MP0RTA/Calculator.git
