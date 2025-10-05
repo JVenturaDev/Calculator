@@ -35,4 +35,4 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Deploy to GitHub Pages
-        run: npx gh-pages -d dist -r git@github.com:Qu3T31MP0RTA/Calculator.git
+        run: npx gh-pages -d dist -r git@github.com:JVenturaDev/Calculator.git

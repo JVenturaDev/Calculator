@@ -221,7 +221,6 @@ h2 {
     align-items: flex-start;
     justify-content: center;
     max-width: 500px;
-    z-index: 1;
 }
 
 .topBar-memory {

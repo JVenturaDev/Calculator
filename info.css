@@ -108,7 +108,7 @@ p {
 .sidebar {
     display: none;
     z-index: 1;
-    padding: 40px 16px 90px 16px;
+    padding: 24px 24px 24px 24px;
     background-color: rgb(255 255 255);
     border-right: 1px solid var(--border);
     overflow-y: auto;
@@ -116,18 +116,25 @@ p {
 
 }
 
-
+.sidebar::-webkit-scrollbar{
+    display: none;
+}
+.width-spacing {
+    width: 240px;
+}
 
 nav .navegar {
-    padding-left: 20px;
+    padding: 20px;
+    font-size: 17px;
+   
     color: #101828;
-    font-weight: 500;
+  font-weight: 500;
     display: block;
     margin-bottom: 15px;
 }
 
 nav .nose {
-
+    
     padding: 12px 20px 12px 20px;
     font-weight: 500;
     display: block;
