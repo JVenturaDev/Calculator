@@ -5,6 +5,8 @@
     --secondary: var(--color-gray);
     --color-bluedeep: #3b82f680;
     --Tertiary: var(--color-bluedeep);
+    --primary1: var(--color-orange);
+    --primary1-5: var(--color-orange--hover);
 
     --color-bg: #eff1f4;
     --color-white: #ffffff;
@@ -12,7 +14,9 @@
     --color-blue: #1e88e5;
     --color-bluee: #1e88e58a;
     --color-blue-light: #90caf9;
-    --color-orange: #f69906;
+    --color-orange: #ff9900a7;
+    --color-orange--hover: #ff9800;
+    ;
     --color-red: #f9544c;
 }
 
@@ -312,7 +316,6 @@ h2 {
     justify-content: center;
     align-items: center;
     width: 90%;
-
     padding: 10px;
     border-radius: 8px;
     transition: all 0.3s ease-in-out;
@@ -320,6 +323,14 @@ h2 {
 
 
 
+}
+
+#equal:hover {
+    background-color: var(--primary1);
+}
+
+#equal {
+    background-color: var(--primary1-5);
 }
 
 .contenido:hover {
@@ -346,11 +357,11 @@ h2 {
 
 .Flex-left {
     display: flex;
-   
+
 
 
 }
- 
+
 
 .Flex:hover {
     display: flex;
@@ -417,13 +428,6 @@ h2 {
     z-index: 1;
 }
 
-#equal {
-    background-color: var(--bg-btn-equal);
-}
-
-#equal:hover {
-    background-color: var(--bg-hover-equal);
-}
 
 /* =====================
    12. Tipos de botones
@@ -541,7 +545,6 @@ h2 {
 .Mmenos,
 .Mmas {
     display: none;
-
     text-align: center;
     height: 30px;
     margin: 3px;
