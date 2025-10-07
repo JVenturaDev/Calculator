@@ -1,9 +1,10 @@
 :root {
-    --back: white;
+    --back: #331E36;
     --card: #f9f9f9;
-    --border: #dee4ec;
-    --boton: #0740f9;
+    --border: #41337A;
+    --boton: #41337A;
     --boton1: #000000;
+    --text: #6EA4BF;
 }
 
 body {
@@ -30,9 +31,11 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fff;
-    border-bottom: 1px solid var(--border);
+    background: var(--back);
+    border-bottom: 1px solid var(--back);
     padding: 10px 20px;
+    box-shadow: 0px 4px 8px rgba(22, 13, 24, 0.5) !important;
+
 }
 
 .logo {
@@ -47,7 +50,7 @@ body {
 
 .btn-primary1 {
     width: 130px;
-    background: var(--boton1);
+    background: var(--boton);
     color: white;
     border: none;
     padding: 8px 14px;
@@ -61,7 +64,7 @@ body {
 .menuHamburger {
     width: 60px;
     background: var(--boton);
-    color: white;
+    color: var(--text);
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
@@ -69,21 +72,10 @@ body {
 }
 
 
-.btn-secondary {
-    background: white;
-    color: black;
-    border: 1px solid #ccc;
-    padding: 8px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: .875rem;
-    line-height: 1.25rem;
-
-}
 
 .btn-secondary2 {
-    background: white;
-    color: black;
+    background: var(--back);
+    color: var(--text);
     border: none;
     cursor: pointer;
     padding: 8px 20px 8px 20px;
@@ -116,9 +108,10 @@ p {
 
 }
 
-.sidebar::-webkit-scrollbar{
+.sidebar::-webkit-scrollbar {
     display: none;
 }
+
 .width-spacing {
     width: 240px;
 }
@@ -126,15 +119,15 @@ p {
 nav .navegar {
     padding: 20px;
     font-size: 17px;
-   
+
     color: #101828;
-  font-weight: 500;
+    font-weight: 500;
     display: block;
     margin-bottom: 15px;
 }
 
 nav .nose {
-    
+
     padding: 12px 20px 12px 20px;
     font-weight: 500;
     display: block;

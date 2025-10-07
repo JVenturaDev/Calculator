@@ -1,13 +1,17 @@
 :root {
-    --Azuloscuro-Marino: #1565C0;
-    --primary: var(--Azuloscuro-Marino);
+    --body--back: var(--primary--darkmode);
+    --body--C-W-H: var(--primary--darkmode);
+    --body--display: var(--secondary--darkmode);
+    --text--general: var(--tertiary--darkmode);
+    --text--display: var(--color-bg);
+    --buttons--color: var(--tertiary1--darkmode);
+    --buttons--color-button: var(--color-blue--darkmode);
+    --buttons--color: var(--tertiary1--darkmode);
+    --buttons--color--hover: var(--tertiary--darkmode);
+    --boder--liner: var(--color-black--liner);
     --color-gray: #999999;
-    --secondary: var(--color-gray);
     --color-bluedeep: #3b82f680;
-    --Tertiary: var(--color-bluedeep);
-    --primary1: var(--color-orange);
-    --primary1-5: var(--color-orange--hover);
-
+    --Azuloscuro-Marino: #1565C0;
     --color-bg: #eff1f4;
     --color-white: #ffffff;
     --color-gray-dark: #424242;
@@ -16,8 +20,22 @@
     --color-blue-light: #90caf9;
     --color-orange: #ff9900a7;
     --color-orange--hover: #ff9800;
-    ;
     --color-red: #f9544c;
+    --color-black--liner: #331e364d;
+
+    /* Dark mode  */
+    --color-dark: #331E36;
+    --color-violet: #41337A;
+    --color-blue--darkmode: #6EA4BF;
+    --color-light: #C2EFEB;
+    --color-pale: #ECFEE8;
+    --color-violet-light: #7E5BA6;
+    --primary--darkmode: var(--color-dark);
+    --secondary--darkmode: var(--color-violet);
+    --tertiary--darkmode: var(--color-blue--darkmode);
+    --primary1--darkmode: var(--color-light);
+    --secondary1--darkmode: var(--color-pale);
+    --tertiary1--darkmode: var(--color-violet-light);
 }
 
 
@@ -27,7 +45,7 @@
 body {
     margin: 0;
     font-family: "Roboto", sans-serif;
-    background: var(--color-bg);
+    background: var(--body--back) !important;
     color: var(--color-gray-dark);
 }
 
@@ -42,17 +60,20 @@ body {
 .workspace,
 .calculator,
 .history {
-    background: var(--color-white);
+    background: var(--body--C-W-H);
+    color: var(--tertiary--darkmode);
     border-radius: 6px;
     padding: 15px;
-    box-shadow: 0 1px 3px #dee4ec;
+    /* box-shadow: 0 1px 3px #dee4ec; */
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
-
+.history{
+    background-color: var(--secondary--darkmode);
+}
 .display {
-    background: var(--color-bg);
+    background: var(--body--display);
     padding: 15px;
     font-size: 28px;
     border-radius: 8px;
@@ -63,9 +84,9 @@ body {
 .display input {
     width: 95%;
     font-size: 35px;
-    color: var(--text-white);
+    color: var(--text--display);
     text-align: right;
-    background-color: var(--bg-display);
+    background-color: var(--body--display);
     border: 1px solid var(--bg-display);
     border-radius: 3px;
 }
@@ -93,18 +114,19 @@ body {
     font-size: 10px;
     border: none;
     cursor: pointer;
-    background: var(--color-blue-light);
+    background: var(--tertiary1--darkmode);
     transition: background 0.2s;
 }
 
 .buttons button:hover {
-    background: var(--color-blue);
-    color: var(--color-white);
+    background: var(--tertiary--darkmode);
+    color: var(--text--general) !important;
 }
 
 button {
     width: 100%;
-    color: var(--text-white);
+    color: var(--primary--darkmode);
+    font-weight: 700;
     border: none;
     border-radius: 2px;
     cursor: pointer;
@@ -119,14 +141,15 @@ button {
 
 .workspace-area {
     flex: 1;
-    background: var(--color-bg);
+    background: var(--secondary--darkmode);
     border-radius: 8px;
     padding: 10px;
     overflow-y: auto;
 }
 
 .history-item {
-    background: var(--color-bg);
+    background: var(--primary--darkmode);
+    color: var(--tertiary--darkmode);
     padding: 10px;
     border-radius: 8px;
     font-size: 14px;
@@ -140,7 +163,7 @@ button {
 
 #historyTitle {
     margin: 0;
-    color: var(--color-blue);
+    color: var(--tertiary--darkmode);
 }
 
 /* =====================
@@ -221,6 +244,8 @@ h2 {
 
 .scroll1 {
     display: flex;
+    background-color: var(--secondary--darkmode);
+    border-radius: 4px;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
@@ -292,11 +317,6 @@ h2 {
     background-color: var(--bg-delete) !important;
 }
 
-.contenido {
-    margin-left: 10px;
-    color: var(--text-white);
-}
-
 .history h3 {
     margin: 0;
     color: var(--color-blue);
@@ -311,6 +331,8 @@ h2 {
 }
 
 .contenido {
+    background-color: var(--primary--darkmode);
+    color: var(--tertiary--darkmode);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -320,7 +342,7 @@ h2 {
     border-radius: 8px;
     transition: all 0.3s ease-in-out;
     opacity: 1;
-
+  margin-left: 10px;
 
 
 }
@@ -433,7 +455,7 @@ h2 {
    12. Tipos de botones
    ===================== */
 .digit-button {
-    background-color: var(--bg-digit);
+    background-color: var(--primary1--darkmode) !important;
 }
 
 .digit-button:hover {
@@ -441,7 +463,8 @@ h2 {
 }
 
 .color-button {
-    background-color: var(--bg-color-btn);
+    background-color: var(--buttons--color-button) !important;
+    color: var(--primary--darkmode);
 }
 
 .color-button:hover {
@@ -449,11 +472,12 @@ h2 {
 }
 
 .operation-button {
-    background-color: var(--bg-operation);
+    background-color: var(--secondary--darkmode) !important;
+    color: var(--text--general);
 }
 
 .operation-button:hover {
-    background-color: var(--bg-hover-operation);
+    background-color: var(--secondary--darkmode) !important;
 }
 
 .side-button,
