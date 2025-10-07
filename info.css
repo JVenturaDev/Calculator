@@ -1,10 +1,10 @@
 :root {
-    --back: #331E36;
+    --back: #2c2c2c;
     --card: #f9f9f9;
-    --border: #41337A;
-    --boton: #41337A;
+    --border: #7C7A7A;
+    --boton: #FF5D73;
     --boton1: #000000;
-    --text: #6EA4BF;
+    --text: #ffffff;
 }
 
 body {
@@ -34,7 +34,7 @@ body {
     background: var(--back);
     border-bottom: 1px solid var(--back);
     padding: 10px 20px;
-    box-shadow: 0px 4px 8px rgba(22, 13, 24, 0.5) !important;
+    border-bottom: solid 1px var(--border);
 
 }
 
@@ -63,7 +63,9 @@ body {
 
 .menuHamburger {
     width: 60px;
-    background: var(--boton);
+    background: transparent
+        /*var(--boton)*/
+    ;
     color: var(--text);
     border-radius: 6px;
     cursor: pointer;

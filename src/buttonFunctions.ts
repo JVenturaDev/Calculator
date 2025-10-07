@@ -13,6 +13,9 @@ const deleteAll = document.querySelector(".style-A") as HTMLAnchorElement
 deleteAll.addEventListener("click", eliminarTodo)
 if (bntMr && memoryContainer) {
     bntMr.addEventListener("click", (): void => {
+        deleteAll.style.display = deleteAll.style.display === "none" || deleteAll.style.display === ''
+            ? "flex"
+            : "none";
         memoryContainer.style.display =
             memoryContainer.style.display === "none" || memoryContainer.style.display === ''
                 ? "flex"
@@ -22,6 +25,9 @@ if (bntMr && memoryContainer) {
 const bntMr1 = document.querySelector("#btn-mr1") as HTMLButtonElement | null;
 if (bntMr1 && memoryContainer) {
     bntMr1.addEventListener("click", (): void => {
+        deleteAll.style.display = deleteAll.style.display === "none" || deleteAll.style.display === ''
+            ? "flex"
+            : "none";
         memoryContainer.style.display =
             memoryContainer.style.display === "none" || memoryContainer.style.display === ''
                 ? "flex"
