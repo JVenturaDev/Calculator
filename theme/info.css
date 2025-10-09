@@ -23,7 +23,7 @@ body {
 
 .gridd2 {
     display: grid;
-    grid-template-columns: 0.8fr 4fr;
+    grid-template-columns: 4fr 4fr;
 }
 
 /* ===== Barra Superior ===== */
@@ -101,7 +101,7 @@ p {
 /* ===== Sidebar ===== */
 .sidebar {
     display: none;
-    z-index: 1;
+    z-index: 5;
     padding: 24px 24px 24px 24px;
     background-color: rgb(255 255 255);
     border-right: 1px solid var(--border);
@@ -156,13 +156,3 @@ nav .nose:hover {
 
 
 
-/* ===== Responsive ===== */
-@media (max-width: 900px) {
-    .gridd2 {
-        grid-template-columns: 1fr;
-    }
-
-    .intro-text {
-        grid-template-columns: 1fr;
-    }
-}
