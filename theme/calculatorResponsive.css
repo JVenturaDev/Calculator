@@ -121,7 +121,7 @@
     .display input {
         width: 100%;
         padding: 0 !important;
-        
+
         outline: none;
         border: none;
         font-size: 20px;
@@ -262,7 +262,7 @@
 
     #color-span {
         font-size: 11px;
-        color: var( --color-accent-red);
+        color: var(--color-accent-red);
     }
 
     .buttons button {
@@ -293,5 +293,26 @@
         width: 30% !important;
         background-color: var(--bg-delete) !important;
         font-size: 6px;
+    }
+
+    .editarr {
+        height: 30px;
+        padding: 3px !important;
+        margin: 1px !important;
+        background-color: transparent;
+        color: var(--secondary);
+        opacity: 1;
+    }
+
+    .borrar,
+    .Mmenos,
+    .Mmas {
+        display: none;
+        text-align: center;
+        height: 30px;
+        margin: 1px !important;
+        padding: 3px !important;
+        background-color: transparent;
+        color: var(--secondary);
     }
 }
