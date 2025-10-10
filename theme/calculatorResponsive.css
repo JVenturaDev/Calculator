@@ -16,6 +16,7 @@
     }
 
     .display {
+        width: 75%;
         background: var(--body--display);
         padding: 5px;
         border-radius: 3px;
@@ -88,6 +89,7 @@
         border: 0.5px solid var(--boder--liner);
         border-radius: 6px;
         padding: 15px;
+        width: 120px;
         display: flex;
         flex-direction: column;
         gap: 15px;
@@ -113,12 +115,11 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-
         margin: 3px !important;
     }
 
     .display input {
-        width: 98%;
+        width: 100%;
         outline: none;
         border: none;
         font-size: 20px;
@@ -229,7 +230,37 @@
 
     .memory-mobile {
         display: flex;
+        flex-direction: column;
         width: 100%;
+    }
+
+    .topBar-memory {
+        display: flex;
+        color: var(--text--general) !important;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .height-H {
+        font-size: 10px;
+        margin: 0 !important;
+        color: var(--text--general) !important;
+
+        padding: 0;
+    }
+
+    .style-A {
+        font-size: 10px;
+        color: var(--boder--liner) !important;
+
+        margin: 0;
+        padding: 0;
+    }
+
+    #color-span {
+        font-size: 11px;
+        color: var( --color-accent-red);
     }
 
     .buttons button {

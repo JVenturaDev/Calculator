@@ -1,6 +1,6 @@
-const memoryContainer = document.querySelector<HTMLDivElement>("#Memory");
+const memoryContainer = document.querySelector<HTMLDivElement>(".scroll1");
 const containerMemory = document.querySelector<HTMLDivElement>(".memory-mobile");
-const originalContainerMemory = document.querySelector<HTMLDivElement>(".scroll1");
+const originalContainerMemory = document.querySelector<HTMLDivElement>(".workspace");
 export function moveMemory() {
     if (window.innerWidth <= 500) {
         if (containerMemory && memoryContainer && !containerMemory.contains(memoryContainer)) {
