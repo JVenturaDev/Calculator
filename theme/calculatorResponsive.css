@@ -18,7 +18,7 @@
     .display {
         width: 75%;
         background: var(--body--display);
-        padding: 5px;
+        padding: 0;
         border-radius: 3px;
         border: solid 0.5px var(--boder--liner);
     }
@@ -120,13 +120,14 @@
 
     .display input {
         width: 100%;
+        padding: 0 !important;
+        
         outline: none;
         border: none;
         font-size: 20px;
         color: var(--text--display);
         text-align: right;
         background-color: var(--body--display);
-        border: 1px solid var(--bg-display);
         /* Nota: --bg-display no definido */
         border-radius: 3px;
     }
@@ -214,6 +215,7 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        max-width: 108px;
         font-size: 8px;
         padding: 4px;
         border-radius: 3px;
