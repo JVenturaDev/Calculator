@@ -10,7 +10,7 @@
 
 
 
-
+import { moveMemory } from "./responsive.js";
 import { switchBtnCalculator, parentesisMulti } from "./buttonFunctions.js";
 // import { symbolMap,parseSymbols } from "./parser.js";
 import {
@@ -139,7 +139,8 @@ window.addEventListener("load", () => {
 window.addEventListener("load", () => {
     runbd();
 });
-
+window.addEventListener('load', moveMemory);
+window.addEventListener('resize', moveMemory);
 
 // ----------------------------
 // Manejo de botones numéricos y operadores
