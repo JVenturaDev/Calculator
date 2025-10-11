@@ -23,7 +23,7 @@ body {
 
 .gridd2 {
     display: grid;
-    grid-template-columns: 4fr 4fr;
+    grid-template-columns: 1fr 4fr;
 }
 
 /* ===== Barra Superior ===== */

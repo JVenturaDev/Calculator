@@ -40,17 +40,11 @@ const btnFe = document.querySelector("#fBtn") as HTMLButtonElement;        // Bo
 const globalMPlus = document.querySelector("#globalMPlus") as HTMLButtonElement;   // Botón M+ global
 const globalMMinus = document.querySelector("#globalMMinus") as HTMLButtonElement; // Botón M- global
 const btnRecuperarMemoria = document.querySelector("#btnRecuperarMemoria") as HTMLButtonElement; // Recuperar memoria
-const menuCalculator = document.querySelector("#menuHamburger") as HTMLButtonElement;
-const sideBar = document.querySelector(".sidebar") as HTMLElement;
 const btnBasic = document.querySelector("#btnBasic") as HTMLAnchorElement;
 const btnScientific = document.querySelector("#btnScientific") as HTMLAnchorElement;
 const btnGraphic = document.querySelector("#btnGraphic") as HTMLAnchorElement;
 
-menuCalculator.addEventListener("click", (): void => {
-    sideBar.style.display = sideBar.style.display === "none" || sideBar.style.display === ''
-        ? "flex"
-        : "none";
-})
+
 btnBasic.addEventListener("click", () => switchBtnCalculator("basic"));
 btnScientific.addEventListener("click", () => switchBtnCalculator("sci"));
 btnGraphic.addEventListener("click", () => switchBtnCalculator("graphic"));

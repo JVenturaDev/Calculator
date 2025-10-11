@@ -46,7 +46,21 @@ if (bntMr2 && memoryContainer) {
                 : "none";
     });
 }
+const menuCalculator = document.querySelector("#menuHamburger") as HTMLButtonElement;
+const sideBar = document.querySelector(".sidebar") as HTMLElement;
 
+menuCalculator.addEventListener("click", (): void => {
+    sideBar.style.display = sideBar.style.display === "none" || sideBar.style.display === ''
+        ? "flex"
+        : "none";
+})
+document.addEventListener("click", (e): void => {
+    const focusClickmenu = menuCalculator.contains(e.target as Node);
+    const focusClickside = sideBar.contains(e.target as Node);
+    if (!focusClickmenu && !focusClickside) {
+        sideBar.style.display = "none";
+    }
+});
 // ----------------------------
 // Extensión de Math
 // ----------------------------
