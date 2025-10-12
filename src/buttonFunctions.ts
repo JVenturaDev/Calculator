@@ -61,6 +61,46 @@ document.addEventListener("click", (e): void => {
         sideBar.style.display = "none";
     }
 });
+
+const cientificBlock = document.querySelector(".scientific") as HTMLElement;
+const equationsBlock = document.querySelector(".scientific-moreButtons") as HTMLElement;
+const Secondbutton = document.getElementById("secondButton") as HTMLDivElement;
+
+Secondbutton.addEventListener("click", () => {
+    const isEquationBlockVisible = equationsBlock.style.display === "none";
+
+    // alternar visibilidad
+    equationsBlock.style.display = isEquationBlockVisible ? "flex" : "none";
+    cientificBlock.style.display = isEquationBlockVisible ? "none" : "flex";
+
+
+
+
+});
+// Secondbutton.addEventListener("click", () => {
+//     const eqVisible = equationsBlock.classList.contains("hidden");
+//     if (eqVisible) {
+//         equationsBlock.classList.add("show");
+//         equationsBlock.classList.remove("hidden");
+//         cientificBlock.classList.add("hidden");
+//         cientificBlock.classList.remove("show");
+//     } else {
+//         equationsBlock.classList.add("hidden");
+//         equationsBlock.classList.remove("show");
+//         cientificBlock.classList.add("show");
+//         cientificBlock.classList.remove("hidden");
+//     }
+// });
+// cientificBlock.querySelectorAll("button").forEach(btn => {
+//     btn.addEventListener("click", () => {
+//         equationsBlock.style.backgroundColor = "red"
+//         equationsBlock.classList.add("hidden");
+//         equationsBlock.classList.remove("show");
+//         cientificBlock.classList.add("show");
+//         cientificBlock.classList.remove("hidden");
+//     });
+//     console.log(btn)
+// });
 // ----------------------------
 // Extensión de Math
 // ----------------------------

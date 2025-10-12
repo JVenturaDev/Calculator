@@ -275,6 +275,11 @@ button {
     background-color: var(--bg-side);
     /* Nota: --bg-side no definido */
 }
+.sidde-button,
+.memoryB {
+    background-color: var(--bg-side);
+    /* Nota: --bg-side no definido */
+}
 
 .side-button:hover,
 .memoryB:hover {
