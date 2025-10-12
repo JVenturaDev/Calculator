@@ -4,7 +4,7 @@ yarn-debug.log*
 yarn-error.log*
 
 dist/
-Robar/
+Steal/
 angular-calculator/
 .vite/
 

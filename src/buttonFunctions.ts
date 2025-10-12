@@ -278,6 +278,8 @@ export function replaceFunction(expresion: string): string {
         .replace(/∛(-?\d+(\.\d+)?)/g, (_m, num) => `raizCubicaCompleja(${num})`)
         .replace(/yroot(\d+(\.\d+)?|\([^()]+\))/g, "Math.pow($1)")
         .replaceAll("MOD(", "Math.mod(")
+        .replace(/(?<=\d),(?=\d)/g, '.')
+
 
         // Trigonometría y logaritmos
         .replace("π", "Math.PI")
@@ -326,17 +328,16 @@ export function replaceFunction(expresion: string): string {
         .replaceAll("|x|", "Math.abs(")
         .replaceAll("⌊x⌋(", "Math.floor(")
         .replaceAll("⌈x⌉(", "Math.ceil(")
-
-        .replace(/(\d+(\.\d+)?)%/g, (_m, num) => {
-            return `(${num}*0.01)`;
-        })
-        .replace(/(\d+(\.\d+)?)%(\d+(\.\d+)?)/g,
-            (_m, a, _dec, b) => `((${a}/${b})*100)`
-
-        )
-        .replace(/(\d+)!/g, (_: string, num: string) => factorial(Number(num)).toString());
-
-
+        // Casos con * o /
+        .replace(/(\d+(\.\d+)?)([*/])(\d+(\.\d+)?)%/g, (_, a, _a2, op, b) => `${a}${op}(${b}/100)`)
+        // Casos con + o -
+        .replace(/(\d+(\.\d+)?)([+\-])(\d+(\.\d+)?)%/g, (_, a, _a2, op, b) => `${a}${op}(${a}*${b}/100)`)
+        //  Casos para un solo digito
+        .replace(/(\d+(\.\d+)?)%/g, (_m, num) => { return `(${num}*0.01)`; })
+        //  Casos para dos digitos
+        .replace(/(\d+(\.\d+)?)%(\d+(\.\d+)?)/g, (_m, a, _dec, b) => `((${a}/${b})*100)`)
+        .replace(/(\d+)!/g, (_: string, num: string) => factorial(Number(num)).toString())
+        .replace(/(?<=[+\-*/(])0+(?=\d(?![.,]))/g, '')
 
     output = transformarArgumentosTrigo(output);
     return output;
