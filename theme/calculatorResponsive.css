@@ -78,6 +78,12 @@
         justify-content: center;
         height: 170px;
     }
+    .show-nt-grapic{
+        display: none;
+        align-items: center;
+        justify-content: center;
+        height: 170px;
+    }
 
     /* .show {
         display: flex !important;
@@ -86,6 +92,24 @@
         display: none !important;
     } */
     .scientific {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        width: 90%;
+        max-height: 240px;
+    }
+
+    .grafica-moreButtons {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        width: 90%;
+        margin: 0 10px;
+        transform: translate(0, 20px);
+    }
+    .grafica {
         display: flex;
         align-items: center;
         justify-content: center;

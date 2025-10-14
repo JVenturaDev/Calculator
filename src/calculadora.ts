@@ -9,7 +9,6 @@
 //    |_|  |_| |_|\___|       \_____\__,_|_|\___|\__,_|_|\__,_| |_| \___/ |__|
 
 
-
 import { moveMemory } from "./responsive.js";
 import { switchBtnCalculator, parentesisMulti } from "./buttonFunctions.js";
 // import { symbolMap,parseSymbols } from "./parser.js";
@@ -173,6 +172,25 @@ buttons.forEach((button: HTMLButtonElement) => {
         }
     });
 });
+
+document.addEventListener("keydown", (event: KeyboardEvent) => {
+    if (!input) return;
+    if ((event.target as HTMLElement).tagName === "button") return;
+    switch (event.key) {
+        case "Backspace":
+            input.value = input.value.slice(0, -1);
+            stateObject.expression = input.value;
+            event.preventDefault();
+            break;
+        case "Enter":
+            calcularResultado();
+            event.preventDefault();
+            break;
+        default:
+            input.focus();
+            break;
+    }
+});
 // ----------------------------
 // Función principal: calcular resultado
 // ----------------------------
@@ -196,7 +214,7 @@ function calcularResultado(): void {
         expresion = replaceFunction(inputValue);
         expresion = parentesisMulti(expresion);
         // Evaluar la expresión final
-        const result: number|string = evalExpresion(expresion);
+        const result: number | string = evalExpresion(expresion);
 
         // Guardar resultado
         stateObject.result = result;
