@@ -7,45 +7,30 @@ import { stateObject } from "./stateObject.js";
 // ----------------------------
 // Toggle panel memoria
 // ----------------------------
-const bntMr = document.querySelector("#btn-mr") as HTMLButtonElement | null;
 const memoryContainer = document.querySelector("#Memory") as HTMLDivElement | null;
-const deleteAll = document.querySelector(".style-A") as HTMLAnchorElement
-deleteAll.addEventListener("click", eliminarTodo)
-if (bntMr && memoryContainer) {
-    bntMr.addEventListener("click", (): void => {
-        deleteAll.style.display = deleteAll.style.display === "none" || deleteAll.style.display === ''
-            ? "flex"
-            : "none";
-        memoryContainer.style.display =
-            memoryContainer.style.display === "none" || memoryContainer.style.display === ''
-                ? "flex"
-                : "none";
-    });
+const deleteAll = document.querySelector(".style-A") as HTMLAnchorElement | null;
+function toggleMemoryPanel(): void {
+    if (!memoryContainer || !deleteAll) return;
+
+    const isHidden = memoryContainer.style.display === "none" || memoryContainer.style.display === '';
+    memoryContainer.style.display = isHidden ? "flex" : "none";
+    deleteAll.style.display = isHidden ? "flex" : "none";
 }
-const bntMr1 = document.querySelector("#btn-mr1") as HTMLButtonElement | null;
-if (bntMr1 && memoryContainer) {
-    bntMr1.addEventListener("click", (): void => {
-        deleteAll.style.display = deleteAll.style.display === "none" || deleteAll.style.display === ''
-            ? "flex"
-            : "none";
-        memoryContainer.style.display =
-            memoryContainer.style.display === "none" || memoryContainer.style.display === ''
-                ? "flex"
-                : "none";
-    });
+
+const memoryButtons = ["#btn-mr", "#btn-mr1", "#btn-mr2"];
+
+memoryButtons.forEach(selector => {
+    const btn = document.querySelector(selector) as HTMLButtonElement | null;
+    if (btn) {
+        btn.addEventListener("click", toggleMemoryPanel);
+    }
+});
+
+const deleteAllBtn = document.querySelector(".style-A") as HTMLAnchorElement | null;
+if (deleteAllBtn) {
+    deleteAllBtn.addEventListener("click", eliminarTodo);
 }
-const bntMr2 = document.querySelector("#btn-mr2") as HTMLButtonElement | null;
-if (bntMr2 && memoryContainer) {
-    bntMr2.addEventListener("click", (e): void => {
-        deleteAll.style.display = deleteAll.style.display === "none" || deleteAll.style.display === ''
-            ? "flex"
-            : "none";
-        memoryContainer.style.display =
-            memoryContainer.style.display === "none" || memoryContainer.style.display === ''
-                ? "flex"
-                : "none";
-    });
-}
+
 const menuCalculator = document.querySelector("#menuHamburger") as HTMLButtonElement;
 const sideBar = document.querySelector(".sidebar") as HTMLElement;
 
@@ -69,13 +54,8 @@ const Secondbutton = document.getElementById("secondButton") as HTMLDivElement;
 Secondbutton.addEventListener("click", () => {
     const isEquationBlockVisible = equationsBlock.style.display === "none";
 
-    // alternar visibilidad
     equationsBlock.style.display = isEquationBlockVisible ? "flex" : "none";
     cientificBlock.style.display = isEquationBlockVisible ? "none" : "flex";
-
-
-
-
 });
 
 // ----------------------------
