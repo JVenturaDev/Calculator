@@ -9,7 +9,7 @@
 //    |_|  |_| |_|\___|       \_____\__,_|_|\___|\__,_|_|\__,_| |_| \___/ |__|
 
 
-import { moveMemory } from "./responsive.js";
+import { initApp } from "./initApp.js";
 import { calcularInverso, invertirUltimoNumero, replaceFunction, evalExpresion, parentesisMulti } from "./buttonFunctions.js";
 import { parsear } from "./parser.js";
 import { StateObject, stateObject } from "./stateObject.js";
@@ -20,8 +20,8 @@ import { switchBtnCalculator } from "./addEvents.js";
 // ----------------------------
 // Variables principales del DOM
 // ----------------------------
+export const input = document.getElementById("input")! as HTMLInputElement;       // Pantalla principal
 const buttons: NodeListOf<HTMLButtonElement> = document.querySelectorAll(".button"); // Todos los botones de la calculadora
-const input = document.getElementById("input")! as HTMLInputElement;       // Pantalla principal
 const equal = document.getElementById("equal") as HTMLButtonElement;       // Botón "="
 const clear = document.getElementById("clear") as HTMLButtonElement;       // Botón "AC"
 const erase = document.getElementById("erase") as HTMLButtonElement;       // Botón "DEL"
@@ -33,15 +33,16 @@ const btnFe = document.querySelector("#fBtn") as HTMLButtonElement;        // Bo
 const globalMPlus = document.querySelector("#globalMPlus") as HTMLButtonElement;   // Botón M+ global
 const globalMMinus = document.querySelector("#globalMMinus") as HTMLButtonElement; // Botón M- global
 const btnRecuperarMemoria = document.querySelector("#btnRecuperarMemoria") as HTMLButtonElement; // Recuperar memoria
- const btnBasic = document.querySelector("#btnBasic") as HTMLAnchorElement;
- const btnScientific = document.querySelector("#btnScientific") as HTMLAnchorElement;
- const btnGraphic = document.querySelector("#btnGraphic") as HTMLAnchorElement;
+const btnBasic = document.querySelector("#btnBasic") as HTMLAnchorElement;
+const btnScientific = document.querySelector("#btnScientific") as HTMLAnchorElement;
+const btnGraphic = document.querySelector("#btnGraphic") as HTMLAnchorElement;
 btnBasic.addEventListener("click", () => switchBtnCalculator("basic"));
 btnScientific.addEventListener("click", () => switchBtnCalculator("sci"));
 btnGraphic.addEventListener("click", () => switchBtnCalculator("graphic"));
 
 // Tipos
 // ----------------------------
+initApp(input);
 type ButtonPanel = {
     btnId: string;
     panelId: string;
@@ -93,39 +94,6 @@ memoryButtons.forEach((button: ButtonPanel) => {
         btn.addEventListener("click", () => panel.classList.toggle("memoryButton"));
     }
 });
-
-
-// ----------------------------
-// Inicialización de la calculadora al cargar la página
-// ----------------------------
-window.onload = () => {
-    input.value = "";
-    stateObject.expression = "";
-    stateObject.result = "";
-
-    // Actualizar historial en el DOM, asegurándonos que bd y memoryContainer existan
-    if (stateObject.bd && stateObject.memoryContainer) {
-        cargarHistorialDesdeDB(stateObject);
-
-    }
-
-};
-// Inicialización de la calculadora
-window.addEventListener("load", () => {
-    input.value = "";
-    stateObject.expression = "";
-    stateObject.result = "";
-
-    if (stateObject.bd && stateObject.memoryContainer) {
-        cargarHistorialDesdeDB(stateObject);
-    }
-});
-
-window.addEventListener("load", () => {
-    runbd();
-});
-window.addEventListener('load', moveMemory);
-window.addEventListener('resize', moveMemory);
 // ----------------------------
 // Manejo de botones numéricos y operadores
 // ----------------------------
