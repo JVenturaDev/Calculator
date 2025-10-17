@@ -10,18 +10,12 @@
 
 
 import { moveMemory } from "./responsive.js";
-import { switchBtnCalculator, parentesisMulti } from "./buttonFunctions.js";
-// import { symbolMap,parseSymbols } from "./parser.js";
-import {
-    calcularInverso,
-    invertirUltimoNumero,
-    replaceFunction, evalExpresion
-} from "./buttonFunctions.js";
+import { calcularInverso, invertirUltimoNumero, replaceFunction, evalExpresion, parentesisMulti } from "./buttonFunctions.js";
 import { parsear } from "./parser.js";
 import { StateObject, stateObject } from "./stateObject.js";
 import { agregarId, addToHistory } from "./localStorage.js";
 import { cargarHistorialDesdeDB, restoreMemory, eliminarTodo, memoriaMasGlobal, memoriaMenosGlobal, almacenarNumero, runbd } from "./indexeddb.js";
-
+import { switchBtnCalculator } from "./addEvents.js";
 
 // ----------------------------
 // Variables principales del DOM
@@ -39,15 +33,13 @@ const btnFe = document.querySelector("#fBtn") as HTMLButtonElement;        // Bo
 const globalMPlus = document.querySelector("#globalMPlus") as HTMLButtonElement;   // Botón M+ global
 const globalMMinus = document.querySelector("#globalMMinus") as HTMLButtonElement; // Botón M- global
 const btnRecuperarMemoria = document.querySelector("#btnRecuperarMemoria") as HTMLButtonElement; // Recuperar memoria
-const btnBasic = document.querySelector("#btnBasic") as HTMLAnchorElement;
-const btnScientific = document.querySelector("#btnScientific") as HTMLAnchorElement;
-const btnGraphic = document.querySelector("#btnGraphic") as HTMLAnchorElement;
-
-
+ const btnBasic = document.querySelector("#btnBasic") as HTMLAnchorElement;
+ const btnScientific = document.querySelector("#btnScientific") as HTMLAnchorElement;
+ const btnGraphic = document.querySelector("#btnGraphic") as HTMLAnchorElement;
 btnBasic.addEventListener("click", () => switchBtnCalculator("basic"));
 btnScientific.addEventListener("click", () => switchBtnCalculator("sci"));
 btnGraphic.addEventListener("click", () => switchBtnCalculator("graphic"));
-// ----------------------------
+
 // Tipos
 // ----------------------------
 type ButtonPanel = {
@@ -114,6 +106,7 @@ window.onload = () => {
     // Actualizar historial en el DOM, asegurándonos que bd y memoryContainer existan
     if (stateObject.bd && stateObject.memoryContainer) {
         cargarHistorialDesdeDB(stateObject);
+
     }
 
 };
@@ -128,13 +121,11 @@ window.addEventListener("load", () => {
     }
 });
 
-// Abrir IndexedDB
 window.addEventListener("load", () => {
     runbd();
 });
 window.addEventListener('load', moveMemory);
 window.addEventListener('resize', moveMemory);
-
 // ----------------------------
 // Manejo de botones numéricos y operadores
 // ----------------------------
