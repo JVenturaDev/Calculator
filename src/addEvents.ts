@@ -1,4 +1,58 @@
-import { eliminarTodo } from "./indexeddb.js";
+import { eliminarTodo, almacenarNumero, memoriaMasGlobal, restoreMemory, memoriaMenosGlobal } from "./indexeddb.js";
+import { calcularResultado } from "./calculadora.js";
+
+
+type ButtonPanel = {
+    btnId: string;
+    panelId: string;
+};
+type ListenerConfig = {
+    id: string;
+    handler: (this: HTMLElement, ev: MouseEvent) => any;
+};
+// ----------------------------
+// Botones con paneles de memoria
+// ----------------------------
+const memoryMoreButtons: ButtonPanel[] = [
+    { btnId: "clickk", panelId: "presionar" },
+    { btnId: "clickk1", panelId: "presionar1" },
+];
+// ----------------------------
+// Listeners de botones
+// ----------------------------
+const listeners: ListenerConfig[] = [
+    { id: "equal", handler: calcularResultado },
+    { id: "equal1", handler: calcularResultado },
+    { id: "deleteAll", handler: eliminarTodo },
+    { id: "restoreMemory", handler: restoreMemory },
+    { id: "memoryM", handler: memoriaMasGlobal },
+    { id: "memoryMe", handler: memoriaMenosGlobal },
+    { id: "saveMemory", handler: almacenarNumero },
+    { id: "equal2", handler: calcularResultado },
+    { id: "deleteAll1", handler: eliminarTodo },
+    { id: "restoreMemory1", handler: restoreMemory },
+    { id: "memoryM1", handler: memoriaMasGlobal },
+    { id: "memoryMe1", handler: memoriaMenosGlobal },
+    { id: "saveMemory1", handler: almacenarNumero },
+];
+// ----------------------------
+// Registrar listeners
+// ----------------------------
+listeners.forEach((listener: ListenerConfig) => {
+    const el = document.getElementById(listener.id);
+    if (el) el.addEventListener("click", listener.handler);
+});
+// ----------------------------
+// Toggle memoria
+// ----------------------------
+memoryMoreButtons.forEach((button: ButtonPanel) => {
+    const btn = document.getElementById(button.btnId) as HTMLButtonElement | null;
+    const panel = document.getElementById(button.panelId) as HTMLDivElement | null;
+
+    if (btn && panel) {
+        btn.addEventListener("click", () => panel.classList.toggle("memoryButton"));
+    }
+});
 
 const memoryContainer = document.querySelector("#Memory") as HTMLDivElement | null;
 const deleteAll = document.querySelector(".style-A") as HTMLAnchorElement | null;

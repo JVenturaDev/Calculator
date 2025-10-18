@@ -140,7 +140,8 @@ export function replaceFunction(expresion: string): string {
         .replace(/∛(-?\d+(\.\d+)?)/g, (_m, num) => `raizCubicaCompleja(${num})`)
         .replace(/yroot(\d+(\.\d+)?|\([^()]+\))/g, "Math.pow($1)")
         .replaceAll("MOD(", "Math.mod(")
-        .replace(/(?<=\d),(?=\d)/g, '.')
+        // Reemplaza solo comas decimales fuera de funciones
+        .replace(/(?<=\d),(?=\d)(?!(?:[^(]*\)))/g, '.')
 
 
         // Trigonometría y logaritmos
