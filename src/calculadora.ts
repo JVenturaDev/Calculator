@@ -69,10 +69,6 @@ function handleKeyDown(event: KeyboardEvent) {
             break;
     }
 }
-// Main calculation function
-if (typeof Math.log10 !== "function") {
-    Math.log10 = function (x: number): number { return Math.log(x) / Math.log(10); };
-}
 export function calcularResultado(): void {
     try {
         stateObject.equalPressed = 1;
@@ -81,8 +77,8 @@ export function calcularResultado(): void {
 
         if (!parsear(inputValue)) return;
 
-        let expresion = replaceFunction(inputValue);
-        expresion = parentesisMulti(expresion);
+       let expresion = parentesisMulti(inputValue);
+         expresion = replaceFunction(inputValue);
 
         const result: number | string = evalExpresion(expresion);
         stateObject.result = result;

@@ -1,6 +1,7 @@
 import { stateObject } from "./stateObject";
 import { runbd, cargarHistorialDesdeDB } from "./indexeddb";
 import { moveMemory } from "./responsive";
+
 export function initApp(input: HTMLInputElement) {
     if ((window as any).__appInitialized) return;
     (window as any).__appInitialized = true;
@@ -12,12 +13,14 @@ export function initApp(input: HTMLInputElement) {
             runbd();
         } catch (err) {
             console.error("Error inicializando DB:", err);
+            alert("Error inicializando DB");
         }
         if (stateObject.bd && stateObject.memoryContainer) {
             try {
                 cargarHistorialDesdeDB(stateObject);
             } catch (e) {
                 console.error("Error cargando historial:", e);
+                alert("Error cargando historial:");
             }
         }
         moveMemory();

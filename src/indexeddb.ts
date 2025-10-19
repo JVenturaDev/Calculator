@@ -175,58 +175,67 @@ function MostrarError(evento: any): void {
 }
 
 // --- Conexión exitosa ---
-function Comenzar(evento: any): void {
+export function Comenzar(evento: any): void {
     stateObject.bd = evento.target.result;
     Mostrar();
     actualizarValorOriginal();
 
-    // Función interna: actualizar M+ / M- individual
-    function actualizarMemoria(id: number, operacion: "sumar" | "restar") {
-        if (!stateObject.bd) return;
-        const transaccion = stateObject.bd.transaction(["numero"], "readwrite");
-        const almacen = transaccion.objectStore("numero");
-        const solicitud = almacen.get(id);
+    // Internal function: update M+ / M- for a memory item
+function actualizarMemoria(id: number, operacion: "sumar" | "restar") {
+    if (!stateObject.bd) return;
 
-        solicitud.onsuccess = (event: any) => {
-            const registro = event.target.result;
-            if (!registro) return;
+    const transaccion = stateObject.bd.transaction(["numero"], "readwrite");
+    const almacen = transaccion.objectStore("numero");
+    const solicitud = almacen.get(id);
 
-            if (registro.resultadoOriginal === undefined) registro.resultadoOriginal = Math.abs(Number(registro.resultado));
+    solicitud.onsuccess = (event: any) => {
+        const registro = event.target.result;
+        if (!registro) return;
 
-            let valorActual = Number(registro.resultado);
-            if (operacion === "sumar") valorActual += Number(input.value);
-            if (operacion === "restar") valorActual -= Number(input.value);
+        // Guardar resultado original si no existe
+        if (registro.resultadoOriginal === undefined) {
+            registro.resultadoOriginal = Number(registro.resultado) || 0;
+        }
 
-            registro.resultado = valorActual;
-            const requestUpdate = almacen.put(registro);
+        // Parsear valor de input seguro
+        const valorInput = parseFloat((input.value || "0").replace(',', '.'));
+        if (isNaN(valorInput)) {
+            console.warn("Input no es un número válido:", input.value);
+            return;
+        }
 
-            requestUpdate.onsuccess = () => {
-                const divContenedor = stateObject.memoryContainer!.querySelector(
-                    `.contenido[data-id='${id}'] .resultadoo`
-                ) as HTMLDivElement;
-                if (divContenedor) divContenedor.textContent = registro.resultado;
-            };
+        let valorActual = Number(registro.resultado) || 0;
+        valorActual = operacion === "sumar" ? valorActual + valorInput : valorActual - valorInput;
+
+        registro.resultado = valorActual;
+        const requestUpdate = almacen.put(registro);
+
+        requestUpdate.onsuccess = () => {
+            const divContenedor = stateObject.memoryContainer!.querySelector(
+                `.contenido[data-id='${id}'] .resultadoo`
+            ) as HTMLDivElement;
+            if (divContenedor) divContenedor.textContent = registro.resultado.toString();
         };
-    }
-
-    document.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
-        if (target.classList.contains("Mmas")) {
-            const contenido = target.closest(".contenido") as HTMLElement | null;
-            if (!contenido || !contenido.dataset.id) return; // Sale si no existe
-            const id = Number(contenido.dataset.id);
-
-            actualizarMemoria(id, "sumar");
-        }
-        if (target.classList.contains("Mmenos")) {
-            const contenido = target.closest(".contenido") as HTMLElement | null;
-            if (!contenido || !contenido.dataset.id) return; // Sale si no existe
-            const id = Number(contenido.dataset.id);
-
-            actualizarMemoria(id, "restar");
-        }
-    });
+    };
 }
+
+
+    // Register click listeners only once
+    if (!(window as any).__memoryListenersRegistered) {
+        document.addEventListener("click", (e) => {
+            const target = e.target as HTMLElement;
+            const contenido = target.closest(".contenido") as HTMLElement | null;
+            if (!contenido || !contenido.dataset.id) return;
+
+            const id = Number(contenido.dataset.id);
+
+            if (target.classList.contains("Mmas")) actualizarMemoria(id, "sumar");
+            if (target.classList.contains("Mmenos")) actualizarMemoria(id, "restar");
+        });
+        (window as any).__memoryListenersRegistered = true;
+    }
+}
+
 
 // --- Guardar último valor original ---
 export function actualizarValorOriginal(): void {

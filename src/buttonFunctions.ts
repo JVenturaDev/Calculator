@@ -71,11 +71,8 @@ function factorial(n: number): number {
     if (n <= 1) return 1;
     return n * factorial(n - 1);
 }
-export function parentesisMulti(expression: string): string {
-    let result = expression.replace(/(\d)(\()/g, "$1*$2");
-    result = result.replace(/(\))(\d)/g, "$1*$2");
-    return result;
-}
+
+
 // ----------------------------
 // Manejo de modos de ángulo
 // ----------------------------
@@ -128,6 +125,15 @@ export function evalExpresion(expresion: string): string {
 // ----------------------------
 // Reemplazos de expresiones
 // ----------------------------
+export function parentesisMulti(expresion: string): string {
+    let output = expresion;
+    output = output.replace(/(?<![A-Za-z.])(\d+(\.\d+)?)(?=\()/g, '$1*');
+    output = output.replace(/\)(?=\()/g, ')*');
+    output = output.replace(/(\d+(\.\d+)?)(?=\s*[A-Za-z]+\()/g, '$1*');
+    output = output.replace(/\)(?=\d)/g, ')*');
+    return output;
+}
+
 export function replaceFunction(expresion: string): string {
     let output: string = expresion;
     output = output
@@ -172,16 +178,15 @@ export function replaceFunction(expresion: string): string {
         .replaceAll("exp(", "Math.EXPT(")
 
 
-        // Potencias y raíces
         .replaceAll("²", "**2")
         .replaceAll("³", "**3")
         .replaceAll("^", "**")
         .replace(/-(\d+(\.\d+)?)\*\*/g, "(-$1)**")
 
         // Logs y exponenciales
+        .replace(/(^|[^a-zA-Z0-9_.])log\(/g, "$1Math.log10(")
 
-        .replace(/log\(/g, "Math.log10(")
-
+        .replace(/\bln\(/g, "Math.log(")
         .replace(/(^|[^a-zA-Z0-9_])e\^(\([^)]+\)|\d+(\.\d+)?)/g, (_, pre, val) => `${pre}Math.exp(${val})`)
         .replace(/(^|[^a-zA-Z0-9_])\be\b/g, (_, pre) => `${pre}Math.E`)
 
