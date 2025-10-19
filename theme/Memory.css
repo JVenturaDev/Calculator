@@ -11,7 +11,7 @@
 }
 
 #Memory {
-    display: none;
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 20px;
@@ -34,7 +34,7 @@
 }
 
 .style-A {
-    display: none;
+    display: flex;
     margin-right: 50px;
     margin-top: 5px;
     color: var(--color-bluee);

@@ -1,5 +1,6 @@
 import { stateObject } from "./stateObject";
-import { runbd, cargarHistorialDesdeDB } from "./indexeddb";
+import { cargarHistorialDesdeDB } from "./UIindexedDB";
+import { runbd} from "./indexeddb";
 import { moveMemory } from "./responsive";
 
 export function initApp(input: HTMLInputElement) {
@@ -10,7 +11,7 @@ export function initApp(input: HTMLInputElement) {
         stateObject.expression = "";
         stateObject.result = "";
         try {
-            runbd();
+            runbd(input);
         } catch (err) {
             console.error("Error inicializando DB:", err);
             alert("Error inicializando DB");

@@ -1,5 +1,13 @@
-import { eliminarTodo, almacenarNumero, memoriaMasGlobal, restoreMemory, memoriaMenosGlobal } from "./indexeddb.js";
-import { calcularResultado } from "./calculadora.js";
+import { eliminarTodo, almacenarNumero, memoriaMasGlobal, restoreMemory, memoriaMenosGlobal } from "./buttonsIndexedDB.js";
+import { calcularResultado, input } from "./calculadora.js";
+
+// Botones de la memoria en el panel de botones 
+declare const globalMPlus: HTMLButtonElement;
+declare const globalMMinus: HTMLButtonElement;
+declare const btnRecuperarMemoria: HTMLButtonElement;
+globalMPlus.addEventListener("click", () => memoriaMasGlobal(input));
+globalMMinus.addEventListener("click", () => memoriaMenosGlobal(input));
+btnRecuperarMemoria.addEventListener("click", () => restoreMemory(input));
 
 // ----------------------------
 // Memory panel buttons
@@ -14,9 +22,9 @@ const memoryContainer = document.querySelector("#Memory") as HTMLDivElement;
 const deleteAll = document.querySelector(".style-A") as HTMLAnchorElement;
 
 export function toggleMemoryPanel(): void {
-    const isHidden = memoryContainer.style.display === "none" || memoryContainer.style.display === '';
-    memoryContainer.style.display = isHidden ? "flex" : "none";
-    deleteAll.style.display = isHidden ? "flex" : "none";
+    const isHidden = memoryContainer.style.display === "flex" || memoryContainer.style.display === '';
+    memoryContainer.style.display = isHidden ? "none" : "flex";
+    deleteAll.style.display = isHidden ? "none" : "flex";
 }
 
 // ----------------------------
@@ -52,22 +60,22 @@ memoryMoreButtons.forEach(({ btnId, panelId }) => {
 
 ["restoreMemory", "restoreMemory1"].forEach(id => {
     const btn = document.getElementById(id) as HTMLButtonElement;
-    btn.addEventListener("click", restoreMemory);
+    btn.addEventListener("click", ()=> restoreMemory(input));
 });
 
 ["memoryM", "memoryM1"].forEach(id => {
     const btn = document.getElementById(id) as HTMLButtonElement;
-    btn.addEventListener("click", memoriaMasGlobal);
+    btn.addEventListener("click", ()=> memoriaMasGlobal(input));
 });
 
 ["memoryMe", "memoryMe1"].forEach(id => {
     const btn = document.getElementById(id) as HTMLButtonElement;
-    btn.addEventListener("click", memoriaMenosGlobal);
+    btn.addEventListener("click", ()=> memoriaMenosGlobal(input));
 });
 
 ["saveMemory", "saveMemory1"].forEach(id => {
     const btn = document.getElementById(id) as HTMLButtonElement;
-    btn.addEventListener("click", almacenarNumero);
+    btn.addEventListener("click",  ()=> almacenarNumero(input));
 });
 
 // ----------------------------
