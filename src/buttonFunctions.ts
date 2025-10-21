@@ -193,7 +193,7 @@ export function replaceFunction(expresion: string): string {
         .replaceAll("10^", "10**")
 
         // Otros
-        .replaceAll("|x|", "Math.abs(")
+        .replaceAll("|x|(", "Math.abs(")
         .replaceAll("⌊x⌋(", "Math.floor(")
         .replaceAll("⌈x⌉(", "Math.ceil(")
         // Casos con * o /
