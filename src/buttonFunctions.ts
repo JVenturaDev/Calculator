@@ -125,15 +125,6 @@ export function evalExpresion(expresion: string): string {
 // ----------------------------
 // Reemplazos de expresiones
 // ----------------------------
-export function parentesisMulti(expresion: string): string {
-    let output = expresion;
-    output = output.replace(/(?<![A-Za-z.])(\d+(\.\d+)?)(?=\()/g, '$1*');
-    output = output.replace(/\)(?=\()/g, ')*');
-    output = output.replace(/(\d+(\.\d+)?)(?=\s*[A-Za-z]+\()/g, '$1*');
-    output = output.replace(/\)(?=\d)/g, ')*');
-    return output;
-}
-
 export function replaceFunction(expresion: string): string {
     let output: string = expresion;
     output = output
@@ -148,6 +139,10 @@ export function replaceFunction(expresion: string): string {
         .replaceAll("MOD(", "Math.mod(")
         // Reemplaza solo comas decimales fuera de funciones
         .replace(/(?<=\d),(?=\d)(?!(?:[^(]*\)))/g, '.')
+        .replace(/(?<![A-Za-z.])(\d+(\.\d+)?)(?=\()/g, '$1*')
+        .replace(/\)(?=\()/g, ')*')
+        .replace(/(\d+(\.\d+)?)(?=\s*[A-Za-z]+\()/g, '$1*')
+        .replace(/\)(?=\d)/g, ')*')
 
 
         // Trigonometría y logaritmos

@@ -1,5 +1,5 @@
 import { initApp } from "./initApp.js";
-import { calcularInverso, invertirUltimoNumero, replaceFunction, evalExpresion, parentesisMulti } from "./buttonFunctions.js";
+import { calcularInverso, invertirUltimoNumero, replaceFunction, evalExpresion } from "./buttonFunctions.js";
 import { parsear } from "./parser.js";
 import { stateObject } from "./stateObject.js";
 import { agregarId } from "./localStorage.js";
@@ -77,8 +77,7 @@ export function calcularResultado(): void {
 
         if (!parsear(inputValue)) return;
 
-       let expresion = parentesisMulti(inputValue);
-         expresion = replaceFunction(inputValue);
+        let expresion = replaceFunction(inputValue);
 
         const result: number | string = evalExpresion(expresion);
         stateObject.result = result;
