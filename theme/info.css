@@ -103,7 +103,7 @@ p {
     display: none;
     z-index: 5;
     padding: 24px 24px 24px 24px;
-    background-color: rgb(255 255 255);
+    background-color: var(--boton1);
     border-right: 1px solid var(--border);
     overflow-y: auto;
     height: calc(100vh - 60px);
@@ -122,7 +122,7 @@ nav .navegar {
     padding: 20px;
     font-size: 17px;
 
-    color: #101828;
+    color: var(--text);
     font-weight: 500;
     display: block;
     margin-bottom: 15px;
@@ -135,14 +135,14 @@ nav .nose {
     display: block;
     font-size: 1rem;
     line-height: 1.5rem;
-    color: rgb(102 112 133);
+    color: var(--border);
     text-decoration: none;
 }
 
 nav .nose:hover {
     border-radius: 8px;
     color: rgb(16 24 40);
-    background-color: rgba(242, 244, 247, 0.799);
+    background-color: var(--text);
 }
 
 .separador {
