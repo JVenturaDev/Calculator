@@ -1,4 +1,4 @@
-name: Deploy Calculator
+name: Deploy Calculator (Angular)
 
 on:
   push:
@@ -11,18 +11,18 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build project
-        run: npm run build
+      - name: Build Angular project
+        run: npm run build -- --base-href "/Calculator/"
 
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.7.0
@@ -35,4 +35,4 @@ jobs:
           git config --global user.email "221253597+JVenturaDev@users.noreply.github.com"
 
       - name: Deploy to GitHub Pages
-        run: npx gh-pages -d dist -r git@github.com:JVenturaDev/Calculator.git
+        run: npx gh-pages -d dist/angular-calculator -r git@github.com:JVenturaDev/Calculator.git
