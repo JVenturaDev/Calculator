@@ -1,0 +1,9 @@
+
+.workspace-area {
+    flex: 1;
+    background: var(--workArea);
+    border: solid 0.5px var(--boder--liner);
+    border-radius: 8px;
+    padding: 10px;
+    overflow-y: auto;
+}

@@ -1,0 +1,66 @@
+:root {
+    --back: #2c2c2c;
+    --card: #f9f9f9;
+    --border: #7C7A7A;
+    --boton: #FF5D73;
+    --boton1: #000000;
+    --text: #ffffff;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+    position: fixed;
+    left: 0;
+    width: 250px;
+    display: none;
+    z-index: 5;
+    padding: 24px 24px 24px 24px;
+    background-color: rgb(255 255 255);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    height: calc(100vh - 60px);
+
+}
+
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+.width-spacing {
+    width: 240px;
+}
+
+nav .navegar {
+    padding: 20px;
+    font-size: 17px;
+
+    color: #101828;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 15px;
+}
+
+nav .nose {
+
+    padding: 12px 20px 12px 20px;
+    font-weight: 500;
+    display: block;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: rgb(102 112 133);
+    text-decoration: none;
+}
+
+nav .nose:hover {
+    border-radius: 8px;
+    color: rgb(16 24 40);
+    background-color: rgba(242, 244, 247, 0.799);
+}
+
+.separador {
+    margin-bottom: 20px;
+}
+
+.separador1 {
+    margin-top: 20px;
+}

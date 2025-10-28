@@ -1,0 +1,39 @@
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+<main class="layout">
+
+    <app-top-bar></app-top-bar>
+
+    <div class="gridd2">
+        <app-sidebar></app-sidebar>
+        <section class="main-container">
+            <div class="workspace">
+                <app-work-space></app-work-space>
+                <app-memory></app-memory>
+            </div>
+
+            <section class="calculator" aria-label="Calculadora">
+                <section class="calculation" aria-label="Calculadora">
+
+                    <div class="display">
+                        <app-display>
+                        </app-display>
+                    </div>
+
+                    <div class="buttons">
+                        <div class="center">
+                            <app-calculator-basic></app-calculator-basic>
+                            <app-calculator-scientific></app-calculator-scientific>
+                            <app-graphic></app-graphic>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <aside class="history" aria-label="Historial de operaciones">
+                <app-history></app-history>
+            </aside>
+
+        </section>
+    </div>
+</main>

@@ -1,0 +1,52 @@
+  <section class="basic" *ngIf="isVisible">
+    <!-- Memoria -->
+    <div class="basic-memory">
+      <div>
+        <button class="side-button" (click)="toggleMemoryPanel()">M</button>
+        <button class="side-button" (click)="recallLast()">MR</button>
+        <button class="memoryB button" (click)="clearMemory()">MC</button>
+        <button class="memoryB button" (click)="memoryPlus()">M+</button>
+        <button class="memoryB button" (click)="memoryMinus()">M-</button>
+        <button class="btnGuardar memoryB button" (click)="saveMemory()">MS</button>
+        <button data-number="," class="side-button button" (click)="handleButtonClick(',')">,</button>
+      </div>
+    </div>
+
+
+    <!-- Filas de botones -->
+    <div class="blackLite">
+      <button class="color-button button" (click)="handleButtonClick('%')">%</button>
+      <button class="color-button button" (click)="handleButtonClick('1/')">1/x</button>
+      <button class="digit-button button" (click)="handleButtonClick('7')">7</button>
+      <button class="digit-button button" (click)="handleButtonClick('4')">4</button>
+      <button class="digit-button button" (click)="handleButtonClick('1')">1</button>
+      <button class="digit-button button" (click)="handleButtonClick('+/-')">+/-</button>
+    </div>
+
+    <div class="blackLite">
+      <button class="color-button button" (click)="handleButtonClick('AC')">AC</button>
+      <button class="color-button button" (click)="handleButtonClick('²')">x²</button>
+      <button class="digit-button button" (click)="handleButtonClick('8')">8</button>
+      <button class="digit-button button" (click)="handleButtonClick('5')">5</button>
+      <button class="digit-button button" (click)="handleButtonClick('2')">2</button>
+      <button class="digit-button button" id="zero" (click)="handleButtonClick('0')">0</button>
+    </div>
+
+    <div class="blackLite">
+      <button class="color-button button" (click)="handleButtonClick('C')">C</button>
+      <button class="color-button button" (click)="handleButtonClick('²√')">²√x</button>
+      <button class="digit-button button" (click)="handleButtonClick('9')">9</button>
+      <button class="digit-button button" (click)="handleButtonClick('6')">6</button>
+      <button class="digit-button button" (click)="handleButtonClick('3')">3</button>
+      <button class="digit-button button" (click)="handleButtonClick('.')">.</button>
+    </div>
+
+    <div class="orange">
+      <button class="color-button button" id="erase" (click)="handleButtonClick('DEL')">DEL</button>
+      <button class="operation-button button" (click)="handleButtonClick('/')">/</button>
+      <button class="operation-button button" (click)="handleButtonClick('*')">*</button>
+      <button class="operation-button button" (click)="handleButtonClick('-')">-</button>
+      <button class="operation-button button" (click)="handleButtonClick('+')">+</button>
+      <button class="operation-button button" id="equal" (click)="handleButtonClick('=')">=</button>
+    </div>
+  </section>

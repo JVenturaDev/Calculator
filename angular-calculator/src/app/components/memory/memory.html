@@ -1,0 +1,40 @@
+<div *ngIf="isVisible" class="scroll1">
+  <div class="topBar-memory">
+    <h3 class="height-H">Memory</h3> <a href="#" class="style-A"><span id="color-span"
+        class="material-symbols-outlined">
+        delete
+      </span> Delete all</a>
+  </div>
+  <div id="Memory">
+    <div *ngIf="isLoading">Cargando memoria...</div>
+    <div *ngIf="!isLoading && memoryList.length === 0">No hay entradas en memoria.</div>
+
+    <div *ngFor="let puntero of memoryList; trackBy: trackById" class="contenido" [attr.data-id]="puntero.id">
+      <div class="Flex-container">
+        <div class="Flex-space">
+          <strong>Ecuación:</strong>
+          <div class="ecuacionn">{{ puntero.ecuacion }}</div>
+        </div>
+        <div class="Flex-space">
+          <strong>Resultado:</strong>
+          <div class="resultadoo">{{ puntero.resultado }}</div>
+        </div>
+      </div>
+
+      <div class="Flex">
+        <div class="Flex-left">
+          <button (click)="deleteRecord(puntero.id)" class="borrar">
+            <span id="color-span1" class="material-symbols-outlined">delete</span>
+          </button>
+
+          <button (click)="memoryPlusFor(puntero.id)" class="Mmas">M+</button>
+          <button (click)="memoryMinusFor(puntero.id)" class="Mmenos">M-</button>
+
+          <button (click)="editRecord(puntero.id)" class="editarr">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

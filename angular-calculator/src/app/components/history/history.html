@@ -1,0 +1,24 @@
+<aside class="history" aria-label="Historial de operaciones">
+  <div class="title">
+    <h3 id="historyTitle">History</h3>
+    <button class="buttonHistory" (click)="clearAll()"><a href="#" class="style-A"><span id="color-span"
+          class="material-symbols-outlined">delete</span> Delete all</a></button>
+  </div>
+  <div class="noMover">
+    <div class="scroll">
+      <div id="historyContent">
+        <div id="historyContent" class="history-container">
+          <div *ngFor="let item of history" class="history-item" [attr.data-idi]="item.idi">
+            <span (click)="restoreHistory(item)" [attr.data-user-input]="item.expression"
+              [attr.data-user-result]="item.result" style="cursor: pointer;">
+              {{ item.expression }} = {{ item.result }}
+            </span>
+            <button class="delete-history" (click)="deleteItem(item.idi)">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>

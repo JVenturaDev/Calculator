@@ -1,0 +1,172 @@
+/* =====================
+   0. Variables globales
+===================== */
+:root {
+    /* Backgrounds y texto */
+    --body--back: var(--color-black);
+    --body--C-W-H: var(--color--black);
+    --body--display: var(--color-gray);
+    --text--general: var(--color-white);
+    --text--display: var(--color-white);
+
+    /* Botones */
+    --buttons--color: var(--color-dark-gray);
+    --buttons--operation: var(--color-dark-gray);
+    --buttons--digit: var(--color-medium-gray-1);
+    --buttons--color--hover: var(--tertiary--darkmode);
+    /* Nota: no definido aquí */
+    --buttons--color--general: var(--color-dark-gray);
+    --buttons--color--text--general: var(--color-medium-gray);
+
+    /* Workspace / Contenedores */
+    --workArea: var(--color-gray);
+    --contenidoArea: var(--color-dark-gray);
+    --memoryContainer: var(--color-gray);
+    --memoryContainer-items: var(--color-gray);
+    --boder--liner: var(--color-medium-gray--2);
+
+    /* Colores base */
+    --color-gray: #999999;
+    --color-bluedeep: #3b82f680;
+    --Azuloscuro-Marino: #1565C0;
+    --color-bg: #eff1f4;
+    --color-white: #ffffff;
+    --color-gray-dark: #424242;
+    --color-blue: #1e88e5;
+    --color-bluee: #1e88e58a;
+    --color-blue-light: #90caf9;
+    --color-orange: #ff9900a7;
+    --color-orange--hover: #ff9800;
+    --color-red: #f9544c;
+    --color-black--liner: #331e364d;
+
+    /* Dark mode */
+    --color-black: #000000;
+    --color-dark-gray: #3a3a3a;
+    --color-medium-gray: #9e9e9e;
+    --color-medium-gray-1: #525252;
+    --color-medium-gray--2: #7C7A7A;
+    --color-white: #FFFFFF;
+    --color-accent-red: #FF5D73;
+    --color-gray: #2c2c2c;
+}
+
+
+button:hover {
+    background: var(--tertiary--darkmode);
+    /* Nota: --tertiary--darkmode no definido */
+    color: var(--text--general) !important;
+}
+
+
+button {
+    height: 29px;
+    margin: 3px;
+    padding: 7px;
+    font-size: 10px;
+    width: 100%;
+    /* Nota: --primary--darkmode no definido */
+    font-weight: 700;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 0.5px solid var(--boder--liner);
+    background: var(--buttons--color--general);
+    color: var(--buttons--color--text--general);
+    transition: background 0.2s;
+
+}
+
+.basic {
+    margin-top: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 90%;
+    gap: 5px;
+}
+
+
+.buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 90%;
+    margin: 0 10px;
+    /* transform: translateY(80px); */
+}
+
+#equal,
+#equal1,
+#equal2 {
+    background-color: var(--color-accent-red) !important;
+    color: var(--text--general) !important;
+}
+
+#equal:hover {
+    background-color: var(--primary1);
+    /* Nota: --primary1 no definido */
+}
+
+
+/* =====================
+   9. Tipos de botones
+===================== */
+.digit-button {
+    background-color: var(--color-medium-gray-1) !important;
+    color: var(--text--general) !important;
+}
+
+.digit-button:hover {
+    background-color: var(--bg-hover-digit);
+    /* Nota: --bg-hover-digit no definido */
+}
+
+.color-button {
+    background-color: var(--buttons--color) !important;
+    color: var(--color-accent-red) !important;
+}
+
+.color-button:hover {
+    background-color: var(--bg-hover-color-btn);
+    /* Nota: --bg-hover-color-btn no definido */
+}
+
+.operation-button {
+    background-color: var(--buttons--operation) !important;
+    color: var(--color-accent-red) !important;
+}
+
+.operation-button:hover {
+    background-color: var(--secondary--darkmode) !important;
+    /* Nota: --secondary--darkmode no definido */
+}
+
+.side-button,
+.memoryB {
+    background-color: var(--bg-side);
+    /* Nota: --bg-side no definido */
+}
+
+.sidde-button,
+.memoryB {
+    background-color: var(--bg-side);
+    /* Nota: --bg-side no definido */
+}
+
+.side-button:hover,
+.memoryB:hover {
+    background-color: var(--bg-hover-side);
+    /* Nota: --bg-hover-side no definido */
+}
+
+
+.basic-memory{
+    margin-top: 35px;
+}
+
+
+.memoryButton {
+    display: flex;
+    flex-direction: column;
+}

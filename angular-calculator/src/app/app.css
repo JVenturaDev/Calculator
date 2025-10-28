@@ -1,0 +1,349 @@
+/* =====================
+   0. Variables globales
+===================== */
+:root {
+    /* Backgrounds y texto */
+    --body--back: var(--color-black);
+    --body--C-W-H: var(--color--black);
+    --body--display: var(--color-gray);
+    --text--general: var(--color-white);
+    --text--display: var(--color-white);
+
+    /* Botones */
+    --buttons--color: var(--color-dark-gray);
+    --buttons--operation: var(--color-dark-gray);
+    --buttons--digit: var(--color-medium-gray-1);
+    --buttons--color--hover: var(--tertiary--darkmode);
+    /* Nota: no definido aquí */
+    --buttons--color--general: var(--color-dark-gray);
+    --buttons--color--text--general: var(--color-medium-gray);
+
+    /* Workspace / Contenedores */
+    --workArea: var(--color-gray);
+    --contenidoArea: var(--color-dark-gray);
+    --memoryContainer: var(--color-gray);
+    --memoryContainer-items: var(--color-gray);
+    --boder--liner: var(--color-medium-gray--2);
+
+    /* Colores base */
+    --color-gray: #999999;
+    --color-bluedeep: #3b82f680;
+    --Azuloscuro-Marino: #1565C0;
+    --color-bg: #eff1f4;
+    --color-white: #ffffff;
+    --color-gray-dark: #424242;
+    --color-blue: #1e88e5;
+    --color-bluee: #1e88e58a;
+    --color-blue-light: #90caf9;
+    --color-orange: #ff9900a7;
+    --color-orange--hover: #ff9800;
+    --color-red: #f9544c;
+    --color-black--liner: #331e364d;
+
+    /* Dark mode */
+    --color-black: #000000;
+    --color-dark-gray: #3a3a3a;
+    --color-medium-gray: #9e9e9e;
+    --color-medium-gray-1: #525252;
+    --color-medium-gray--2: #7C7A7A;
+    --color-white: #FFFFFF;
+    --color-accent-red: #FF5D73;
+    --color-gray: #2c2c2c;
+}
+
+/* =====================
+   1. Estilos generales
+===================== */
+body {
+    margin: 0;
+    font-family: "Roboto", sans-serif;
+    background: var(--body--back) !important;
+    color: var(--color-gray-dark);
+    overflow-y: hidden;
+
+}
+
+.main-container {
+    display: grid;
+    grid-template-columns: .8fr 1fr .8fr;
+    gap: 10px;
+    padding: 10px;
+    height: calc(100vh - 60px);
+    position: absolute;
+}
+
+
+
+/* =====================
+   2. Calculadora
+===================== */
+.calculator {
+    background: var(--body--C-W-H);
+    color: var(--text--general);
+    border-radius: 6px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Display de la calculadora */
+.display {
+    background: var(--body--display);
+    padding: 10px;
+    border-radius: 6px;
+    border: solid 0.5px var(--boder--liner);
+}
+
+#fontSize,
+#fontSize1,
+#fontSize2 {
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.calculation {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    background-color: var(--bg-calculation);
+    /* Nota: --bg-calculation no definido */
+    border-left: solid 0.5px var(--border-color);
+    /* Nota: --border-color no definido */
+    border-right: solid 0.5px var(--border-color);
+    z-index: 1;
+}
+
+.graficaa {
+    display: none;
+}
+
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.workspace {
+    display: flex;
+    background: var(--body--C-W-H);
+    color: var(--text--general);
+    border-radius: 6px;
+    height: calc(100vh - 60px);
+    padding: 15px;
+    flex-direction: column;
+    gap: 15px;
+}
+
+app-work-space {
+    display: flex;
+    background: var(--body--C-W-H);
+    color: var(--text--general);
+    border-radius: 6px;
+    height: calc(100vh - 60px);
+
+    flex-direction: column;
+    gap: 15px;
+}
+
+.blackLite-memory {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 280px;
+    margin-top: 35px;
+}
+
+app-calculator-basic {
+    width: 80%;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    gap: 5px;
+
+
+}
+
+/* =====================
+   7. Layout auxiliar / Flex
+===================== */
+
+.show-nt {
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.show-nt-grapic {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#equal,
+#equal1,
+#equal2 {
+    background-color: var(--color-accent-red) !important;
+    color: var(--text--general) !important;
+}
+
+#equal:hover {
+    background-color: var(--primary1);
+    /* Nota: --primary1 no definido */
+}
+
+/* =====================
+   8. Botones especiales
+===================== */
+#multiBtn,
+#fBtn {
+    width: 50px;
+    height: 30px;
+    background-color: transparent;
+    border: none !important;
+}
+
+.specialButtons {
+    display: flex;
+    margin-left: 10px;
+    padding: 0;
+    z-index: 1;
+}
+
+/* =====================
+   9. Tipos de botones
+===================== */
+.digit-button {
+    background-color: var(--color-medium-gray-1) !important;
+    color: var(--text--general) !important;
+}
+
+.digit-button:hover {
+    background-color: var(--bg-hover-digit);
+    /* Nota: --bg-hover-digit no definido */
+}
+
+.color-button {
+    background-color: var(--buttons--color) !important;
+    color: var(--color-accent-red) !important;
+}
+
+.color-button:hover {
+    background-color: var(--bg-hover-color-btn);
+    /* Nota: --bg-hover-color-btn no definido */
+}
+
+.operation-button {
+    background-color: var(--buttons--operation) !important;
+    color: var(--color-accent-red) !important;
+}
+
+.operation-button:hover {
+    background-color: var(--secondary--darkmode) !important;
+    /* Nota: --secondary--darkmode no definido */
+}
+
+.side-button,
+.memoryB {
+    background-color: var(--buttons--color--general);
+    /* Nota: --bg-side no definido */
+}
+
+.sidde-button,
+.memoryB {
+    background-color: var(--bg-side);
+    /* Nota: --bg-side no definido */
+}
+
+.side-button:hover,
+.memoryB:hover {
+    background-color: var(--bg-hover-side);
+    /* Nota: --bg-hover-side no definido */
+}
+
+/* =====================
+   10. Modos (básico y científico)
+===================== */
+.basic {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 80%;
+    margin: 20px 10px 0 10px;
+}
+
+.basic-memory {
+    margin-top: 34px;
+}
+
+
+.main-container{
+    position: fixed;
+}
+
+.scientific {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 90%;
+    max-height: 240px;
+    margin: 5px 10px 0 0;
+}
+
+.app-calculator-basic {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 90%;
+    margin: 0 10px;
+    /* transform: translateY(80px); */
+}
+
+
+.scientific-moreButtons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 90%;
+    margin: 0 10px;
+    transform: translate(0, 20px);
+}
+
+.section-special-button {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.grafica {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 90%;
+    margin: 5px 10px 0 0;
+}
+
+.grafica-moreButtons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 90%;
+    margin: 0 10px;
+    transform: translate(0, 20px);
+}
+
+.memoryButton {
+    display: none;
+    flex-direction: column;
+}

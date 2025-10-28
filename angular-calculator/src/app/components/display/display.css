@@ -1,0 +1,19 @@
+
+
+ input {
+    width: 98%;
+    outline: none;
+    border: none;
+    font-size: 35px;
+    color: var(--text--display);
+    text-align: right;
+    background-color: var(--body--display);
+    border: 1px solid var(--bg-display);
+    /* Nota: --bg-display no definido */
+    border-radius: 3px;
+}
+input::placeholder {
+    margin-left: 10px;
+    color: var(--placeholder-color);
+    /* Nota: --placeholder-color no definido */
+}
