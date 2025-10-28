@@ -24,14 +24,12 @@
                 "output": "/"
               }
             ],
-            "styles": ["src/styles.css"],
-            "baseHref": "/"  
+            "styles": ["src/styles.css"]
           },
           "configurations": {
             "production": {
               "optimization": true,
               "outputHashing": "all",
-              "baseHref": "/Calculator/",  
               "budgets": [
                 {
                   "type": "initial",
@@ -48,8 +46,7 @@
             "development": {
               "optimization": false,
               "sourceMap": true,
-              "extractLicenses": false,
-              "baseHref": "/"  
+              "extractLicenses": false
             }
           },
           "defaultConfiguration": "production"
