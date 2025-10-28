@@ -22,7 +22,9 @@ jobs:
         run: npm install
 
       - name: Build Angular project
-        run: npm run build -- --base-href "/Calculator/"
+        run: |
+          # Build production version with base-href
+          ng build --configuration production --base-href "/Calculator/"
 
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.7.0
