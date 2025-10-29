@@ -1,147 +1,129 @@
-# Multifunctional Math Web App
+# Calculator (Angular Version)
 
-[![Status](https://img.shields.io/badge/Status-Development-yellow)](https://jventuradev.github.io/Calculator/calculadora.html)
-[![License](https://img.shields.io/badge/License-GPLv3-blue)](https://www.gnu.org/licenses/gpl-3.0.en.html)
-[![GitHub Pages](https://img.shields.io/badge/GH-Pages-green)](https://jventuradev.github.io/Calculator/calculadora.html)
-
-Basic and scientific calculator with history, memory, mobile UI, and support for advanced operations. Workspace and graphing calculator are under development.
+A modern web-based calculator built with **Angular 20.3.7**, designed to provide a complete mathematical workspace.
+This version is the **successor** of the original Vite + TypeScript project and is currently being migrated to Angular for improved scalability, modularity, and maintainability.
 
 ---
 
-## Demo Calculator
+## Live Demo
 
-![Screenshot](ruta-a-tu-imagen.gif)
-**Online Demo:** [Calculator](https://jventuradev.github.io/Calculator/calculadora.html)
+**GitHub Pages:** [https://jventuradev.github.io/Calculator/](https://jventuradev.github.io/Calculator/)
 
 ---
 
-## Table of Contents
+## Overview
 
-* [Installation](#installation)
-* [Usage / Features](#usage--features)
-* [Technologies](#technologies)
-* [Project Status / Roadmap](#project-status--roadmap)
-* [Usage Examples](#usage-examples)
-* [Contribution](#contribution)
-* [License](#license)
+The application currently includes:
+
+* **Basic Calculator** – fully functional.
+* **Scientific Calculator** – complete with advanced operations.
+* **Sidebar Navigation** – allows switching between calculator modes.
+* **Memory and History Modules** – operational and stored via IndexedDB.
+* **Graphing Calculator** – under development.
+* **Workspace System** – planned for saving, tagging, and organizing full calculations and graphs.
+
+The project is under **active migration and enhancement**, with responsive design and advanced modules being restructured for Angular compatibility.
+
+---
+
+## Project Structure
+
+```
+Calculator/
+├── src/
+│   ├── app/
+│   │   ├── components/        # Calculator, workspace, memory, etc.
+│   │   ├── services/          # State, storage, evaluator, etc.
+│   │   ├── lib/               # Calculator engine
+│   │   └── app.module.ts
+│   ├── index.html
+│   ├── main.ts
+│   └── styles.css
+├── angular.json
+├── package.json
+├── README.md
+├── package-lock.json
+├── Licence
+├── tsconfig.app.json
+├── tsconfig.json
+└── tsconfig.spec.json
+```
+
+---
+
+## Tech Stack
+
+* **Angular 20.3.7**
+* **Vite, Node.js**
+* **TypeScript, JavaScript**
+* **IndexedDB, LocalStorgae** for persistence
+* **HTML / CSS**
+* **Git, GitHub**  Development & Version Control
+* **GitHub Actions** for CI/CD
+* **GitHub Pages** for deployment
+
+---
+
+## Current Status
+
+| Module                | Status            | Notes                                 |
+| :-------------------- | :---------------- | :------------------------------------ |
+| Basic Calculator      | ✅ Functional      | Accessible via sidebar                |
+| Scientific Calculator | ✅ Functional      | Supports advanced math                |
+| Memory                | ✅ Functional      | Data stored locally                   |
+| History               | ✅ Functional      | Displays recent calculations          |
+| Graphing              | 🚧 In development | To include plotting and analysis      |
+| Workspace             | 🚧 Planned        | Will allow saving and versioning work |
+| Responsive Design     | ⚙️ Pending        | Not yet optimized post-migration      |
+
+---
+
+## Roadmap
+
+| Phase | Feature                           | Status         |
+| :---- | :-------------------------------- | :------------- |
+| 1     | Core migration to Angular         | ✅ Completed   |
+| 2     | Memory and History integration    | ✅ Completed   |
+| 3     | Graphing calculator               | 🚧 In progress |
+| 4     | Workspace (projects, tags, notes) | 🚧 In progress |
+| 5     | Camera-based math solver          | 🧩 Planned     |
+| 6     | Chat                              | 🧩 Planned     |
+| 7     | Log tracking system               | 🧩 Planned     |
+| 8     | Responsive design improvement     | 🔄 Pending     |
+| 9     | Automated testing & CI/CD         | 🧩 Planned     |
 
 ---
 
 ## Installation
 
-Clone the repository:
-
 ```bash
+# Clone the repository
 git clone https://github.com/JVenturaDev/Calculator.git
+
+# Navigate to the project folder
 cd Calculator
-```
 
-Install dependencies:
-
-```bash
+# Install dependencies
 npm install
+
+# Run locally
+ng serve
 ```
 
-Run the development server:
-
-```bash
-npm run dev
-```
-
-**Requirements:** Node.js
+Then open your browser at [http://localhost:4200](http://localhost:4200).
 
 ---
 
-## Usage / Features
+## Author
 
-### Currently Functional
-
-* Basic and scientific calculator: arithmetic, trigonometric, logarithmic, roots, powers.
-* Math.js: support for roots with imaginary numbers.
-* History: persistent with `localStorage`.
-* Memory: persistent with `IndexedDB`.
-* Mobile UI: adapted for the basic calculator.
-
-### In Development
-
-* Workspace for saving, editing, and organizing complete tasks.
-* Graphing calculator.
-* Mobile UI for scientific calculator.
-
-### Future
-
-* Internal chat and sharing area.
-* Optional AI integration.
-* User login and profiles.
+**Jonathan Ventura**
+GitHub: [JVenturaDev](https://github.com/JVenturaDev)
 
 ---
 
-## Technologies
+**License**
 
-* TypeScript
-* HTML / CSS
-* Vite
-* Node.js
-* localStorage: simple history
-* IndexedDB: advanced memory
-* Math.js: advanced mathematical operations including imaginary numbers
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)** — see the [LICENSE](LICENSE) file for full details.
 
----
-
-## Project Status / Roadmap
-
-**Functional:**
-
-* Basic and scientific calculator
-* History and memory
-* Mobile UI for basic calculator
-
-**In Development:**
-
-* Workspace
-* Graphing calculator
-* Mobile UI for scientific calculator
-
-**Future Plans:**
-
-* Internal chat and sharing area
-* Optional AI integration
-* User login and profiles
-
----
-
-## Usage Examples
-
-```typescript
-import { calcular } from './src/calculadora.ts';
-
-const result = calcular('sqrt(-4)'); // Math.js supports imaginary numbers
-console.log(result); // 2i
-
-memory.save('result1', result);
-console.log(localStorage.getItem('history'));
-```
-
----
-
-## Contribution
-
-* Fork the repository
-* Create your branch (`git checkout -b feature/new-feature`)
-* Commit your changes (`git commit -am 'Add new feature'`)
-* Submit a pull request
-
-Please follow the existing modular and clean code structure.
-
----
-
-## License
-
-This project is licensed under the **GNU General Public License v3 (GPLv3)**.
-
-For more information, check the [LICENSE](./LICENSE) file or visit the official page: [GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt).
-
-**Why GPLv3:**
-
-* Ensures that any distribution, modification, or use of the code remains free and open.
-* Requires that derivatives of the project also share their code under the same license, protecting the philosophy of free software.
+© 2025 Jonathan Ventura.
+You are free to use, modify, and distribute this software under the same license terms, provided that proper attribution and a copy of the GPL v3 are included.
