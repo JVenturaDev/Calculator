@@ -54,7 +54,16 @@
 
     <!-- Sección científica con memoria -->
     <section class="grafica">
+        <div class="graphic-buttons" *ngIf="showInequalitySymbols">
+            <button class="side-button button" (click)="handleButtonClick('<')"><</button>
+            <button class="side-button button" (click)="handleButtonClick('≥')">≥</button>
+            <button class="side-button button" (click)="handleButtonClick('⩵')">⩵</button>
+            <button class="side-button button" (click)="handleButtonClick('≤')">≤</button>
+            <button class="side-button button" (click)="handleButtonClick('>')">></button>
+
+        </div>
         <div class="blackLite-memory">
+            <button class="side-button btnInequality" (click)="showInequalitySymbols = !showInequalitySymbols">⋚</button>
             <button class="side-button" (click)="showMemoryButtons = !showMemoryButtons">More</button>
             <button class="side-button" (click)="toggleMemoryPanel()">M <!--<span
             class="material-symbols-outlined">arrow_drop_down</span>--></button>
@@ -76,7 +85,7 @@
             <button class="digit-button button" (click)="handleButtonClick('7')">7</button>
             <button class="digit-button button" (click)="handleButtonClick('4')">4</button>
             <button class="digit-button button" (click)="handleButtonClick('1')">1</button>
-            <button class="digit-button button" (click)="handleButtonClick('+/-')">+/-</button>
+            <button class="digit-button button" (click)="handleButtonClick('-')">(-)</button>
         </div>
 
         <div class="blackLite">
@@ -92,7 +101,7 @@
         <div class="blackLite">
             <button class="color-button button" (click)="handleButtonClick('AC')">CE</button>
             <button class="color-button button" (click)="handleButtonClick('exp(')">EXP</button>
-            <button class="color-button button" (click)="handleButtonClick('!')">!</button>
+            <button class="color-button button" (click)="handleButtonClick('⩵')">⩵</button>
             <button class="digit-button button" (click)="handleButtonClick('9')">9</button>
             <button class="digit-button button" (click)="handleButtonClick('6')">6</button>
             <button class="digit-button button" (click)="handleButtonClick('3')">3</button>

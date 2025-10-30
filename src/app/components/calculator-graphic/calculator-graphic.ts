@@ -1,7 +1,5 @@
-
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { CalculatorEngineService } from '../../services/calculator-engine';
 import { HistoryService } from '../../services/history';
@@ -23,7 +21,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
   private sub!: Subscription;
   isVisible = false;
   showMemoryButtons = false;
-
+  showInequalitySymbols = false;
 
   constructor(
     private display: DisplayStateService,
@@ -33,9 +31,9 @@ export class GraphicComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private memoryToggle: MemoryToggleService,
     private toggle: ToggleService,
-    public toggleService: ToggleService
-  ) {
-  }
+    public toggleService: ToggleService,
+    private elRef: ElementRef
+  ) { }
 
   ngOnInit(): void {
     this.sub = this.toggle.activeCalc$.subscribe(v => this.isVisible = (v === 'graphic'));
@@ -51,6 +49,23 @@ export class GraphicComponent implements OnInit, OnDestroy {
   toggleMemoryPanel(): void {
     this.memoryToggle.toggle();
   }
+
+toggleInequalitySymbols(event?: MouseEvent) {
+  if (event) event.stopPropagation(); 
+  this.showInequalitySymbols = !this.showInequalitySymbols;
+}
+
+@HostListener('document:click', ['$event'])
+onClickAnywhere(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  const container = document.querySelector('.graphic-buttons'); 
+  const button = document.querySelector('.btnInequality');    
+
+  if (this.showInequalitySymbols && button && target !== button && container) {
+    this.showInequalitySymbols = false;
+  }
+}
+
 
   handleButtonClick(value: string): void {
     try {
@@ -71,6 +86,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
           this.display.setValue(currentVal.startsWith('-') ? currentVal.slice(1) : '-' + currentVal);
           this.stateService.update({ expression: this.display.currentValue });
           return;
+
         case '=':
           const expr = this.display.currentValue;
           const replaced = this.engine.replaceFunction(expr);
@@ -85,7 +101,6 @@ export class GraphicComponent implements OnInit, OnDestroy {
           this.stateService.update({ expression: expr, result: stateResult });
           this.history.agregarId(expr, stateResult);
           return;
-
 
         default:
           this.display.appendValue(value);
@@ -112,24 +127,19 @@ export class GraphicComponent implements OnInit, OnDestroy {
     }
   }
 
-  async clearMemory() {
-    await this.memoryService.clear();
-  }
-
+  async clearMemory() { await this.memoryService.clear(); }
   async memoryPlus() {
     const last = await this.memoryService.getLastRecord();
     if (!last) return;
     const nuevo = Number(last.resultado) + Number(this.stateService.value.result);
     await this.memoryService.updateRecord(last.id!, last.ecuacion, nuevo);
   }
-
   async memoryMinus() {
     const last = await this.memoryService.getLastRecord();
     if (!last) return;
     const nuevo = Number(last.resultado) - Number(this.stateService.value.result);
     await this.memoryService.updateRecord(last.id!, last.ecuacion, nuevo);
   }
-
   async recallLast() {
     const last = await this.memoryService.getLastRecord();
     if (!last) return;
@@ -137,8 +147,5 @@ export class GraphicComponent implements OnInit, OnDestroy {
     this.display.setValue(last.resultado.toString());
   }
 
-  clearHistory(): void {
-    this.history.clearHistory();
-  }
+  clearHistory(): void { this.history.clearHistory(); }
 }
-

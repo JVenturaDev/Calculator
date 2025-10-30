@@ -116,13 +116,27 @@ button {
 
 }
 
+.graphic-buttons {
+    font-weight: bolder;
+    font-size: 16px !important;
+    background-color: var(--buttons--color--text--general);
+    height: 40px;
+    width: 210px;
+    margin-bottom: 199px;
+    margin-left: 80px;
+    display: flex;
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+}
 
 .side-button .memoryB {
     background-color: var(--buttons--color--general);
 
 }
 
-.side-button  {
+.side-button {
     background-color: var(--buttons--color--general);
 
 }
@@ -212,4 +226,3 @@ button {
     background-color: var(--secondary--darkmode) !important;
     /* Nota: --secondary--darkmode no definido */
 }
-

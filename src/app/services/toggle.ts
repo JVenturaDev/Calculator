@@ -32,7 +32,7 @@ export class ToggleService {
     return this.getToggle(name).value;
   }
 
-  private _activeCalc = new BehaviorSubject<CalcType>('basic');
+  private _activeCalc = new BehaviorSubject<CalcType>('graphic');
   readonly activeCalc$ = this._activeCalc.asObservable();
 
   setActiveCalc(calc: CalcType) {

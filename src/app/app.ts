@@ -8,12 +8,14 @@ import { TopBar } from './components/top-bar/top-bar';
 import { SidebarComponent } from './components/sidebar/sidebar';
 import { CalculatorScientificComponent } from './components/calculator-scientific/calculator-scientific';
 import { GraphicComponent } from './components/calculator-graphic/calculator-graphic';
+import { GraphicComponentPlot } from './components/graphic-plot/graphic-plot';
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
   standalone: true,
   imports: [
+    GraphicComponentPlot,
     GraphicComponent,
     CalculatorScientificComponent,
     TopBar,
