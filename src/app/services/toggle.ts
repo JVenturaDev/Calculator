@@ -7,6 +7,16 @@ export type AngleMode = 'RAD' | 'DEG' | 'GRAD';
 @Injectable({ providedIn: 'root' })
 export class ToggleService {
   private toggles: { [key: string]: BehaviorSubject<boolean> } = {};
+  private state = new BehaviorSubject<'graph' | 'history'>('graph');
+  state$ = this.state.asObservable();
+
+  GHtoggle() {
+    this.state.next(this.state.value === 'graph' ? 'history' : 'graph');
+  }
+
+  get current() {
+    return this.state.value;
+  }
 
   getToggle(name: string): BehaviorSubject<boolean> {
     if (!this.toggles[name]) {

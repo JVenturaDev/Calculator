@@ -118,9 +118,8 @@ body {
     z-index: 1;
 }
 
-.graficaa {
-    display: none;
-}
+
+
 
 .center {
     display: flex;
@@ -159,12 +158,8 @@ app-work-space {
 }
 
 app-calculator-basic {
-    width: 80%;
     justify-content: center;
     align-items: center;
     display: flex;
-    gap: 5px;
-
 
 }
-

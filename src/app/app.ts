@@ -9,12 +9,15 @@ import { SidebarComponent } from './components/sidebar/sidebar';
 import { CalculatorScientificComponent } from './components/calculator-scientific/calculator-scientific';
 import { GraphicComponent } from './components/calculator-graphic/calculator-graphic';
 import { GraphicComponentPlot } from './components/graphic-plot/graphic-plot';
+import { PolishNotationParserService } from './services/polish-notation-parser-service';
+import { ToggleService } from './services/toggle';
+import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
   standalone: true,
-  imports: [
+  imports: [CommonModule,
     GraphicComponentPlot,
     GraphicComponent,
     CalculatorScientificComponent,
@@ -29,6 +32,16 @@ import { GraphicComponentPlot } from './components/graphic-plot/graphic-plot';
 })
 export class AppComponent {
   inputValue: string = '';
+  currentView: 'graph' | 'history' = 'graph';
+
+  constructor(private parser: PolishNotationParserService,
+    private toggleService: ToggleService
+  ) { }
+
+  ngOnInit() {
+    this.toggleService.state$.subscribe(view => this.currentView = view);
+    this.parser.testPostfix("²√-9");
+  }
 
   handleKeyDown(event: KeyboardEvent) {
     if (event.key === 'Backspace') {

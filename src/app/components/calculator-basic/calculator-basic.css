@@ -77,6 +77,7 @@ button {
 }
 
 .basic {
+    width: 80% !important;
     margin-top: 90px;
     display: flex;
     align-items: center;
@@ -161,7 +162,7 @@ button {
 }
 
 
-.basic-memory{
+.basic-memory {
     margin-top: 35px;
 }
 

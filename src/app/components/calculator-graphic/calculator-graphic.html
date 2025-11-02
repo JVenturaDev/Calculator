@@ -1,121 +1,128 @@
 <section class="show-nt-grapic" *ngIf="isVisible">
-    <section class="grafica-moreButtons">
-        <div class="blackLite">
-            <button class="side-button button" (click)="handleButtonClick('acoth(')">coth<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('acsch(')">csch<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('asech(')">sech<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('asin(')">sin<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('acos(')">cos<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('atan(')">tan<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('asec(')">sec<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('acsc(')">csc<sup>-1</sup></button>
-        </div>
-        <div class="blackLite">
-            <button class="side-button button" (click)="handleButtonClick('acot(')">cot<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('asinh(')">sinh<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('acosh(')">cosh<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('atanh(')">tanh<sup>-1</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('coth(')">coth</button>
-            <button class="side-button button" (click)="handleButtonClick('csch(')">csch</button>
-            <button class="side-button button" (click)="handleButtonClick('sech(')">sech</button>
-            <button class="side-button button" (click)="handleButtonClick('sinh(')">sinh</button>
-        </div>
-        <div class="blackLite">
-            <button class="side-button button" (click)="handleButtonClick('cosh(')">cosh</button>
-            <button class="side-button button" (click)="handleButtonClick('tanh(')">tanh</button>
-            <button class="side-button button" (click)="handleButtonClick('sec(')">sec</button>
-            <button class="side-button button" (click)="handleButtonClick('cot(')">cot</button>
-            <button class="side-button button" (click)="handleButtonClick('csc(')">csc</button>
-            <button class="side-button button" (click)="handleButtonClick('sin(')">sin</button>
-            <button class="side-button button" (click)="handleButtonClick('cos(')">cos</button>
-            <button class="side-button button" (click)="handleButtonClick('tan(')">tan</button>
-        </div>
-        <div class="blackLite">
-            <button class="side-button button" (click)="handleButtonClick('e^(')">eˣ</button>
-            <button class="side-button button" (click)="handleButtonClick('xylog(')">log<sub>y</sub>x</button>
-            <button class="side-button button" (click)="handleButtonClick('2^x')">2<sup>x</sup></button>
-            <button class="side-button button" (click)="handleButtonClick('yroot(')">ʸ√x</button>
-            <button class="side-button button" (click)="handleButtonClick('∛')">∛x</button>
-            <button class="side-button button" (click)="handleButtonClick('³')">x³</button>
-            <button class="side-button button" (click)="handleButtonClick('ln(')">ln</button>
-            <button class="side-button button" (click)="handleButtonClick('log(')">log</button>
-        </div>
-        <div class="orange">
-            <button class="side-button button" (click)="handleButtonClick('10^')">10ˣ</button>
-            <button class="side-button button" (click)="handleButtonClick('pow(')">xʸ</button>
-            <button class="side-button button" (click)="handleButtonClick('²√')">²√x</button>
-            <button class="side-button button" (click)="handleButtonClick('²')">x²</button>
-            <button class="side-button button" (click)="handleButtonClick('|x|(')">|x|</button>
-            <button class="side-button button" (click)="handleButtonClick('⌊x⌋(')">⌊x⌋</button>
-            <button class="side-button button" (click)="handleButtonClick('⌈x⌉(')">⌈x⌉</button>
-            <button class="side-button button" (click)="handleButtonClick('→dms')">→dms</button>
-        </div>
-    </section>
-
-    <!-- Sección científica con memoria -->
-    <section class="grafica">
-        <div class="graphic-buttons" *ngIf="showInequalitySymbols">
-            <button class="side-button button" (click)="handleButtonClick('<')"><</button>
-            <button class="side-button button" (click)="handleButtonClick('≥')">≥</button>
-            <button class="side-button button" (click)="handleButtonClick('⩵')">⩵</button>
-            <button class="side-button button" (click)="handleButtonClick('≤')">≤</button>
-            <button class="side-button button" (click)="handleButtonClick('>')">></button>
-
-        </div>
-        <div class="blackLite-memory">
-            <button class="side-button btnInequality" (click)="showInequalitySymbols = !showInequalitySymbols">⋚</button>
-            <button class="side-button" (click)="showMemoryButtons = !showMemoryButtons">More</button>
-            <button class="side-button" (click)="toggleMemoryPanel()">M <!--<span
-            class="material-symbols-outlined">arrow_drop_down</span>--></button>
-            <div class="memoryButton" *ngIf="showMemoryButtons">
-                <button class="memoryB" (click)="clearMemory()">MC</button>
-                <button class="memoryB" (click)="recallLast()">MR</button>
-                <button class="memoryB" (click)="memoryPlus()">M+</button>
-                <button class="memoryB" (click)="memoryMinus()">M-</button>
-                <button class="memoryB" (click)="saveMemory()">MS</button>
+    <div class="graph-header">
+        <button class="btnHeaderShow" (click)="toggleHistory()">
+            {{ toggleService.current === 'graph' ? 'Historial' : 'Gráfica' }}
+        </button>
+    </div>
+    <section class="order">
+        <section class="grafica-moreButtons">
+            <div class="blackLite">
+                <button class="side-button button" (click)="handleButtonClick('acoth(')">coth<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('acsch(')">csch<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('asech(')">sech<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('asin(')">sin<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('acos(')">cos<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('atan(')">tan<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('asec(')">sec<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('acsc(')">csc<sup>-1</sup></button>
             </div>
-            <button class="side-button button" (click)="handleButtonClick('→deg')">→deg</button>
-            <button class="side-button button" (click)="handleButtonClick(',')">,</button>
-        </div>
+            <div class="blackLite">
+                <button class="side-button button" (click)="handleButtonClick('acot(')">cot<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('asinh(')">sinh<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('acosh(')">cosh<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('atanh(')">tanh<sup>-1</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('coth(')">coth</button>
+                <button class="side-button button" (click)="handleButtonClick('csch(')">csch</button>
+                <button class="side-button button" (click)="handleButtonClick('sech(')">sech</button>
+                <button class="side-button button" (click)="handleButtonClick('sinh(')">sinh</button>
+            </div>
+            <div class="blackLite">
+                <button class="side-button button" (click)="handleButtonClick('cosh(')">cosh</button>
+                <button class="side-button button" (click)="handleButtonClick('tanh(')">tanh</button>
+                <button class="side-button button" (click)="handleButtonClick('sec(')">sec</button>
+                <button class="side-button button" (click)="handleButtonClick('cot(')">cot</button>
+                <button class="side-button button" (click)="handleButtonClick('csc(')">csc</button>
+                <button class="side-button button" (click)="handleButtonClick('sin(')">sin</button>
+                <button class="side-button button" (click)="handleButtonClick('cos(')">cos</button>
+                <button class="side-button button" (click)="handleButtonClick('tan(')">tan</button>
+            </div>
+            <div class="blackLite">
+                <button class="side-button button" (click)="handleButtonClick('e^(')">eˣ</button>
+                <button class="side-button button" (click)="handleButtonClick('xylog(')">log<sub>y</sub>x</button>
+                <button class="side-button button" (click)="handleButtonClick('2^x')">2<sup>x</sup></button>
+                <button class="side-button button" (click)="handleButtonClick('yroot(')">ʸ√x</button>
+                <button class="side-button button" (click)="handleButtonClick('∛')">∛x</button>
+                <button class="side-button button" (click)="handleButtonClick('³')">x³</button>
+                <button class="side-button button" (click)="handleButtonClick('ln(')">ln</button>
+                <button class="side-button button" (click)="handleButtonClick('log(')">log</button>
+            </div>
+            <div class="orange">
+                <button class="side-button button" (click)="handleButtonClick('10^')">10ˣ</button>
+                <button class="side-button button" (click)="handleButtonClick('pow(')">xʸ</button>
+                <button class="side-button button" (click)="handleButtonClick('²√')">²√x</button>
+                <button class="side-button button" (click)="handleButtonClick('²')">x²</button>
+                <button class="side-button button" (click)="handleButtonClick('|x|(')">|x|</button>
+                <button class="side-button button" (click)="handleButtonClick('⌊x⌋(')">⌊x⌋</button>
+                <button class="side-button button" (click)="handleButtonClick('⌈x⌉(')">⌈x⌉</button>
+                <button class="side-button button" (click)="handleButtonClick(',')">,</button>
+            </div>
+        </section>
 
-        <div class="blackLite">
-            <button class="color-button button" (click)="handleButtonClick('π')">π</button>
-            <button class="color-button button" (click)="handleButtonClick('1/')">1/x</button>
-            <button class="color-button button" (click)="handleButtonClick('(')">(</button>
-            <button class="digit-button button" (click)="handleButtonClick('7')">7</button>
-            <button class="digit-button button" (click)="handleButtonClick('4')">4</button>
-            <button class="digit-button button" (click)="handleButtonClick('1')">1</button>
-            <button class="digit-button button" (click)="handleButtonClick('-')">(-)</button>
-        </div>
+        <!-- Sección científica con memoria -->
+        <section class="grafica">
+            <div class="graphic-buttons" *ngIf="showInequalitySymbols">
+                <button class="side-button button" (click)="handleButtonClick('<')">
+                    < </button>
+                        <button class="side-button button" (click)="handleButtonClick('≥')">≥</button>
+                        <button class="side-button button" (click)="handleButtonClick('⩵')">⩵</button>
+                        <button class="side-button button" (click)="handleButtonClick('≤')">≤</button>
+                        <button class="side-button button" (click)="handleButtonClick('>')">></button>
 
-        <div class="blackLite">
-            <button class="color-button button" (click)="handleButtonClick('|x|(')">|x|</button>
-            <button class="color-button button" (click)="handleButtonClick('e')">e</button>
-            <button class="color-button button" (click)="handleButtonClick(')')">)</button>
-            <button class="digit-button button" (click)="handleButtonClick('8')">8</button>
-            <button class="digit-button button" (click)="handleButtonClick('5')">5</button>
-            <button class="digit-button button" (click)="handleButtonClick('2')">2</button>
-            <button class="digit-button button" (click)="handleButtonClick('0')">0</button>
-        </div>
+            </div>
+            <div class="blackLite-memory">
+                <button class="side-button btnInequality"
+                    (click)="showInequalitySymbols = !showInequalitySymbols">⋚</button>
+                <button class="side-button" (click)="showMemoryButtons = !showMemoryButtons">More</button>
+                <button class="side-button" (click)="toggleMemoryPanel()">M <!--<span
+            class="material-symbols-outlined">arrow_drop_down</span>--></button>
+                <div class="memoryButton" *ngIf="showMemoryButtons">
+                    <button class="memoryB" (click)="clearMemory()">MC</button>
+                    <button class="memoryB" (click)="recallLast()">MR</button>
+                    <button class="memoryB" (click)="memoryPlus()">M+</button>
+                    <button class="memoryB" (click)="memoryMinus()">M-</button>
+                    <button class="memoryB" (click)="saveMemory()">MS</button>
+                </div>
+            </div>
 
-        <div class="blackLite">
-            <button class="color-button button" (click)="handleButtonClick('AC')">CE</button>
-            <button class="color-button button" (click)="handleButtonClick('exp(')">EXP</button>
-            <button class="color-button button" (click)="handleButtonClick('⩵')">⩵</button>
-            <button class="digit-button button" (click)="handleButtonClick('9')">9</button>
-            <button class="digit-button button" (click)="handleButtonClick('6')">6</button>
-            <button class="digit-button button" (click)="handleButtonClick('3')">3</button>
-            <button class="digit-button button" (click)="handleButtonClick('.')">.</button>
-        </div>
+            <div class="blackLite">
+                <button class="color-button button" (click)="handleButtonClick('π')">π</button>
+                <button class="color-button button" (click)="handleButtonClick('1/')">1/x</button>
+                <button class="color-button button" (click)="handleButtonClick('(')">(</button>
+                <button class="digit-button button" (click)="handleButtonClick('7')">7</button>
+                <button class="digit-button button" (click)="handleButtonClick('4')">4</button>
+                <button class="digit-button button" (click)="handleButtonClick('1')">1</button>
+                <button class="digit-button button" (click)="handleButtonClick('-')">(-)</button>
+            </div>
 
-        <div class="orange">
-            <button class="color-button button" (click)="handleButtonClick('DEL')">DEL</button>
-            <button class="color-button button" (click)="handleButtonClick('MOD(')">MOD</button>
-            <button class="operation-button button" (click)="handleButtonClick('/')">/</button>
-            <button class="operation-button button" (click)="handleButtonClick('*')">*</button>
-            <button class="operation-button button" (click)="handleButtonClick('-')">-</button>
-            <button class="operation-button button" (click)="handleButtonClick('+')">+</button>
-            <button class="operation-button button" (click)="handleButtonClick('=')">=</button>
-        </div>
+            <div class="blackLite">
+                <button class="color-button button" (click)="handleButtonClick('e')">e</button>
+                <button class="color-button button" (click)="handleButtonClick('|x|(')">|x|</button>
+                <button class="color-button button" (click)="handleButtonClick(')')">)</button>
+                <button class="digit-button button" (click)="handleButtonClick('8')">8</button>
+                <button class="digit-button button" (click)="handleButtonClick('5')">5</button>
+                <button class="digit-button button" (click)="handleButtonClick('2')">2</button>
+                <button class="digit-button button" (click)="handleButtonClick('0')">0</button>
+            </div>
+
+            <div class="blackLite">
+                <button class="color-button button" (click)="handleButtonClick('AC')">C</button>
+                <button class="color-button button" (click)="handleButtonClick('x')">x</button>
+                <button class="color-button button" (click)="handleButtonClick('⩵')">⩵</button>
+                <button class="digit-button button" (click)="handleButtonClick('9')">9</button>
+                <button class="digit-button button" (click)="handleButtonClick('6')">6</button>
+                <button class="digit-button button" (click)="handleButtonClick('3')">3</button>
+                <button class="digit-button button" (click)="handleButtonClick('.')">.</button>
+            </div>
+
+            <div class="orange">
+                <button class="color-button button" (click)="handleButtonClick('DEL')">DEL</button>
+                <button class="color-button button" (click)="handleButtonClick('y')">y</button>
+                <button class="operation-button button" (click)="handleButtonClick('/')">/</button>
+                <button class="operation-button button" (click)="handleButtonClick('*')">*</button>
+                <button class="operation-button button" (click)="handleButtonClick('-')">-</button>
+                <button class="operation-button button" (click)="handleButtonClick('+')">+</button>
+                <button class="operation-button button" (click)="handleButtonClick('=')">=</button>
+            </div>
+        </section>
     </section>
 </section>

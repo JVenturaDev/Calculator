@@ -9,6 +9,8 @@ import { StateService } from '../../services/state-object';
 import Complex from 'complex.js';
 import { MemoryToggleService } from '../../services/memory-toggle';
 import { ToggleService, AngleMode } from '../../services/toggle';
+import { PolishNotationParserService } from '../../services/polish-notation-parser-service';
+import { Tokenizer } from '../../services/tokenizer';
 
 @Component({
   selector: 'app-graphic',
@@ -32,7 +34,9 @@ export class GraphicComponent implements OnInit, OnDestroy {
     private memoryToggle: MemoryToggleService,
     private toggle: ToggleService,
     public toggleService: ToggleService,
-    private elRef: ElementRef
+    private elRef: ElementRef,
+    private parserService: PolishNotationParserService,
+    private tokenizer: Tokenizer
   ) { }
 
   ngOnInit(): void {
@@ -42,6 +46,15 @@ export class GraphicComponent implements OnInit, OnDestroy {
     });
   }
 
+
+  toggleHistory() {
+    this.toggleService.GHtoggle();
+  }
+  private evalExpression(expr: string): number | Complex {
+    const tokens = this.tokenizer.tokenize(expr);
+    const postfix = this.parserService.toPostFix(tokens);
+    return this.parserService.evaluatePostFix(postfix);
+  }
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
@@ -50,21 +63,97 @@ export class GraphicComponent implements OnInit, OnDestroy {
     this.memoryToggle.toggle();
   }
 
-toggleInequalitySymbols(event?: MouseEvent) {
-  if (event) event.stopPropagation(); 
-  this.showInequalitySymbols = !this.showInequalitySymbols;
-}
-
-@HostListener('document:click', ['$event'])
-onClickAnywhere(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  const container = document.querySelector('.graphic-buttons'); 
-  const button = document.querySelector('.btnInequality');    
-
-  if (this.showInequalitySymbols && button && target !== button && container) {
-    this.showInequalitySymbols = false;
+  toggleInequalitySymbols(event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    this.showInequalitySymbols = !this.showInequalitySymbols;
   }
-}
+
+  @HostListener('document:click', ['$event'])
+  onClickAnywhere(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const container = document.querySelector('.graphic-buttons');
+    const button = document.querySelector('.btnInequality');
+
+    if (this.showInequalitySymbols && button && target !== button && container) {
+      this.showInequalitySymbols = false;
+    }
+  }
+  private preprocessExpression(expr: string): string {
+    let output = expr;
+
+    // 🔹 Funciones trigonométricas inversas
+    output = output
+      .replace(/\bacoth\(/g, 'acoth(')
+      .replace(/\bacsch\(/g, 'acsch(')
+      .replace(/\basech\(/g, 'asech(')
+      .replace(/\basin\(/g, 'asin(')
+      .replace(/\bacos\(/g, 'acos(')
+      .replace(/\batan\(/g, 'atan(')
+      .replace(/\basec\(/g, 'asec(')
+      .replace(/\bacsc\(/g, 'acsc(')
+      .replace(/\bacot\(/g, 'acot(');
+
+    // 🔹 Funciones hiperbólicas inversas
+    output = output
+      .replace(/\basinh\(/g, 'asinh(')
+      .replace(/\bacosh\(/g, 'acosh(')
+      .replace(/\batanh\(/g, 'atanh(');
+
+    // 🔹 Funciones hiperbólicas normales
+    output = output
+      .replace(/\bcoth\(/g, 'coth(')
+      .replace(/\bcsch\(/g, 'csch(')
+      .replace(/\bsech\(/g, 'sech(')
+      .replace(/\bsinh\(/g, 'sinh(')
+      .replace(/\bcosh\(/g, 'cosh(')
+      .replace(/\btanh\(/g, 'tanh(')
+      .replace(/\bsec\(/g, 'sec(')
+      .replace(/\bcot\(/g, 'cot(')
+      .replace(/\bcsc\(/g, 'csc(')
+      .replace(/\bsin\(/g, 'sin(')
+      .replace(/\bcos\(/g, 'cos(')
+      .replace(/\btan\(/g, 'tan(');
+
+    // 🔹 Exponenciales y logaritmos
+    output = output
+      .replace(/\be\^\(/g, 'exp(')
+      .replace(/\bxylog\(/g, 'logxy(')
+      .replace(/\bln\(/g, 'ln(')
+      .replace(/\blog\(/g, 'log(');
+
+    // 🔹 Raíces y potencias: se asegura que negativos se envuelvan
+    output = output
+      .replace(/²√(-?\d+(\.\d+)?)/g, 'sqrt($1)')
+      .replace(/∛(-?\d+(\.\d+)?)/g, 'cbrt($1)')
+      .replace(/(\d+(\.\d+)?)²/g, '($1**2)')
+      .replace(/(\d+(\.\d+)?)³/g, '($1**3)')
+      .replace(/2\^x/g, '(2**')
+      .replace(/10\^/g, '(10**')
+      .replace(/yroot\(/g, 'yroot(')
+      .replace(/pow\(/g, 'pow(');
+
+    // 🔹 Otras funciones
+    output = output
+      .replace(/\|x\|\(/g, 'abs(')
+      .replace(/⌊x⌋\(/g, 'floor(')
+      .replace(/⌈x⌉\(/g, 'ceil(');
+
+    // 🔹 Constantes
+    output = output
+      .replace(/\bπ\b/g, 'π')
+      .replace(/\be\b/g, 'e');
+
+    // 🔹 Signos negativos antes de exponentes o raíces
+    output = output.replace(/-(\d+(\.\d+)?)/g, '(-$1)');
+
+    // 🔹 Agregar paréntesis de cierre faltantes si detecta "func("
+    const openParens = (output.match(/\(/g) || []).length;
+    const closeParens = (output.match(/\)/g) || []).length;
+    const missing = openParens - closeParens;
+    if (missing > 0) output += ')'.repeat(missing);
+
+    return output;
+  }
 
 
   handleButtonClick(value: string): void {
@@ -89,8 +178,8 @@ onClickAnywhere(event: MouseEvent) {
 
         case '=':
           const expr = this.display.currentValue;
-          const replaced = this.engine.replaceFunction(expr);
-          const rawResult = this.engine.evalExpresion(replaced);
+          const preprocessed = this.preprocessExpression(expr);
+          const rawResult = this.evalExpression(preprocessed);
           const displayResult = rawResult instanceof Complex
             ? rawResult.toString().replace('=', '')
             : String(rawResult);

@@ -1,31 +1,65 @@
 // src/app/lib/buttonFunctions.ts
 import Complex from "complex.js";
 
+export const ButtonFunctions = {
+  factorial,
+  transformarArgumentosTrigo,
+  calcularInversoFromExpression,
+  invertirUltimoNumeroFromExpression,
+  obtenerModoAngulo,
+  DEG: Math.DEG,
+  DMS: Math.DMS,
+  raizCompleja: Math.raizCompleja,
+  raizCubicaCompleja: Math.raizCubicaCompleja,
+  mod: Math.mod,
+  EXPT: Math.EXPT,
+  logxy: Math.logxy,
+  sec: Math.sec,
+  cot: Math.cot,
+  csc: Math.csc,
+  asec: Math.asec,
+  acot: Math.acot,
+  acsc: Math.acsc,
+  sech: Math.sech,
+  coth: Math.coth,
+  csch: Math.csch,
+  acoth: Math.acoth,
+  asech: Math.asech,
+  acsch: Math.acsch,
+  sin: Math.sin,
+  cos: Math.cos,
+  tan: Math.tan,
+  ln: Math.log,
+  sqrt: Math.sqrt,
+  abs: Math.abs,
+  PI: Math.PI,
+  E: Math.E
+};
 // ----------------------------
 // Extensión de Math
 // ----------------------------
 declare global {
   interface Math {
-    ln?: (x: number) => number;
-    sec?: (x: number) => number;
-    cot?: (x: number) => number;
-    csc?: (x: number) => number;
-    asec?: (x: number) => number;
-    acot?: (x: number) => number;
-    acsc?: (x: number) => number;
-    sech?: (x: number) => number;
-    coth?: (x: number) => number;
-    csch?: (x: number) => number;
-    acoth?: (x: number) => number;
-    asech?: (x: number) => number;
-    acsch?: (x: number) => number;
-    logxy?: (x: number, y: number) => number;
-    EXPT?: (a: number, b: number) => number;
-    mod?: (a: number, b: number) => number;
-    DMS?: (x: number) => string;
-    DEG?: (g: number, m: number, s: number) => number;
-    raizCompleja?: (x: number) => number | Complex;
-    raizCubicaCompleja?: (x: number) => number | Complex;
+    ln: (x: number) => number;
+    sec: (x: number) => number;
+    cot: (x: number) => number;
+    csc: (x: number) => number;
+    asec: (x: number) => number;
+    acot: (x: number) => number;
+    acsc: (x: number) => number;
+    sech: (x: number) => number;
+    coth: (x: number) => number;
+    csch: (x: number) => number;
+    acoth: (x: number) => number;
+    asech: (x: number) => number;
+    acsch: (x: number) => number;
+    logxy: (x: number, y: number) => number;
+    EXPT: (a: number, b: number) => number;
+    mod: (a: number, b: number) => number;
+    DMS: (x: number) => number;
+    DEG: (g: number, m: number, s: number) => number;
+    raizCompleja: (x: number) => number | Complex;
+    raizCubicaCompleja: (x: number) => number | Complex;
   }
 }
 
@@ -52,13 +86,14 @@ Math.logxy = (x: number, y: number) => Math.log(x) / Math.log(y);
 Math.EXPT = (a: number, b: number) => a * Math.pow(10, b);
 Math.mod = (a: number, b: number) => ((a % b) + b) % b;
 Math.DEG = (g: number, m: number, s: number): number => g + m / 60 + s / 3600;
-Math.DMS = (x: number): string => {
+Math.DMS = (x: number): number => {
   const grados = Math.floor(x);
   const minutosDecimal = (x - grados) * 60;
   const minutos = Math.floor(minutosDecimal);
   const segundos = (minutosDecimal - minutos) * 60;
-  return `${grados}° ${minutos}' ${segundos.toFixed(2)}"`;
+  return grados + minutos / 60 + segundos / 3600; // todo en grados decimales
 };
+
 
 if (typeof Math.ln !== "function") {
   Math.ln = (x: number) => Math.log(x);
@@ -70,7 +105,7 @@ Math.raizCubicaCompleja = (x: number) => (x >= 0 ? Math.cbrt(x) : new Complex(x,
 // ----------------------------
 // Funciones auxiliares
 // ----------------------------
-function factorial(n: number): number {
+export function factorial(n: number): number {
   if (n <= 1) return 1;
   return n * factorial(n - 1);
 }
@@ -86,6 +121,25 @@ export function evalExpresion(expresion: string): number | Complex {
     throw error;
   }
 }
+export function evalExpressionWithVariables(
+  expression: string,
+  variables: Record<string, number> = {}
+): number | Complex {
+  try {
+    let replacedExpression = replaceFunction(expression);
+
+    // Replace variables in the expression
+    for (const [variableName, value] of Object.entries(variables)) {
+      const regex = new RegExp(`\\b${variableName}\\b`, "g");
+      replacedExpression = replacedExpression.replace(regex, `(${value})`);
+    }
+    return evalExpresion(replacedExpression);
+  } catch (error) {
+    console.error("Error evaluating expression with variables:", error);
+    return NaN;
+  }
+}
+
 
 
 // ----------------------------
@@ -94,6 +148,7 @@ export function evalExpresion(expresion: string): number | Complex {
 export function replaceFunction(expresion: string,): string {
   let output: string = expresion;
   output = output
+    .replace(/(\d)([a-zA-Z])/g, '$1*$2')
     .replaceAll("pow(", "Math.pow(")
     .replaceAll("xylog(", "Math.logxy(")
     .replace(/(\d+\.?\d*)→dms/g, "Math.DMS($1)")

@@ -3,12 +3,18 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: 500px;
+  max-width: 480px;
+  height: 700px;
+}
+
+svg.main-svg {
+  max-width: 480px !important;
+  background-color: transparent;
   height: 700px;
 }
 
 .graphic-container {
-  max-width: 500px;
+  max-width: 95%;
   height: 700px;
 
   display: flex;
@@ -18,9 +24,11 @@
 }
 
 /* graphic-plot.css */
+.draglayer {
+  position: absolute !important;
+}
 
 .plot-container {
- 
-    max-width: 500px;
-    height: 700px;
+  max-width: 96%;
+  height: 700px;
 }

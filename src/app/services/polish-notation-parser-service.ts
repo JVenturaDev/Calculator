@@ -1,0 +1,198 @@
+import { Injectable } from '@angular/core';
+import { Token, Tokenizer } from './tokenizer';
+import { ButtonFunctions, factorial } from '../lib/buttonFunctions';
+import Complex from 'complex.js';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class PolishNotationParserService {
+  constructor(
+    private tokenizer: Tokenizer
+  ) { }
+  public testPostfix(expression: string): void {
+    const tokens = this.tokenizer.tokenize(expression);
+    console.log('Tokens:', tokens);
+    const postfix = this.toPostFix(tokens);
+    console.log('Postfija:', postfix.map(t => t.value).join(' '));
+  }
+
+  public toPostFix(tokens: Token[]): Token[] {
+    const output: Token[] = [];
+    const opStack: Token[] = [];
+    const precedence: Record<string, number> = {
+      '^': 4,
+      '*': 3,
+      '/': 3,
+      '-': 2,
+      '+': 2,
+    };
+    const rigthassociative: Record<string, boolean> = {
+      '^': true,
+      '*': false,
+      '/': false,
+      '+': false,
+      '-': false
+    }
+    for (const token of tokens) {
+      if (token.type === 'number' || token.type === 'variable') {
+        output.push(token);
+      } else if (token.type === 'function') {
+        opStack.push(token);
+      } else if (token.type === 'operator') {
+        while (opStack.length > 0 && opStack[opStack.length - 1].type === 'operator' &&
+          (
+            (precedence[opStack[opStack.length - 1].value] > precedence[token.value]) ||
+            (precedence[opStack[opStack.length - 1].value] === precedence[token.value] && !rigthassociative[token.value])
+          )
+        ) {
+          output.push(opStack.pop()!)
+        }
+        opStack.push(token);
+      } else if (token.type === 'paren') {
+        if (token.value === '(') {
+          opStack.push(token);
+        } else if (token.value == ')') {
+          while (opStack.length > 0 && opStack[opStack.length - 1].value !== '(') {
+            output.push(opStack.pop()!);
+          }
+          opStack.pop();
+          if (opStack.length > 0 && opStack[opStack.length - 1].type === 'function') {
+            output.push(opStack.pop()!);
+          }
+        }
+      }
+    }
+    while (opStack.length > 0) {
+      const op = opStack.pop()!;
+      if (op.value === '(' || op.value === ')') {
+        throw new Error('Paréntesis desbalanceados');
+      }
+      output.push(op);
+    }
+    return output;
+  }
+  public evaluatePostFix(tokens: Token[], variables: Record<string, number> = {}): number | Complex {
+    const stack: (number | Complex)[] = [];
+    const toReal = (val: number | Complex): Complex => {
+      if (val instanceof Complex) return val;
+      return new Complex(val);
+    };
+
+    for (const token of tokens) {
+      if (token.type === 'number') {
+        stack.push(Number(token.value));
+      } else if (token.type === 'variable') {
+        if (token.value === 'π') stack.push(Math.PI);
+        else if (token.value === 'e') stack.push(Math.E);
+        else if (variables[token.value] !== undefined) stack.push(variables[token.value]);
+        else throw new Error(`Variable no definida: ${token.value}`);
+      } else if (token.type === 'operator') {
+        const b = stack.pop();
+        const a = stack.pop();
+        if (a === undefined || b === undefined)
+          throw new Error('Error: operandos insuficientes');
+        stack.push(this.applyOperation(token.value, a, b));
+      } else if (token.type === 'function') {
+        const a = stack.pop();
+        if (a === undefined) throw new Error(`Argumento faltante para ${token.value}`);
+
+        switch (token.value) {
+          // Funciones trigonométricas
+          case 'sin': stack.push(Math.sin(toReal(a).re)); break;
+          case 'cos': stack.push(Math.cos(toReal(a).re)); break;
+          case 'tan': stack.push(Math.tan(toReal(a).re)); break;
+          case 'asin': stack.push(Math.asin(toReal(a).re)); break;
+          case 'acos': stack.push(Math.acos(toReal(a).re)); break;
+          case 'atan': stack.push(Math.atan(toReal(a).re)); break;
+          case 'asec': stack.push(Math.asec(toReal(a).re)); break;
+          case 'acsc': stack.push(Math.acsc(toReal(a).re)); break;
+          case 'acot': stack.push(Math.acot(toReal(a).re)); break;
+          case 'sinh': stack.push(Math.sinh(toReal(a).re)); break;
+          case 'cosh': stack.push(Math.cosh(toReal(a).re)); break;
+          case 'tanh': stack.push(Math.tanh(toReal(a).re)); break;
+          case 'sech': stack.push(Math.sech(toReal(a).re)); break;
+          case 'csch': stack.push(Math.csch(toReal(a).re)); break;
+          case 'coth': stack.push(Math.coth(toReal(a).re)); break;
+          case 'asinh': stack.push(Math.asinh(toReal(a).re)); break;
+          case 'acosh': stack.push(Math.acosh(toReal(a).re)); break;
+          case 'atanh': stack.push(Math.atanh(toReal(a).re)); break;
+          case 'asech': stack.push(Math.asech(toReal(a).re)); break;
+          case 'acsch': stack.push(Math.acsch(toReal(a).re)); break;
+          case 'acoth': stack.push(Math.acoth(toReal(a).re)); break;
+
+          // Funciones matemáticas
+
+          case 'ln': stack.push(Math.log(toReal(a).re)); break;
+          case 'log': stack.push(Math.log10(toReal(a).re)); break;
+          case 'sqrt': stack.push(toReal(a).sqrt());break;
+          case 'cbrt':stack.push(toReal(a).pow(new Complex(1 / 3)));  break;
+          case 'abs': stack.push(Math.abs(toReal(a).re)); break;
+          case '%': stack.push(toReal(a).re * 0.01); break;
+          case '!': stack.push(factorial(toReal(a).re)); break;
+
+          // Funciones de varios argumentos
+          case 'logxy': {
+            const y = stack.pop();
+            if (y === undefined) throw new Error("Argumento faltante para logxy");
+            stack.push(Math.logxy(toReal(a).re, toReal(y).re));
+            break;
+          }
+          case 'exp': {
+            const b = stack.pop();
+            if (b === undefined) throw new Error("Argumento faltante para exp");
+            stack.push(Math.EXPT(toReal(a).re, toReal(b).re));
+            break;
+          }
+          case 'yroot': {
+            const y = stack.pop();
+            if (y === undefined) throw new Error("Argumento faltante para yroot");
+            stack.push(Math.pow(toReal(a).re, 1 / toReal(y).re));
+            break;
+          }
+          case 'deg': {
+            const s = stack.pop();
+            const m = stack.pop();
+            const g = stack.pop();
+            if (g === undefined || m === undefined || s === undefined)
+              throw new Error("Argumento faltante para DEG");
+            stack.push(Math.DEG(toReal(g).re, toReal(m).re, toReal(s).re));
+            break;
+          }
+          case 'mod': {
+            const b = stack.pop();
+            if (b === undefined) throw new Error("Argumento faltante para mod");
+            stack.push(Math.mod(toReal(a).re, toReal(b).re));
+            break;
+          }
+          case 'dms':
+            stack.push(Math.DMS(toReal(a).re));
+            break;
+
+          default:
+            throw new Error(`Función desconocida: ${token.value}`);
+        }
+      }
+    }
+
+    if (stack.length !== 1)
+      throw new Error('Error: expresión mal formada');
+
+    return stack[0];
+  }
+  private applyOperation(op: string, a: number | Complex, b: number | Complex): number | Complex {
+    const A = a instanceof Complex ? a : new Complex(a);
+    const B = b instanceof Complex ? b : new Complex(b);
+
+    switch (op) {
+      case '+': return A.add(B);
+      case '-': return A.sub(B);
+      case '*': return A.mul(B);
+      case '/': return A.div(B);
+      case '^': return A.pow(B);
+      default: throw new Error(`Operador desconocido: ${op}`);
+    }
+  }
+
+
+}

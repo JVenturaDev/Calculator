@@ -97,7 +97,7 @@ body {
     display: none;
 }
 
-@media (max-width:500px) {
+ @media (max-width:500px) {
     .main-container {
         display: flex;
         justify-content: space-around;
@@ -231,13 +231,6 @@ body {
         justify-content: center;
         height: 170px;
     }
-
-    /* .show {
-        display: flex !important;
-    }
-    .hidden {
-        display: none !important;
-    } */
     .scientific {
         display: none;
         align-items: center;
@@ -361,7 +354,6 @@ body {
         color: var(--text--display);
         text-align: right;
         background-color: var(--body--display);
-        /* Nota: --bg-display no definido */
         border-radius: 3px;
     }
 
@@ -532,11 +524,9 @@ body {
         transition: background 0.2s;
     }
 
-    /* Botones generales */
     button {
         width: 100%;
         color: var(--primary--darkmode);
-        /* Nota: --primary--darkmode no definido */
         font-weight: 700;
         border: none;
         border-radius: 2px;
@@ -570,4 +560,4 @@ body {
         background-color: transparent;
         color: var(--secondary);
     }
-}
+} 

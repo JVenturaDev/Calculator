@@ -95,8 +95,6 @@ export class CalculatorScientificComponent implements OnInit, OnDestroy {
           this.stateService.update({ expression: expr, result: stateResult });
           this.history.agregarId(expr, stateResult);
           return;
-
-
         default:
           this.display.appendValue(value);
           this.stateService.update({ expression: this.display.currentValue });
