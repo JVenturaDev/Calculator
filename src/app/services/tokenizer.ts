@@ -29,9 +29,7 @@ export class Tokenizer {
     for (let i = 0; i < expression.length; i++) {
       const char = expression[i];
 
-      // 🔹 Operadores
       if (this.operators.includes(char)) {
-        // Manejar signo negativo como parte del número
         if (char === '-' &&
           (!lastToken || lastToken.type === 'operator' || lastToken.value === '(')) {
           current += char;
@@ -53,18 +51,7 @@ export class Tokenizer {
       else if (char.match(/[0-9.]/)) {
         current += char;
       }
-
-      else if (char.match(/[a-zA-Z]/)) {
-        if (current) {
-          if (current.match(/[0-9]$/)) {
-            tokens.push({ type: 'number', value: current });
-            tokens.push({ type: 'operator', value: '*' });
-            current = '';
-          } else {
-            tokens.push(this.createToken(current));
-            current = '';
-          }
-        }
+      else if (/[a-zA-Z]/.test(char)) {
         current += char;
       }
       else if (char === '(' || char === ')') {
@@ -79,13 +66,11 @@ export class Tokenizer {
         lastToken = token;
       }
 
-      // 🔹 Ignorar espacios
       else if (char === ' ') {
         continue;
       }
     }
 
-    // Último token pendiente
     if (current) {
       const token = this.createToken(current);
       tokens.push(token);

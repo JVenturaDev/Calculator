@@ -41,6 +41,7 @@ export class AppComponent {
   ngOnInit() {
     this.toggleService.state$.subscribe(view => this.currentView = view);
     this.parser.testPostfix("²√-9");
+    
   }
 
   handleKeyDown(event: KeyboardEvent) {

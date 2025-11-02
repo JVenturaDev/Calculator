@@ -81,7 +81,6 @@ export class GraphicComponent implements OnInit, OnDestroy {
   private preprocessExpression(expr: string): string {
     let output = expr;
 
-    // 🔹 Funciones trigonométricas inversas
     output = output
       .replace(/\bacoth\(/g, 'acoth(')
       .replace(/\bacsch\(/g, 'acsch(')
@@ -93,13 +92,11 @@ export class GraphicComponent implements OnInit, OnDestroy {
       .replace(/\bacsc\(/g, 'acsc(')
       .replace(/\bacot\(/g, 'acot(');
 
-    // 🔹 Funciones hiperbólicas inversas
     output = output
       .replace(/\basinh\(/g, 'asinh(')
       .replace(/\bacosh\(/g, 'acosh(')
       .replace(/\batanh\(/g, 'atanh(');
 
-    // 🔹 Funciones hiperbólicas normales
     output = output
       .replace(/\bcoth\(/g, 'coth(')
       .replace(/\bcsch\(/g, 'csch(')
@@ -114,14 +111,12 @@ export class GraphicComponent implements OnInit, OnDestroy {
       .replace(/\bcos\(/g, 'cos(')
       .replace(/\btan\(/g, 'tan(');
 
-    // 🔹 Exponenciales y logaritmos
     output = output
       .replace(/\be\^\(/g, 'exp(')
       .replace(/\bxylog\(/g, 'logxy(')
       .replace(/\bln\(/g, 'ln(')
       .replace(/\blog\(/g, 'log(');
 
-    // 🔹 Raíces y potencias: se asegura que negativos se envuelvan
     output = output
       .replace(/²√(-?\d+(\.\d+)?)/g, 'sqrt($1)')
       .replace(/∛(-?\d+(\.\d+)?)/g, 'cbrt($1)')
@@ -132,21 +127,17 @@ export class GraphicComponent implements OnInit, OnDestroy {
       .replace(/yroot\(/g, 'yroot(')
       .replace(/pow\(/g, 'pow(');
 
-    // 🔹 Otras funciones
     output = output
       .replace(/\|x\|\(/g, 'abs(')
       .replace(/⌊x⌋\(/g, 'floor(')
       .replace(/⌈x⌉\(/g, 'ceil(');
 
-    // 🔹 Constantes
     output = output
       .replace(/\bπ\b/g, 'π')
       .replace(/\be\b/g, 'e');
 
-    // 🔹 Signos negativos antes de exponentes o raíces
     output = output.replace(/-(\d+(\.\d+)?)/g, '(-$1)');
 
-    // 🔹 Agregar paréntesis de cierre faltantes si detecta "func("
     const openParens = (output.match(/\(/g) || []).length;
     const closeParens = (output.match(/\)/g) || []).length;
     const missing = openParens - closeParens;
@@ -201,7 +192,6 @@ export class GraphicComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🔹 Funciones de memoria
   async saveMemory() {
     const resultado = Number(this.stateService.value.result);
     const expresion = this.stateService.value.expression || String(resultado);

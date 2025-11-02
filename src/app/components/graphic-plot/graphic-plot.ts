@@ -24,10 +24,8 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    // Mostrar ejemplo inicial
     this.renderExampleGraph();
 
-    // Suscribirse al valor del display
     this.sub = this.display.value$.subscribe(val => {
       this.expression = val;
       this.updateGraph();
@@ -38,7 +36,6 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  // 🔹 Evalúa la expresión y decide el tipo de gráfica
   updateGraph(): void {
     const expr = this.expression.trim();
     if (!expr) {
@@ -126,7 +123,6 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
     Plotly.newPlot(this.plotContainer.nativeElement, [trace], layout, { responsive: true });
   }
 
-  // 🔹 Función auxiliar para generar rangos
   linspace(start: number, end: number, num: number): number[] {
     const arr = [];
     const step = (end - start) / (num - 1);
@@ -134,7 +130,6 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
     return arr;
   }
 
-  // 🔹 Gráfica inicial de ejemplo
   renderExampleGraph(): void {
     const xValues = this.linspace(-10, 10, 100);
     const yValues = xValues.map(x => Math.sin(x));
