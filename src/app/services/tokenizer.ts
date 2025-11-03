@@ -48,12 +48,15 @@ export class Tokenizer {
         lastToken = token;
       }
 
-      else if (char.match(/[0-9.]/)) {
+      else if (/[0-9.]/.test(char)) {
         current += char;
       }
+
       else if (/[a-zA-Z]/.test(char)) {
         current += char;
       }
+
+      // 🔹 Paréntesis
       else if (char === '(' || char === ')') {
         if (current) {
           const token = this.createToken(current);
@@ -66,9 +69,7 @@ export class Tokenizer {
         lastToken = token;
       }
 
-      else if (char === ' ') {
-        continue;
-      }
+      else if (char === ' ') continue;
     }
 
     if (current) {
@@ -76,8 +77,22 @@ export class Tokenizer {
       tokens.push(token);
     }
 
-    return tokens;
+    const finalTokens: Token[] = [];
+    for (let i = 0; i < tokens.length; i++) {
+      finalTokens.push(tokens[i]);
+      if (i < tokens.length - 1) {
+        const cur = tokens[i];
+        const next = tokens[i + 1];
+        if ((cur.type === 'number' && (next.type === 'variable' || next.type === 'function')) ||
+          (cur.type === 'paren' && cur.value === ')' && (next.type === 'variable' || next.type === 'function' || (next.type === 'paren' && next.value === '(')))) {
+          finalTokens.push({ type: 'operator', value: '*' });
+        }
+      }
+    }
+
+    return finalTokens;
   }
+
 
   private createToken(str: string): Token {
     if (!isNaN(Number(str))) {
