@@ -47,16 +47,36 @@ export class Tokenizer {
         tokens.push(token);
         lastToken = token;
       }
+      else if (/[<>⩵≠≤≥]/.test(char)) {
+        if (current) {
+          tokens.push(this.createToken(current));
+          current = '';
+        }
+
+        let op = char;
+        const next = expression[i + 1];
+        if ((char === '<' || char === '>') && next === '=') {
+          op += '=';
+          i++;
+        } else if (char === '=' && next === '=') {
+          op = '==';
+          i++;
+        }
+
+        tokens.push({ type: 'operator', value: op });
+      }
 
       else if (/[0-9.]/.test(char)) {
         current += char;
       }
-
-      else if (/[a-zA-Z]/.test(char)) {
+      else if (/[a-zA-Zπ]/.test(char)) {
+        if (current && !isNaN(Number(current))) {
+          tokens.push(this.createToken(current));
+          tokens.push({ type: 'operator', value: '*' }); 
+          current = '';
+        }
         current += char;
       }
-
-      // 🔹 Paréntesis
       else if (char === '(' || char === ')') {
         if (current) {
           const token = this.createToken(current);
@@ -97,6 +117,9 @@ export class Tokenizer {
   private createToken(str: string): Token {
     if (!isNaN(Number(str))) {
       return { type: 'number', value: str };
+    }
+    if (str === 'π' || str.toLowerCase() === 'pi') {
+      return { type: 'number', value: String(Math.PI) };
     }
     if (this.functions.includes(str)) {
       return { type: 'function', value: str };

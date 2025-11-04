@@ -80,20 +80,30 @@ export class PolishNotationParserService {
     };
 
     for (const token of tokens) {
+      // number if
       if (token.type === 'number') {
         stack.push(Number(token.value));
-      } else if (token.type === 'variable') {
+      }
+      // var if
+      else if (token.type === 'variable') {
         if (token.value === 'π') stack.push(Math.PI);
         else if (token.value === 'e') stack.push(Math.E);
-        else if (variables[token.value] !== undefined) stack.push(variables[token.value]);
-        else throw new Error(`Variable no definida: ${token.value}`);
-      } else if (token.type === 'operator') {
+        else if (variables && Object.prototype.hasOwnProperty.call(variables, token.value)) {
+          stack.push(variables[token.value]);
+        } else {
+          throw new Error(`Variable no definida: ${token.value}`);
+        }
+      }
+      // operator if
+      else if (token.type === 'operator') {
         const b = stack.pop();
         const a = stack.pop();
         if (a === undefined || b === undefined)
           throw new Error('Error: operandos insuficientes');
         stack.push(this.applyOperation(token.value, a, b));
-      } else if (token.type === 'function') {
+      }
+      // function if
+      else if (token.type === 'function') {
         const a = stack.pop();
         if (a === undefined) throw new Error(`Argumento faltante para ${token.value}`);
 
@@ -125,8 +135,8 @@ export class PolishNotationParserService {
 
           case 'ln': stack.push(Math.log(toReal(a).re)); break;
           case 'log': stack.push(Math.log10(toReal(a).re)); break;
-          case 'sqrt': stack.push(toReal(a).sqrt());break;
-          case 'cbrt':stack.push(toReal(a).pow(new Complex(1 / 3)));  break;
+          case 'sqrt': stack.push(toReal(a).sqrt()); break;
+          case 'cbrt': stack.push(toReal(a).pow(new Complex(1 / 3))); break;
           case 'abs': stack.push(Math.abs(toReal(a).re)); break;
           case '%': stack.push(toReal(a).re * 0.01); break;
           case '!': stack.push(factorial(toReal(a).re)); break;
@@ -190,9 +200,17 @@ export class PolishNotationParserService {
       case '*': return A.mul(B);
       case '/': return A.div(B);
       case '^': return A.pow(B);
-      default: throw new Error(`Operador desconocido: ${op}`);
+      case '<': return a < b ? 1 : 0;
+      case '>': return a > b ? 1 : 0;
+      case '≤': return a <= b ? 1 : 0;
+      case '≥': return a >= b ? 1 : 0;
+      case '=':
+      case '==':
+      case '⩵':
+        return a === b ? 1 : 0;
+      case '≠': return a !== b ? 1 : 0;
+      default:
+        throw new Error(`Operador desconocido: ${op}`);
     }
   }
-
-
 }

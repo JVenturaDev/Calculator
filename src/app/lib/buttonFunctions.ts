@@ -1,5 +1,7 @@
 // src/app/lib/buttonFunctions.ts
 import Complex from "complex.js";
+import { PolishNotationParserService } from "../services/polish-notation-parser-service";
+import { Tokenizer } from "../services/tokenizer";
 
 export const ButtonFunctions = {
   factorial,
@@ -121,6 +123,8 @@ export function evalExpresion(expresion: string): number | Complex {
     throw error;
   }
 }
+
+
 export function evalExpressionWithVariables(
   expression: string,
   variables: Record<string, number> = {}
@@ -128,17 +132,23 @@ export function evalExpressionWithVariables(
   try {
     let replacedExpression = replaceFunction(expression);
 
-    // Replace variables in the expression
+    if (!('x' in variables)) variables['x'] = 0;
+    if (!('y' in variables)) variables['y'] = 0;
+
+
     for (const [variableName, value] of Object.entries(variables)) {
       const regex = new RegExp(`\\b${variableName}\\b`, "g");
       replacedExpression = replacedExpression.replace(regex, `(${value})`);
     }
+
     return evalExpresion(replacedExpression);
   } catch (error) {
     console.error("Error evaluating expression with variables:", error);
     return NaN;
   }
 }
+
+
 
 
 

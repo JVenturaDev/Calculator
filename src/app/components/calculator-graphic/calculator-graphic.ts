@@ -50,11 +50,12 @@ export class GraphicComponent implements OnInit, OnDestroy {
   toggleHistory() {
     this.toggleService.GHtoggle();
   }
-  private evalExpression(expr: string): number | Complex {
+  private evalExpression(expr: string, variables: Record<string, number> = {}): number | Complex {
     const tokens = this.tokenizer.tokenize(expr);
     const postfix = this.parserService.toPostFix(tokens);
-    return this.parserService.evaluatePostFix(postfix);
+    return this.parserService.evaluatePostFix(postfix, variables);
   }
+
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
@@ -170,7 +171,11 @@ export class GraphicComponent implements OnInit, OnDestroy {
         case '=':
           const expr = this.display.currentValue;
           const preprocessed = this.preprocessExpression(expr);
-          const rawResult = this.evalExpression(preprocessed);
+
+
+          const variables = { x: 5 }; 
+          const rawResult = this.evalExpression(preprocessed, variables);
+
           const displayResult = rawResult instanceof Complex
             ? rawResult.toString().replace('=', '')
             : String(rawResult);
@@ -181,7 +186,6 @@ export class GraphicComponent implements OnInit, OnDestroy {
           this.stateService.update({ expression: expr, result: stateResult });
           this.history.agregarId(expr, stateResult);
           return;
-
         default:
           this.display.appendValue(value);
           this.stateService.update({ expression: this.display.currentValue });

@@ -99,6 +99,8 @@ button {
 .btnHeaderShow {
     width: 89px;
     margin-right: 40px;
+    background-color: transparent;
+    border: none;
 }
 
 .show-nt-grapic {
