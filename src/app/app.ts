@@ -40,7 +40,7 @@ export class AppComponent {
 
   ngOnInit() {
     this.toggleService.state$.subscribe(view => this.currentView = view);
-    this.parser.testPostfix("5x");
+    this.parser.testPostfix("x5");
     
   }
 

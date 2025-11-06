@@ -28,33 +28,28 @@ export class Tokenizer {
 
     for (let i = 0; i < expression.length; i++) {
       const char = expression[i];
+      const next = expression[i + 1];
 
       if (this.operators.includes(char)) {
-        if (char === '-' &&
-          (!lastToken || lastToken.type === 'operator' || lastToken.value === '(')) {
+        if (char === '-' && (!lastToken || lastToken.type === 'operator' || lastToken.value === '(')) {
           current += char;
           continue;
         }
-
         if (current) {
-          const token = this.createToken(current);
-          tokens.push(token);
-          lastToken = token;
+          tokens.push(this.createToken(current));
+          lastToken = tokens[tokens.length - 1];
           current = '';
         }
-
-        const token: Token = { type: 'operator', value: char };
-        tokens.push(token);
-        lastToken = token;
+        tokens.push({ type: 'operator', value: char });
+        lastToken = tokens[tokens.length - 1];
       }
+
       else if (/[<>⩵≠≤≥]/.test(char)) {
         if (current) {
           tokens.push(this.createToken(current));
           current = '';
         }
-
         let op = char;
-        const next = expression[i + 1];
         if ((char === '<' || char === '>') && next === '=') {
           op += '=';
           i++;
@@ -62,31 +57,35 @@ export class Tokenizer {
           op = '==';
           i++;
         }
-
         tokens.push({ type: 'operator', value: op });
       }
 
       else if (/[0-9.]/.test(char)) {
+        if (current && /[a-zA-Zπ]/.test(current[current.length - 1])) {
+          tokens.push(this.createToken(current));
+          tokens.push({ type: 'operator', value: '*' });
+          current = '';
+        }
         current += char;
       }
+
       else if (/[a-zA-Zπ]/.test(char)) {
         if (current && !isNaN(Number(current))) {
           tokens.push(this.createToken(current));
-          tokens.push({ type: 'operator', value: '*' }); 
+          tokens.push({ type: 'operator', value: '*' });
           current = '';
         }
         current += char;
       }
+
       else if (char === '(' || char === ')') {
         if (current) {
-          const token = this.createToken(current);
-          tokens.push(token);
-          lastToken = token;
+          tokens.push(this.createToken(current));
+          lastToken = tokens[tokens.length - 1];
           current = '';
         }
-        const token: Token = { type: 'paren', value: char };
-        tokens.push(token);
-        lastToken = token;
+        tokens.push({ type: 'paren', value: char });
+        lastToken = tokens[tokens.length - 1];
       }
 
       else if (char === ' ') continue;
@@ -103,16 +102,22 @@ export class Tokenizer {
       if (i < tokens.length - 1) {
         const cur = tokens[i];
         const next = tokens[i + 1];
-        if ((cur.type === 'number' && (next.type === 'variable' || next.type === 'function')) ||
-          (cur.type === 'paren' && cur.value === ')' && (next.type === 'variable' || next.type === 'function' || (next.type === 'paren' && next.value === '(')))) {
+        if (
+          (cur.type === 'number' && (next.type === 'variable' || next.type === 'function' ||
+            (next.type === 'paren' && next.value === '('))) ||
+          (cur.type === 'variable' && (next.type === 'number' || next.type === 'function' ||
+            (next.type === 'paren' && next.value === '('))) ||
+          (cur.type === 'paren' && cur.value === ')' && (next.type === 'variable' ||
+            next.type === 'number' || (next.type === 'paren' && next.value === '(')))
+        ) {
           finalTokens.push({ type: 'operator', value: '*' });
         }
+
       }
     }
 
     return finalTokens;
   }
-
 
   private createToken(str: string): Token {
     if (!isNaN(Number(str))) {

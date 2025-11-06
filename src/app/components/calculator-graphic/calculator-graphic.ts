@@ -171,21 +171,25 @@ export class GraphicComponent implements OnInit, OnDestroy {
         case '=':
           const expr = this.display.currentValue;
           const preprocessed = this.preprocessExpression(expr);
-
-
-          const variables = { x: 5 }; 
-          const rawResult = this.evalExpression(preprocessed, variables);
-
+          if (/[xy]/i.test(preprocessed)) {
+            this.display.setValue(preprocessed);
+            this.stateService.update({ expression: expr, result: preprocessed });
+            this.history.agregarId(expr, preprocessed);
+            return;
+          }
+          const rawResult = this.evalExpression(preprocessed);
           const displayResult = rawResult instanceof Complex
             ? rawResult.toString().replace('=', '')
             : String(rawResult);
           const stateResult: string | number = rawResult instanceof Complex
             ? displayResult
             : rawResult;
+
           this.display.setValue(displayResult);
           this.stateService.update({ expression: expr, result: stateResult });
           this.history.agregarId(expr, stateResult);
           return;
+
         default:
           this.display.appendValue(value);
           this.stateService.update({ expression: this.display.currentValue });

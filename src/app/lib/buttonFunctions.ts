@@ -131,27 +131,18 @@ export function evalExpressionWithVariables(
 ): number | Complex {
   try {
     let replacedExpression = replaceFunction(expression);
-
     if (!('x' in variables)) variables['x'] = 0;
     if (!('y' in variables)) variables['y'] = 0;
-
-
     for (const [variableName, value] of Object.entries(variables)) {
-      const regex = new RegExp(`\\b${variableName}\\b`, "g");
+      const regex = new RegExp(`(?<![a-zA-Z0-9_])${variableName}(?![a-zA-Z0-9_])`, "g");
       replacedExpression = replacedExpression.replace(regex, `(${value})`);
     }
-
     return evalExpresion(replacedExpression);
   } catch (error) {
     console.error("Error evaluating expression with variables:", error);
     return NaN;
   }
 }
-
-
-
-
-
 // ----------------------------
 // Funciones de reemplazo
 // ----------------------------
