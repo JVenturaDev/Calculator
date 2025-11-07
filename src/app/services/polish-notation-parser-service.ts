@@ -15,6 +15,7 @@ export class PolishNotationParserService {
     console.log('Tokens:', tokens);
     const postfix = this.toPostFix(tokens);
     console.log('Postfija:', postfix.map(t => t.value).join(' '));
+    
   }
 
   public toPostFix(tokens: Token[]): Token[] {

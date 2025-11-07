@@ -11,7 +11,7 @@ import { MemoryToggleService } from '../../services/memory-toggle';
 import { ToggleService, AngleMode } from '../../services/toggle';
 import { PolishNotationParserService } from '../../services/polish-notation-parser-service';
 import { Tokenizer } from '../../services/tokenizer';
-
+import { GraphicPlotService } from '../../services/graphic-plot';
 @Component({
   selector: 'app-graphic',
   templateUrl: './calculator-graphic.html',
@@ -36,7 +36,8 @@ export class GraphicComponent implements OnInit, OnDestroy {
     public toggleService: ToggleService,
     private elRef: ElementRef,
     private parserService: PolishNotationParserService,
-    private tokenizer: Tokenizer
+    private tokenizer: Tokenizer,
+    private graphicService: GraphicPlotService
   ) { }
 
   ngOnInit(): void {
@@ -81,7 +82,9 @@ export class GraphicComponent implements OnInit, OnDestroy {
   }
   private preprocessExpression(expr: string): string {
     let output = expr;
-
+    output = output
+      .replace(/(\d)([a-zA-Z])/g, '$1*$2')
+      .replace(/([a-zA-Z])(\d)/g, '$1*$2')
     output = output
       .replace(/\bacoth\(/g, 'acoth(')
       .replace(/\bacsch\(/g, 'acsch(')
@@ -111,6 +114,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
       .replace(/\bsin\(/g, 'sin(')
       .replace(/\bcos\(/g, 'cos(')
       .replace(/\btan\(/g, 'tan(');
+
 
     output = output
       .replace(/\be\^\(/g, 'exp(')
@@ -172,22 +176,26 @@ export class GraphicComponent implements OnInit, OnDestroy {
           const expr = this.display.currentValue;
           const preprocessed = this.preprocessExpression(expr);
           if (/[xy]/i.test(preprocessed)) {
-            this.display.setValue(preprocessed);
-            this.stateService.update({ expression: expr, result: preprocessed });
-            this.history.agregarId(expr, preprocessed);
+            let result: number | Complex;
+            try {
+              result = this.engine.evalExpressionWithVariables(preprocessed, { x: 0, y: 0 });
+            } catch {
+              result = NaN;
+            }
+            const displayResult = result instanceof Complex ? result.toString() : String(result);
+            this.display.setValue(displayResult);
+            this.stateService.update({ expression: expr, result: displayResult });
+            this.history.agregarId(expr, displayResult);
+            this.graphicService.setExpression(preprocessed);
             return;
           }
           const rawResult = this.evalExpression(preprocessed);
-          const displayResult = rawResult instanceof Complex
-            ? rawResult.toString().replace('=', '')
-            : String(rawResult);
-          const stateResult: string | number = rawResult instanceof Complex
-            ? displayResult
-            : rawResult;
+          const displayRes = rawResult instanceof Complex ? rawResult.toString().replace('=', '') : String(rawResult);
+          const stateRes: string | number = rawResult instanceof Complex ? displayRes : rawResult;
 
-          this.display.setValue(displayResult);
-          this.stateService.update({ expression: expr, result: stateResult });
-          this.history.agregarId(expr, stateResult);
+          this.display.setValue(displayRes);
+          this.stateService.update({ expression: expr, result: stateRes });
+          this.history.agregarId(expr, stateRes);
           return;
 
         default:

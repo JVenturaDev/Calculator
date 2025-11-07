@@ -123,26 +123,31 @@ export function evalExpresion(expresion: string): number | Complex {
     throw error;
   }
 }
-
-
 export function evalExpressionWithVariables(
   expression: string,
-  variables: Record<string, number> = {}
+  variables: Record<string, number> = {},
+  tokenizer?: Tokenizer,
+  parserService?: PolishNotationParserService
 ): number | Complex {
+  if (!tokenizer || !parserService) {
+    throw new Error("Tokenizer y parserService son requeridos");
+  }
   try {
-    let replacedExpression = replaceFunction(expression);
-    if (!('x' in variables)) variables['x'] = 0;
-    if (!('y' in variables)) variables['y'] = 0;
-    for (const [variableName, value] of Object.entries(variables)) {
-      const regex = new RegExp(`(?<![a-zA-Z0-9_])${variableName}(?![a-zA-Z0-9_])`, "g");
-      replacedExpression = replacedExpression.replace(regex, `(${value})`);
+    const tokens = tokenizer.tokenize(expression);
+    const postfix = parserService.toPostFix(tokens);
+    const result = parserService.evaluatePostFix(postfix, variables);
+    if (result instanceof Complex) {
+      return result.im === 0 ? result.re : result;
     }
-    return evalExpresion(replacedExpression);
-  } catch (error) {
-    console.error("Error evaluating expression with variables:", error);
+    return result;
+  } catch (err) {
+    console.error(err);
     return NaN;
   }
 }
+
+
+
 // ----------------------------
 // Funciones de reemplazo
 // ----------------------------

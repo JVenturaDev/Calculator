@@ -1,33 +1,9 @@
-/* src/app/components/graphic/graphic.component.css */
-.graphic-component {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: 480px;
-  height: 700px;
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-svg.main-svg {
-  max-width: 480px !important;
-  background-color: transparent;
-  height: 700px;
-}
-
-.graphic-container {
-  max-width: 95%;
-  height: 700px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f7f7f7;
-}
-
-.draglayer {
-  position: absolute !important;
-}
-
-.plot-container {
-  max-width: 96%;
-  height: 700px;
+.js-plotly-plot {
+  height: 670px;
 }
