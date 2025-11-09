@@ -1,6 +1,4 @@
-/* =====================
-   0. Variables globales
-===================== */
+
 :root {
     /* Backgrounds y texto */
     --body--back: var(--color-black);
@@ -50,10 +48,6 @@
     --color-accent-red: #FF5D73;
     --color-gray: #2c2c2c;
 }
-
-/* =====================
-   1. Estilos generales
-===================== */
 body {
     margin: 0;
     font-family: "Roboto", sans-serif;
@@ -72,11 +66,6 @@ body {
     position: absolute;
 }
 
-
-
-/* =====================
-   2. Calculadora
-===================== */
 .calculator {
     background: var(--body--C-W-H);
     color: var(--text--general);

@@ -73,6 +73,8 @@ export class PolishNotationParserService {
     }
     return output;
   }
+
+  
   public evaluatePostFix(tokens: Token[], variables: Record<string, number> = {}): number | Complex {
     const stack: (number | Complex)[] = [];
     const toReal = (val: number | Complex): Complex => {
