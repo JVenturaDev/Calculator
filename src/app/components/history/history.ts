@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { HistoryService, HistoryItem } from '../../services/history';
-import { StateService } from '../../services/state-object';
+import { HistoryService,HistoryItem } from '../../services/history-services/history';
+import { StateService } from '../../services/core-services/state-object';
 
 @Component({
   selector: 'app-history',

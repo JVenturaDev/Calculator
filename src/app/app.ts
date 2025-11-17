@@ -9,8 +9,8 @@ import { SidebarComponent } from './components/sidebar/sidebar';
 import { CalculatorScientificComponent } from './components/calculator-scientific/calculator-scientific';
 import { GraphicComponent } from './components/calculator-graphic/calculator-graphic';
 import { GraphicComponentPlot } from './components/graphic-plot/graphic-plot';
-import { PolishNotationParserService } from './services/polish-notation-parser-service';
-import { ToggleService } from './services/toggle';
+import { PolishNotationParserService } from './services/polish-services/polish-notation-parser-service';
+import { ToggleService } from './services/toggle-services/toggle';
 import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-root',
@@ -40,7 +40,7 @@ export class AppComponent {
 
   ngOnInit() {
     this.toggleService.state$.subscribe(view => this.currentView = view);
-    this.parser.testPostfix("x5");
+    this.parser.testPostfix("5-2");
     
   }
 

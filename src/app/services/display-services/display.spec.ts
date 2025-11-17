@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { DisplayComponent } from '../components/display/display';
+import { DisplayComponent } from '../../components/display/display';
 
 describe('Display', () => {
   let service: DisplayComponent;

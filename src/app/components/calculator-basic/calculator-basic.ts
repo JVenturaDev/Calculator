@@ -2,14 +2,14 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { CalculatorEngineService } from '../../services/calculator-engine';
-import { HistoryService } from '../../services/history';
-import { DisplayStateService } from '../../services/display';
-import { MemoryService } from '../../services/memory';
-import { StateService } from '../../services/state-object';
+import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
+import { HistoryService } from '../../services/history-services/history';
+import { DisplayStateService } from '../../services/display-services/display';
+import { MemoryService } from '../../services/memory-services/memory';
+import { StateService } from '../../services/core-services/state-object';
 import Complex from "complex.js";
-import { MemoryToggleService } from '../../services/memory-toggle';
-import { ToggleService, } from '../../services/toggle';
+import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
+import { ToggleService, } from '../../services/toggle-services/toggle';
 
 @Component({
   selector: 'app-calculator-basic',

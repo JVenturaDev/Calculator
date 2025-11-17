@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { CalculatorEngineService } from '../../services/calculator-engine';
-import { GraphicPlotService } from '../../services/graphic-plot';
+import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
+import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
 import Plotly from 'plotly.js-dist-min';
 
 @Component({

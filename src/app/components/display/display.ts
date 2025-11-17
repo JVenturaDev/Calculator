@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CalculatorEngineService } from '../../services/calculator-engine';
-import { DisplayStateService } from '../../services/display';
-import { StateService } from '../../services/state-object';
-import { HistoryService } from '../../services/history';
+import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
+import { DisplayStateService } from '../../services/display-services/display';
+import { StateService } from '../../services/core-services/state-object';
+import { HistoryService } from '../../services/history-services/history';
 import Complex from 'complex.js';
 
 @Component({

@@ -1,7 +1,7 @@
 // src/app/services/calculator-engine.service.spec.ts
 import { TestBed } from '@angular/core/testing';
 import { CalculatorEngineService } from './calculator-engine';
-import * as lib from '../lib/buttonFunctions';
+import * as lib from '../../lib/buttonFunctions';
 
 describe('CalculatorEngineService', () => {
   let service: CalculatorEngineService;

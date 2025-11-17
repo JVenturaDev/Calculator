@@ -1,17 +1,17 @@
 import { Component, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { CalculatorEngineService } from '../../services/calculator-engine';
-import { HistoryService } from '../../services/history';
-import { DisplayStateService } from '../../services/display';
-import { MemoryService } from '../../services/memory';
-import { StateService } from '../../services/state-object';
+import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
+import { HistoryService } from '../../services/history-services/history';
+import { DisplayStateService } from '../../services/display-services/display';
+import { MemoryService } from '../../services/memory-services/memory';
+import { StateService } from '../../services/core-services/state-object';
 import Complex from 'complex.js';
-import { MemoryToggleService } from '../../services/memory-toggle';
-import { ToggleService, AngleMode } from '../../services/toggle';
-import { PolishNotationParserService } from '../../services/polish-notation-parser-service';
-import { Tokenizer } from '../../services/tokenizer';
-import { GraphicPlotService } from '../../services/graphic-plot';
+import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
+import { ToggleService, AngleMode } from '../../services/toggle-services/toggle';
+import { PolishNotationParserService } from '../../services/polish-services/polish-notation-parser-service';
+import { Tokenizer } from '../../services/polish-services/tokenizer';
+import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
 @Component({
   selector: 'app-graphic',
   templateUrl: './calculator-graphic.html',

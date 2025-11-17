@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ToggleService, CalcType } from '../../services/toggle';
+import { ToggleService, CalcType } from '../../services/toggle-services/toggle';
 
 @Component({
   selector: 'app-sidebar',

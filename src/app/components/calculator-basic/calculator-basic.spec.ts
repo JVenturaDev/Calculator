@@ -4,7 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 
 import { CalculatorBasicComponent } from './calculator-basic';
 import { CalculatorEngineService } from '../../services/calculator-engine';
-import { StateService } from '../../services/state-object';
+import { StateService } from '../../services/core-services/state-object';
 import { HistoryService } from '../../services/history';
 
 describe('CalculatorBasicComponent', () => {

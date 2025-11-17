@@ -1,7 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-
 import { MemoryToggleService } from './memory-toggle';
-
 describe('MemoryToggle', () => {
   let service: MemoryToggleService;
 

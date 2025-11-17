@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 
 import { GraphicComponent } from './calculator-graphic';
-import { StateService } from '../../services/state-object';
+import { StateService } from '../../services/core-services/state-object';
 import { CalculatorEngineService } from '../../services/calculator-engine';
 
 describe('GraphicComponent', () => {

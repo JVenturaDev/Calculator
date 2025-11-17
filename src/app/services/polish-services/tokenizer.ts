@@ -103,9 +103,12 @@ export class Tokenizer {
       const next = expression[i + 1];
 
       if (this.operators.includes(char)) {
-        if (char === '-' && (!lastToken || lastToken.type === 'operator' || lastToken.value === '(')) {
-          current += char;
-          continue;
+        if (char === '-') {
+          const isUnary = (!current && (!lastToken || lastToken.type === 'operator' || (lastToken.type === 'paren' && lastToken.value === '(')));
+          if (isUnary) {
+            current += char; 
+            continue;
+          }
         }
         if (current) {
           tokens.push(this.createToken(current));

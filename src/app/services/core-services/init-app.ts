@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { DisplayStateService } from './display';
-import { MemoryService } from './memory';
-import { CalculatorEngineService } from './calculator-engine';
-import { HistoryService } from './history';
+import { DisplayStateService } from '../display-services/display';
+import { MemoryService } from '../memory-services/memory';
+import { CalculatorEngineService } from '../engine-services/calculator-engine';
+import { HistoryService } from '../history-services/history';
 import { StateService } from './state-object';
 
 @Injectable({ providedIn: 'root' })

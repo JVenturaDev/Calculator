@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Token, Tokenizer } from './tokenizer';
-import { ButtonFunctions, factorial } from '../lib/buttonFunctions';
+import { ButtonFunctions, factorial } from '../../lib/buttonFunctions';
 import Complex from 'complex.js';
 
 @Injectable({

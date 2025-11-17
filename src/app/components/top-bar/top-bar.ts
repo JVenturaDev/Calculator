@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ToggleService } from '../../services/toggle';
+import { ToggleService } from '../../services/toggle-services/toggle';
 
 @Component({
   selector: 'app-top-bar',

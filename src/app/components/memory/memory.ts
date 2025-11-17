@@ -2,12 +2,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { MemoryService, MemoryRecord } from '../../services/memory';
-import { AppInitService } from '../../services/init-app';
-import { StateService } from '../../services/state-object';
-import { DisplayStateService } from '../../services/display';
-import { CalculatorEngineService } from '../../services/calculator-engine';
-import { MemoryToggleService } from '../../services/memory-toggle';
+import { MemoryService, MemoryRecord } from '../../services/memory-services/memory';
+import { AppInitService } from '../../services/core-services/init-app';
+import { StateService } from '../../services/core-services/state-object';
+import { DisplayStateService } from '../../services/display-services/display';
+import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
+import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
 
 @Component({
   selector: 'app-memory',

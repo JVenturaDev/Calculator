@@ -1,7 +1,7 @@
 // src/app/lib/buttonFunctions.ts
 import Complex from "complex.js";
-import { PolishNotationParserService } from "../services/polish-notation-parser-service";
-import { Tokenizer } from "../services/tokenizer";
+import { PolishNotationParserService } from "../services/polish-services/polish-notation-parser-service";
+import { Tokenizer } from "../services/polish-services/tokenizer";
 
 export const ButtonFunctions = {
   factorial,

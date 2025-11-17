@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { GraphicPlot } from './graphic-plot';
+import { GraphicPlotService } from './graphic-plot';
 
 describe('GraphicPlot', () => {
-  let service: GraphicPlot;
+  let service: GraphicPlotService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(GraphicPlot);
+    service = TestBed.inject(GraphicPlotService);
   });
 
   it('should be created', () => {

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { replaceFunction, evalExpresion } from '../lib/buttonFunctions';
+import { replaceFunction,evalExpresion } from '../../lib/buttonFunctions';
 import Complex from 'complex.js';
-import { Tokenizer } from './tokenizer';
-import { PolishNotationParserService } from './polish-notation-parser-service';
+import { Tokenizer } from '../polish-services/tokenizer';
+import { PolishNotationParserService } from '../polish-services/polish-notation-parser-service';
 @Injectable({ providedIn: 'root' })
 export class CalculatorEngineService {
   constructor(

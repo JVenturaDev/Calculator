@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { StateService } from './state-object';
+import { StateService } from '../core-services/state-object';
 
 export interface HistoryItem {
   idi: number;
