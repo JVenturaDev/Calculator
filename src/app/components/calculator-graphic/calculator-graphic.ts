@@ -9,9 +9,11 @@ import { StateService } from '../../services/core-services/state-object';
 import Complex from 'complex.js';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
 import { ToggleService, AngleMode } from '../../services/toggle-services/toggle';
-import { PolishNotationParserService } from '../../services/polish-services/polish-notation-parser-service';
+import { parser } from '../../services/polish-services/polish-notation-parser-service';
 import { Tokenizer } from '../../services/polish-services/tokenizer';
 import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
+import { evaluator } from '../../services/polish-services/polish-evaluator';
+import { PreprocessModule } from '../../services/polish-services/preprocess-module';
 @Component({
   selector: 'app-graphic',
   templateUrl: './calculator-graphic.html',
@@ -35,9 +37,11 @@ export class GraphicComponent implements OnInit, OnDestroy {
     private toggle: ToggleService,
     public toggleService: ToggleService,
     private elRef: ElementRef,
-    private parserService: PolishNotationParserService,
+    private parserService: parser,
     private tokenizer: Tokenizer,
-    private graphicService: GraphicPlotService
+    private graphicService: GraphicPlotService,
+    private process: PreprocessModule,
+    private evalutorPolish: evaluator
   ) { }
 
   ngOnInit(): void {
@@ -54,7 +58,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
   private evalExpression(expr: string, variables: Record<string, number> = {}): number | Complex {
     const tokens = this.tokenizer.tokenize(expr);
     const postfix = this.parserService.toPostFix(tokens);
-    return this.parserService.evaluatePostFix(postfix, variables);
+    return this.evalutorPolish.evaluatePostFix(postfix, variables);
   }
 
   ngOnDestroy(): void {
@@ -103,7 +107,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
 
         case '=':
           const expr = this.display.currentValue;
-          const preprocessed = this.tokenizer.preprocessExpression(expr);
+          const preprocessed = this.process.preprocessExpression(expr);
           if (/[xy]/i.test(preprocessed)) {
             let result: number | Complex;
             try {

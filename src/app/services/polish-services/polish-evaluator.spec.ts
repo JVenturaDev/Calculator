@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { parser } from './polish-notation-parser-service';
+import { evaluator } from './polish-evaluator';
 
-describe('PolishNotationParserService', () => {
-  let service: parser;
+describe('PolishParser', () => {
+  let service: evaluator;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(parser);
+    service = TestBed.inject(evaluator);
   });
 
   it('should be created', () => {

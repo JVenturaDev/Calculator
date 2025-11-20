@@ -9,7 +9,7 @@ import { SidebarComponent } from './components/sidebar/sidebar';
 import { CalculatorScientificComponent } from './components/calculator-scientific/calculator-scientific';
 import { GraphicComponent } from './components/calculator-graphic/calculator-graphic';
 import { GraphicComponentPlot } from './components/graphic-plot/graphic-plot';
-import { PolishNotationParserService } from './services/polish-services/polish-notation-parser-service';
+import { parser } from './services/polish-services/polish-notation-parser-service';
 import { ToggleService } from './services/toggle-services/toggle';
 import { CommonModule } from '@angular/common';
 @Component({
@@ -34,13 +34,13 @@ export class AppComponent {
   inputValue: string = '';
   currentView: 'graph' | 'history' = 'graph';
 
-  constructor(private parser: PolishNotationParserService,
+  constructor(private parserPolish: parser,
     private toggleService: ToggleService
   ) { }
 
   ngOnInit() {
     this.toggleService.state$.subscribe(view => this.currentView = view);
-    this.parser.testPostfix("5-2");
+    this.parserPolish.testPostfix("1x9*y");
     
   }
 

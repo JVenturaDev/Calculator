@@ -1,7 +1,8 @@
 // src/app/lib/buttonFunctions.ts
 import Complex from "complex.js";
-import { PolishNotationParserService } from "../services/polish-services/polish-notation-parser-service";
+import { parser } from "../services/polish-services/polish-notation-parser-service";
 import { Tokenizer } from "../services/polish-services/tokenizer";
+import { evaluator } from "../services/polish-services/polish-evaluator";
 
 export const ButtonFunctions = {
   factorial,
@@ -127,15 +128,16 @@ export function evalExpressionWithVariables(
   expression: string,
   variables: Record<string, number> = {},
   tokenizer?: Tokenizer,
-  parserService?: PolishNotationParserService
+  evaluatorPolish?: evaluator,
+  parserPolish?: parser
 ): number | Complex {
-  if (!tokenizer || !parserService) {
+  if (!tokenizer || !parserPolish) {
     throw new Error("Tokenizer y parserService son requeridos");
   }
   try {
     const tokens = tokenizer.tokenize(expression);
-    const postfix = parserService.toPostFix(tokens);
-    const result = parserService.evaluatePostFix(postfix, variables);
+    const postfix = parserPolish.toPostFix(tokens);
+    const result = evaluatorPolish!.evaluatePostFix(postfix, variables);
     if (result instanceof Complex) {
       return result.im === 0 ? result.re : result;
     }

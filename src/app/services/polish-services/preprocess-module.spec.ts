@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { parser } from './polish-notation-parser-service';
+import { PreprocessModule } from './preprocess-module';
 
-describe('PolishNotationParserService', () => {
-  let service: parser;
+describe('PreprocessModule', () => {
+  let service: PreprocessModule;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(parser);
+    service = TestBed.inject(PreprocessModule);
   });
 
   it('should be created', () => {
