@@ -7,9 +7,6 @@ export class PreprocessModule {
   preprocessExpression(expr: string): string {
     let output = expr;
     output = output
-      .replace(/(\d)([a-zA-Z])/g, '$1*$2')
-      .replace(/([a-zA-Z])(\d)/g, '$1*$2');
-    output = output
       .replace(/\bacoth\(/g, 'acoth(')
       .replace(/\bacsch\(/g, 'acsch(')
       .replace(/\basech\(/g, 'asech(')

@@ -9,7 +9,7 @@ export class parser {
     const tokens = this.tokenizer.tokenize(expression);
     console.log('Tokens:', tokens);
     const postfix = this.toPostFix(tokens);
-    console.log('Postfija:', postfix.map(t => t.value).join('5-3'));
+    console.log('Postfija:', postfix.map(t => t.value).join(''));
 
   }
 

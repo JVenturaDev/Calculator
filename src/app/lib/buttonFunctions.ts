@@ -38,9 +38,7 @@ export const ButtonFunctions = {
   PI: Math.PI,
   E: Math.E
 };
-// ----------------------------
 // Extensión de Math
-// ----------------------------
 declare global {
   interface Math {
     ln: (x: number) => number;
@@ -66,9 +64,7 @@ declare global {
   }
 }
 
-// ----------------------------
 // Extensiones de Math
-// ----------------------------
 Math.sec = (x: number) => 1 / Math.cos(x);
 Math.cot = (x: number) => 1 / Math.tan(x);
 Math.csc = (x: number) => 1 / Math.sin(x);
@@ -94,7 +90,7 @@ Math.DMS = (x: number): number => {
   const minutosDecimal = (x - grados) * 60;
   const minutos = Math.floor(minutosDecimal);
   const segundos = (minutosDecimal - minutos) * 60;
-  return grados + minutos / 60 + segundos / 3600; // todo en grados decimales
+  return grados + minutos / 60 + segundos / 3600;
 };
 
 
@@ -105,17 +101,13 @@ if (typeof Math.ln !== "function") {
 Math.raizCompleja = (x: number) => (x >= 0 ? x ** 0.5 : new Complex(0, Math.sqrt(-x)));
 Math.raizCubicaCompleja = (x: number) => (x >= 0 ? Math.cbrt(x) : new Complex(x, 0).pow(1 / 3));
 
-// ----------------------------
 // Funciones auxiliares
-// ----------------------------
 export function factorial(n: number): number {
   if (n <= 1) return 1;
   return n * factorial(n - 1);
 }
 
-// ----------------------------
 // Funciones de cálculo
-// ----------------------------
 export function evalExpresion(expresion: string): number | Complex {
   try {
     const result: unknown = Function('"use strict"; return (' + expresion + ')')();
@@ -150,9 +142,7 @@ export function evalExpressionWithVariables(
 
 
 
-// ----------------------------
 // Funciones de reemplazo
-// ----------------------------
 export function replaceFunction(expresion: string,): string {
   let output: string = expresion;
   output = output
