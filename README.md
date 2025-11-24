@@ -72,8 +72,8 @@ Calculator/
 | Scientific Calculator | ✅ Functional      | Supports advanced math                |
 | Memory                | ✅ Functional      | Data stored locally                   |
 | History               | ✅ Functional      | Displays recent calculations          |
-| Graphing              | 🚧 In development | To include plotting and analysis      |
-| Workspace             | 🚧 Planned        | Will allow saving and versioning work |
+| Graphing              | ✅ Functional      | To include plotting and analysis      |
+| Workspace             | 🚧 In progress    | Will allow saving and versioning work |
 | Responsive Design     | ⚙️ Pending        | Not yet optimized post-migration      |
 
 ---
@@ -84,7 +84,7 @@ Calculator/
 | :---- | :-------------------------------- | :------------- |
 | 1     | Core migration to Angular         | ✅ Completed   |
 | 2     | Memory and History integration    | ✅ Completed   |
-| 3     | Graphing calculator               | 🚧 In progress |
+| 3     | Graphing calculator               | ✅ Completed   |
 | 4     | Workspace (projects, tags, notes) | 🚧 In progress |
 | 5     | Camera-based math solver          | 🧩 Planned     |
 | 6     | Chat                              | 🧩 Planned     |

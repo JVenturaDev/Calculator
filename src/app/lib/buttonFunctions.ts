@@ -139,9 +139,6 @@ export function evalExpressionWithVariables(
     return NaN;
   }
 }
-
-
-
 // Funciones de reemplazo
 export function replaceFunction(expresion: string,): string {
   let output: string = expresion;
