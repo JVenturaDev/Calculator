@@ -1,5 +1,5 @@
-// src/app/services/memory.ts
 import { Injectable, NgZone } from '@angular/core';
+import Complex from 'complex.js';
 import { BehaviorSubject } from 'rxjs';
 
 export interface MemoryRecord {
@@ -42,7 +42,7 @@ export class MemoryService {
     });
   }
 
-  async saveRecord(ecuacion: string, resultado: number): Promise<number> {
+  async saveRecord(ecuacion: string, resultado: number | Complex): Promise<number | Complex> {
     if (!this.db) throw new Error('DB no inicializada');
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(['numero'], 'readwrite');
