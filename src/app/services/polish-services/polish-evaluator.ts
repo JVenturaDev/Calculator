@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Complex } from 'complex.js';
 import { Token } from './tokenizer';
-import {factorial } from '../../lib/buttonFunctions';
+import { factorial } from '../../lib/buttonFunctions';
 @Injectable({
   providedIn: 'root'
 })

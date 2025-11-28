@@ -47,7 +47,17 @@ export class parser {
           output.push(opStack.pop()!)
         }
         opStack.push(token);
-      } else if (token.type === 'paren') {
+
+      } else if (token.type === 'comma') {
+        while (opStack.length > 0 && opStack[opStack.length - 1].value !== '(') {
+          output.push(opStack.pop()!);
+        }
+        if (opStack.length === 0 || opStack[opStack.length - 1].value !== '(') {
+          throw new Error("Separador de argumentos fuera de función");
+        }
+      }
+
+      else if (token.type === 'paren') {
         if (token.value === '(') {
           opStack.push(token);
         } else if (token.value == ')') {
