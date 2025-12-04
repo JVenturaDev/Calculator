@@ -6,7 +6,6 @@ export class DisplayStateService {
   private valueSubject = new BehaviorSubject<string>(''); 
   value$ = this.valueSubject.asObservable(); 
 
-  // Getter para obtener el valor actual
   get currentValue(): string {
     return this.valueSubject.value;
   }

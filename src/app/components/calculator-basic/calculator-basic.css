@@ -59,36 +59,6 @@ button {
 /* =====================
    9. Tipos de botones
 ===================== */
-.digit-button {
-    background-color: var(--color-medium-gray-1) !important;
-    color: var(--text--general) !important;
-}
-
-.digit-button:hover {
-    background-color: var(--bg-hover-digit);
-    /* Nota: --bg-hover-digit no definido */
-}
-
-.color-button {
-    background-color: var(--buttons--color) !important;
-    color: var(--color-accent-red) !important;
-}
-
-.color-button:hover {
-    background-color: var(--bg-hover-color-btn);
-    /* Nota: --bg-hover-color-btn no definido */
-}
-
-.operation-button {
-    background-color: var(--buttons--operation) !important;
-    color: var(--color-accent-red) !important;
-}
-
-.operation-button:hover {
-    background-color: var(--secondary--darkmode) !important;
-    /* Nota: --secondary--darkmode no definido */
-}
-
 .side-button,
 .memoryB {
     background-color: var(--bg-side);
