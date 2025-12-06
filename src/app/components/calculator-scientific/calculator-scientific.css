@@ -79,21 +79,6 @@
     color: var(--color-accent-red) !important;
 }
 
-.color-button:hover {
-    background-color: var(--bg-hover-color-btn);
-    /* Nota: --bg-hover-color-btn no definido */
-}
-
-.operation-button {
-    background-color: var(--buttons--operation) !important;
-    color: var(--color-accent-red) !important;
-}
-
-.operation-button:hover {
-    background-color: var(--secondary--darkmode) !important;
-    /* Nota: --secondary--darkmode no definido */
-}
-
 .side-button:hover,
 .memoryB:hover {
     background-color: var(--bg-hover-side);
