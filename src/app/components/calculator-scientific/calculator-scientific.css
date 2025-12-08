@@ -109,7 +109,6 @@
 
 .buttons button:hover {
     background: var(--tertiary--darkmode);
-    /* Nota: --tertiary--darkmode no definido */
     color: var(--text--general) !important;
 }
 
@@ -117,7 +116,6 @@
 button {
     width: 100%;
     color: var(--primary--darkmode);
-    /* Nota: --primary--darkmode no definido */
     font-weight: 700;
     border: none;
     border-radius: 2px;
@@ -126,7 +124,6 @@ button {
 
 button:hover {
     background: var(--tertiary--darkmode);
-    /* Nota: --tertiary--darkmode no definido */
     color: var(--text--general) !important;
 }
 
@@ -137,7 +134,6 @@ button {
     padding: 7px;
     font-size: 10px;
     width: 100%;
-    /* Nota: --primary--darkmode no definido */
     font-weight: 700;
     border-radius: 2px;
     cursor: pointer;
