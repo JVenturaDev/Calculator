@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { replaceFunction,evalExpresion } from '../../lib/buttonFunctions';
+import { replaceFunction, evalExpresion } from '../../lib/buttonFunctions';
 import Complex from 'complex.js';
 import { Tokenizer } from '../polish-services/tokenizer';
 import { parser } from '../polish-services/polish-notation-parser-service';
@@ -29,7 +29,7 @@ export class CalculatorEngineService {
       if (result instanceof Complex) {
         return result.im === 0 ? result.re : result;
       }
-      return result;
+      return result as number | Complex;
     } catch (err) {
       console.error('Error al evaluar expresión:', err);
       return NaN;

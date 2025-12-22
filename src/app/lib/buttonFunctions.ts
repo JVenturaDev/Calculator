@@ -133,7 +133,7 @@ export function evalExpressionWithVariables(
     if (result instanceof Complex) {
       return result.im === 0 ? result.re : result;
     }
-    return result;
+    return result as number | Complex;
   } catch (err) {
     console.error(err);
     return NaN;

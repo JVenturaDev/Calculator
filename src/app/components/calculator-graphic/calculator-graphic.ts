@@ -58,8 +58,19 @@ export class GraphicComponent implements OnInit, OnDestroy {
   private evalExpression(expr: string, variables: Record<string, number> = {}): number | Complex {
     const tokens = this.tokenizer.tokenize(expr);
     const postfix = this.parserService.toPostFix(tokens);
-    return this.evalutorPolish.evaluatePostFix(postfix, variables);
+
+    const evaluation = this.evalutorPolish.evaluatePostFix(postfix, variables, true);
+
+    // type guard para objetos con result y steps
+    if (typeof evaluation === 'object' && 'result' in evaluation && 'steps' in evaluation) {
+      console.log("Resultado final:", evaluation.result);
+      console.log("Pasos del cálculo:", evaluation.steps);
+      return evaluation.result;
+    }
+
+    return evaluation as number | Complex;
   }
+
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
