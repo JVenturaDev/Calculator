@@ -1,3 +1,28 @@
 <div class="workspace-area">
-    <p>Área de trabajo</p>
+  <p>Área de trabajo</p>
+
+  <div *ngIf="creatingItem" class="new-item">
+    <input type="text" placeholder="Título del cálculo" [(ngModel)]="newItemTitle" />
+    <input type="text" placeholder="Expresión" [(ngModel)]="newItemExpression" />
+
+    <app-workspace-tags [tags]="newItemTags"></app-workspace-tags>
+
+  
+    <button (click)="saveNewItem()">Guardar</button>
+    <button (click)="creatingItem = false">Cancelar</button>
+  </div>
+
+  <div *ngFor="let item of workspaceItems" class="workspace-item">
+    <h3>{{ item.title }}</h3>
+    <p>{{ item.expression }}</p>
+    <p>Tags: {{ item.tags.join(', ') }}</p>
+
+    <div *ngFor="let step of item.steps" class="step">
+      {{ step.type }}: {{ step.name }} ({{ step.operands.join(', ') }}) = {{ step.result }}
+    </div>
+
+    <p>Resultado final: {{ item.results[item.results.length - 1] }}</p>
+  </div>
+
+  <button *ngIf="!creatingItem" (click)="creatingItem = true">Nuevo Item</button>
 </div>

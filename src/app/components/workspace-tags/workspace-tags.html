@@ -1,0 +1,19 @@
+<div class="tag-container" (click)="input.focus()">
+
+  <span
+    *ngFor="let tag of tags"
+    class="tag-item"
+  >
+    {{ tag }}
+    <button type="button" (click)="removeTag(tag)">×</button>
+  </span>
+
+  <input
+    #input
+    class="tag-input"
+    type="text"
+    [(ngModel)]="inputValue"
+    (keydown)="handleKeyDown($event)"
+    placeholder="add tag"
+  />
+</div>
