@@ -1,7 +1,2 @@
-<input
-  class="display-input"
-  id="input"
-  placeholder="0"
-  [value]="value"
-  (keydown)="onKeyDown($event)"  
-/>
+<input class="display-input" id="calculatorInput" placeholder="0" [ngModel]="display.currentValue" [value]="value"
+  (focus)="inputService.setCalculatorTarget()" (keydown)="onKeyDown($event)" />

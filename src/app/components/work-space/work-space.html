@@ -1,28 +1,46 @@
 <div class="workspace-area">
   <p>Área de trabajo</p>
 
+  <!-- Crear nuevo item -->
   <div *ngIf="creatingItem" class="new-item">
-    <input type="text" placeholder="Título del cálculo" [(ngModel)]="newItemTitle" />
-    <input type="text" placeholder="Expresión" [(ngModel)]="newItemExpression" />
+    <input type="text" placeholder="Título del cálculo" [(ngModel)]="newItemTitle" (click)="$event.stopPropagation()" />
 
     <app-workspace-tags [tags]="newItemTags"></app-workspace-tags>
 
-  
     <button (click)="saveNewItem()">Guardar</button>
     <button (click)="creatingItem = false">Cancelar</button>
   </div>
 
-  <div *ngFor="let item of workspaceItems" class="workspace-item">
+  <!-- Items del workspace -->
+  <div *ngFor="let item of workspaceItems; trackBy: trackById" class="workspace-item" (click)="activateItem(item.id)">
     <h3>{{ item.title }}</h3>
-    <p>{{ item.expression }}</p>
-    <p>Tags: {{ item.tags.join(', ') }}</p>
 
-    <div *ngFor="let step of item.steps" class="step">
-      {{ step.type }}: {{ step.name }} ({{ step.operands.join(', ') }}) = {{ step.result }}
+    <!-- Input del item activo -->
+    <div *ngIf="activeItemId === item.id" class="item-input" (click)="$event.stopPropagation()">
+      <input #workspaceInput type="text" placeholder="" [ngModel]="item.currentExpression"
+        (ngModelChange)="wsService.updateCurrentExpression(item.id, $event)"
+        (focus)="inputService.setWorkspaceItemTarget(item.id)" />
+      <button (click)="$event.stopPropagation(); evaluateWorkspaceItem()">=</button>
     </div>
 
-    <p>Resultado final: {{ item.results[item.results.length - 1] }}</p>
+    <!-- Historial del item -->
+    <div *ngFor="let calc of item.calculations" class="calc-row">
+      <b>{{ calc.expression }}</b> → {{ calc.result }}
+
+      <!-- Pasos -->
+      <div *ngIf="calc.steps?.length">
+        <div *ngFor="let step of calc.steps">
+          {{ step.type }}: {{ step.name }}
+          ({{ step.operands.join(', ') }}) = {{ step.result }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tags -->
+    <app-workspace-tags [tags]="item.tags"></app-workspace-tags>
   </div>
 
-  <button *ngIf="!creatingItem" (click)="creatingItem = true">Nuevo Item</button>
+  <button *ngIf="!creatingItem" (click)="creatingItem = true">
+    Nuevo Item
+  </button>
 </div>

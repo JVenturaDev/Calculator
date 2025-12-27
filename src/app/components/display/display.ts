@@ -5,6 +5,7 @@ import { CalculatorEngineService } from '../../services/engine-services/calculat
 import { DisplayStateService } from '../../services/display-services/display';
 import { StateService } from '../../services/core-services/state-object';
 import { HistoryService } from '../../services/history-services/history';
+import { InputService } from '../../services/input-services/input-services';
 import Complex from 'complex.js';
 
 @Component({
@@ -20,8 +21,8 @@ export class DisplayComponent {
   constructor(
     private engine: CalculatorEngineService,
     public history: HistoryService,
-
-    private display: DisplayStateService,
+    public inputService: InputService,
+    public display: DisplayStateService,
     private stateService: StateService,
 
   ) {
