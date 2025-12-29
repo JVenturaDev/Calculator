@@ -28,7 +28,7 @@
       <b>{{ calc.expression }}</b> → {{ calc.result }}
 
       <!-- Pasos -->
-      <div *ngIf="calc.steps?.length">
+      <div *ngIf="calc.steps.length">
         <div *ngFor="let step of calc.steps">
           {{ step.type }}: {{ step.name }}
           ({{ step.operands.join(', ') }}) = {{ step.result }}

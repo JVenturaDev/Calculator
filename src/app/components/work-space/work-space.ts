@@ -126,7 +126,7 @@ export class WorkSpace implements OnInit {
 
   pressButton(value: string) {
     const target = this.inputService.target; if (target.type === 'calculator') return; if (target.type === 'workspace-item') {
-      this.wsService.appendToCurrentExpression(target.itemId, value); // Mantener focus setTimeout(() => this.activateItem(target.itemId)); } }
+      this.wsService.appendToCurrentExpression(target.itemId, value); 
     }
   }
 }
