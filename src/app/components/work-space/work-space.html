@@ -2,13 +2,13 @@
   <p>Área de trabajo</p>
 
   <!-- Crear nuevo item -->
-  <div *ngIf="creatingItem" class="new-item">
+  <div *ngIf="creatingItem" class="new-item" (click)="$event.stopPropagation()">
     <input type="text" placeholder="Título del cálculo" [(ngModel)]="newItemTitle" (click)="$event.stopPropagation()" />
 
     <app-workspace-tags [tags]="newItemTags"></app-workspace-tags>
 
-    <button (click)="saveNewItem()">Guardar</button>
-    <button (click)="creatingItem = false">Cancelar</button>
+    <button (click)="$event.stopPropagation()" (click)="saveNewItem()">Guardar</button>
+    <button (click)="$event.stopPropagation()" (click)="creatingItem = false">Cancelar</button>
   </div>
 
   <!-- Items del workspace -->
