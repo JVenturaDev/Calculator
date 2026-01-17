@@ -29,6 +29,15 @@ export class WorkspaceService {
     };
     this.workspaceItems$.next([...this.workspaceItems$.value, item]);
     this.activeItemId$.next(item.id);
+    console.table({
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      tags: item.tags.join(', '),
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString()
+    });
+
   }
 
   setActiveItem(id: string) {
