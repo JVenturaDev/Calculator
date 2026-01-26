@@ -3,9 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { BehaviorSubject } from 'rxjs';
 
 import { CalculatorBasicComponent } from './calculator-basic';
-import { CalculatorEngineService } from '../../services/calculator-engine';
+import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
 import { StateService } from '../../services/core-services/state-object';
-import { HistoryService } from '../../services/history';
+import { HistoryService } from '../../services/history-services/history';
 
 describe('CalculatorBasicComponent', () => {
   let component: CalculatorBasicComponent;
