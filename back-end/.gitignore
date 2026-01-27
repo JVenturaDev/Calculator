@@ -1,0 +1,50 @@
+
+# Java / Spring Boot
+target/
+build/
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+
+# Spring config
+src/main/resources/application.properties
+src/main/resources/application.yml
+src/main/resources/application-*.properties
+!src/main/resources/application-example.properties
+
+# Environment
+.env
+
+
+# IDEs
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# Other
+HELP.md
