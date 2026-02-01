@@ -1,19 +1,32 @@
 package com.tuapp.backend.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "workspace_calculation")
+@Getter
+@Setter
 public class WorkspaceCalculation {
 
     @Id
     @GeneratedValue
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_item_id", nullable = false)
+    @JsonIgnore
     private WorkspaceItem workspaceItem;
 
     @Column(nullable = false, columnDefinition = "TEXT")
@@ -22,28 +35,10 @@ public class WorkspaceCalculation {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String result;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private String steps;
+    private List<Step> steps;
 
-    @Column(name = "timestamp", nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp = LocalDateTime.now();
-
-    // Getters y setters
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public WorkspaceItem getWorkspaceItem() { return workspaceItem; }
-    public void setWorkspaceItem(WorkspaceItem workspaceItem) { this.workspaceItem = workspaceItem; }
-
-    public String getExpression() { return expression; }
-    public void setExpression(String expression) { this.expression = expression; }
-
-    public String getResult() { return result; }
-    public void setResult(String result) { this.result = result; }
-
-    public String getSteps() { return steps; }
-    public void setSteps(String steps) { this.steps = steps; }
-
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 }
