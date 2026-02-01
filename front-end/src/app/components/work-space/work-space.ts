@@ -28,6 +28,14 @@ export interface WorkspaceCalculation {
   timestamp: Date;
 }
 
+
+export interface CalculationDTO {
+  expression: string;
+  result: string;
+  steps: string;
+}
+
+
 @Component({
   selector: 'app-work-space',
   standalone: true,
@@ -84,7 +92,7 @@ export class WorkSpace implements OnInit {
 
   focusInput(itemId: string) {
     const index = this.workspaceItems.findIndex(i => i.id === itemId);
-    this.cd.detectChanges(); 
+    this.cd.detectChanges();
     const input = this.workspaceInputs.get(index);
     input?.nativeElement.focus();
   }
@@ -119,14 +127,14 @@ export class WorkSpace implements OnInit {
       steps: evaluation.steps,
       timestamp: new Date()
     };
-
+    console.log('WorkspaceCalculation:', calc);
     this.wsService.addCalculationToActiveItem(calc);
     setTimeout(() => this.activateItem(activeId));
   }
 
   pressButton(value: string) {
     const target = this.inputService.target; if (target.type === 'calculator') return; if (target.type === 'workspace-item') {
-      this.wsService.appendToCurrentExpression(target.itemId, value); 
+      this.wsService.appendToCurrentExpression(target.itemId, value);
     }
   }
 }

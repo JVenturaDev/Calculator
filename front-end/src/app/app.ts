@@ -27,9 +27,10 @@ import { CommonModule } from '@angular/common';
     MemoryComponent,
     DisplayComponent,
     CalculatorBasicComponent,
-    HistoryComponent
+    HistoryComponent,
   ]
 })
+
 export class AppComponent {
   inputValue: string = '';
   currentView: 'graph' | 'history' = 'graph';
@@ -41,7 +42,7 @@ export class AppComponent {
   ngOnInit() {
     this.toggleService.state$.subscribe(view => this.currentView = view);
     this.parserPolish.testPostfix("sin(asinh(9))");
-    
+
   }
 
   handleKeyDown(event: KeyboardEvent) {
@@ -55,3 +56,4 @@ export class AppComponent {
   }
 
 }
+

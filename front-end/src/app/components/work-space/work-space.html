@@ -36,7 +36,8 @@
     </div>
 
     <!-- Tags -->
-    <app-workspace-tags [tags]="item.tags"></app-workspace-tags>
+    <app-workspace-tags [tags]="item.tags" (tagsChange)="wsService.updateTags(item.id, $event)">
+    </app-workspace-tags>
   </div>
 
   <button *ngIf="!creatingItem" (click)="creatingItem = true">
