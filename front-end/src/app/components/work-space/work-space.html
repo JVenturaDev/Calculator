@@ -23,17 +23,19 @@
     </div>
 
     <!-- Historial del item -->
-    <div *ngFor="let calc of item.calculations" class="calc-row">
+    
+    <div *ngFor="let calc of item.calculations">
       <b>{{ calc.expression }}</b> → {{ calc.result }}
 
-      <!-- Pasos -->
+      <!-- Pasos renderizados en modo humano -->
       <div *ngIf="calc.steps.length">
-        <div *ngFor="let step of calc.steps">
-          {{ step.type }}: {{ step.name }}
-          ({{ step.operands.join(', ') }}) = {{ step.result }}
-        </div>
+        <!-- Convertir a HumanStep antes de pasar al componente -->
+        <ng-container *ngFor="let step of convertToHumanSteps(calc.steps)">
+          <app-human-render-line [step]="step"></app-human-render-line>
+        </ng-container>
       </div>
     </div>
+
 
     <!-- Tags -->
     <app-workspace-tags [tags]="item.tags" (tagsChange)="wsService.updateTags(item.id, $event)">

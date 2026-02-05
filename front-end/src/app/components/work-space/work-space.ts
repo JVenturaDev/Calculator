@@ -9,7 +9,8 @@ import { WorkspaceTagsComponent } from '../workspace-tags/workspace-tags';
 import Complex from 'complex.js';
 import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
 import { ChangeDetectorRef } from '@angular/core';
-
+import { HumanRenderLineComponent } from '../human-render-line/human-render-line';
+import { HumanStep } from '../../services/calculation-renderers/human-render/human-renderer';
 export interface WorkspaceItem {
   id: string;
   title: string;
@@ -41,7 +42,7 @@ export interface CalculationDTO {
   standalone: true,
   templateUrl: './work-space.html',
   styleUrls: ['./work-space.css'],
-  imports: [CommonModule, FormsModule, WorkspaceTagsComponent]
+  imports: [CommonModule, FormsModule, WorkspaceTagsComponent, HumanRenderLineComponent]
 })
 export class WorkSpace implements OnInit {
 
@@ -75,6 +76,37 @@ export class WorkSpace implements OnInit {
     });
   }
 
+  convertToHumanSteps(steps: Step[]): HumanStep[] {
+    const formatComplex = (c: Complex) =>
+      c.im === 0 ? `${c.re}` : `${c.re}${c.im >= 0 ? '+' : ''}${c.im}i`;
+
+    return steps.map((s, idx) => {
+      let text: string;
+
+      if (s.type === "Operator") {
+        const left = s.operands[0] instanceof Complex ? formatComplex(s.operands[0] as Complex) : s.operands[0];
+        const right = s.operands[1] instanceof Complex ? formatComplex(s.operands[1] as Complex) : s.operands[1];
+        text = `${left} ${s.name} ${right} = ${s.result instanceof Complex ? formatComplex(s.result) : s.result}`;
+      } else {
+        const ops = s.operands
+          .map(o => (o instanceof Complex ? formatComplex(o as Complex) : o))
+          .join(", ");
+        text = `${s.name}(${ops}) = ${s.result instanceof Complex ? formatComplex(s.result) : s.result}`;
+      }
+
+      return {
+        text,
+        level: 0,
+        type: s.type === "Operator" ? "operator" : "function",
+        name: s.name,
+        operands: s.operands,
+        result: s.result
+      };
+    });
+  }
+
+
+
   activateItem(id: string) {
     this.activeItemId = id;
     this.wsService.setActiveItem(id);
@@ -106,6 +138,7 @@ export class WorkSpace implements OnInit {
     this.newItemTitle = '';
     this.newItemTags = [];
     this.creatingItem = false;
+
   }
 
   evaluateWorkspaceItem() {
@@ -127,6 +160,10 @@ export class WorkSpace implements OnInit {
       steps: evaluation.steps,
       timestamp: new Date()
     };
+    const humanSteps: HumanStep[] = this.convertToHumanSteps(calc.steps);
+
+    console.table(humanSteps);
+
     console.log('WorkspaceCalculation:', calc);
     this.wsService.addCalculationToActiveItem(calc);
     setTimeout(() => this.activateItem(activeId));

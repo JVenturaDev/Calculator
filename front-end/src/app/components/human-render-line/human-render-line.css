@@ -1,0 +1,17 @@
+.human-step.operator {
+  color: white;
+}
+
+.human-step.function {
+  color: darkblue;
+}
+
+.human-step.result {
+  color: darkgreen;
+  font-weight: bold;
+}
+
+.human-step {
+  font-family: 'Courier New', monospace;
+  margin: 2px 0;
+}
