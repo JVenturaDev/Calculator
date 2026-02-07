@@ -23,18 +23,18 @@
     </div>
 
     <!-- Historial del item -->
-    
+
     <div *ngFor="let calc of item.calculations">
       <b>{{ calc.expression }}</b> → {{ calc.result }}
 
-      <!-- Pasos renderizados en modo humano -->
+      <!-- Pasos renderizados en modo libro -->
       <div *ngIf="calc.steps.length">
-        <!-- Convertir a HumanStep antes de pasar al componente -->
-        <ng-container *ngFor="let step of convertToHumanSteps(calc.steps)">
-          <app-human-render-line [step]="step"></app-human-render-line>
+        <ng-container *ngFor="let step of bookRenderer.convertToBookSteps(calc.steps)">
+          <app-book-render-line [step]="step"></app-book-render-line>
         </ng-container>
       </div>
     </div>
+
 
 
     <!-- Tags -->

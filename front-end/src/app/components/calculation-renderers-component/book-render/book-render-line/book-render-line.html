@@ -1,0 +1,14 @@
+<div class="book-step" *ngIf="step.denominator; else inlineStep">
+  <div class="numerator">{{ formatValue(step.numerator) }}</div>
+  <div class="line">——</div>
+  <div class="denominator">{{ formatValue(step.denominator) }}</div>
+  <div class="equals">= {{ formatValue(step.result) }}</div>
+</div>
+
+<ng-template #inlineStep>
+  <div class="inline-step">
+    {{ formatValue(step.numerator) }}
+    <span *ngIf="step.operator">{{ step.operator }}</span>
+    = {{ formatValue(step.result) }}
+  </div>
+</ng-template>

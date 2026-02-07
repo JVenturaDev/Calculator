@@ -9,8 +9,13 @@ import { WorkspaceTagsComponent } from '../workspace-tags/workspace-tags';
 import Complex from 'complex.js';
 import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
 import { ChangeDetectorRef } from '@angular/core';
-import { HumanRenderLineComponent } from '../human-render-line/human-render-line';
 import { HumanStep } from '../../services/calculation-renderers/human-render/human-renderer';
+import { BookRenderLineComponent } from '../calculation-renderers-component/book-render/book-render-line/book-render-line';
+import { CalculationParserService } from '../../services/calculation/calculation-parser';
+import { BookRenderer } from '../../services/book-renderer-service/book-renderer';
+
+
+
 export interface WorkspaceItem {
   id: string;
   title: string;
@@ -42,7 +47,7 @@ export interface CalculationDTO {
   standalone: true,
   templateUrl: './work-space.html',
   styleUrls: ['./work-space.css'],
-  imports: [CommonModule, FormsModule, WorkspaceTagsComponent, HumanRenderLineComponent]
+  imports: [CommonModule, FormsModule, WorkspaceTagsComponent,BookRenderLineComponent]
 })
 export class WorkSpace implements OnInit {
 
@@ -61,7 +66,9 @@ export class WorkSpace implements OnInit {
     public inputService: InputService,
     private tokenizer: Tokenizer,
     private parserService: parser,
-    private evaluatorPolish: evaluator
+    private evaluatorPolish: evaluator,
+    private serviseParserN: CalculationParserService,
+    public bookRenderer: BookRenderer,
   ) { }
 
   ngOnInit(): void {
@@ -76,34 +83,27 @@ export class WorkSpace implements OnInit {
     });
   }
 
-  convertToHumanSteps(steps: Step[]): HumanStep[] {
-    const formatComplex = (c: Complex) =>
-      c.im === 0 ? `${c.re}` : `${c.re}${c.im >= 0 ? '+' : ''}${c.im}i`;
+convertToHumanSteps(steps: Step[]): HumanStep[] {
+  return steps.map(s => {
+    const format = (v: number | Complex) => this.serviseParserN.formatValue(v); 
 
-    return steps.map((s, idx) => {
-      let text: string;
+    let text: string;
+    if (s.type === "Operator") {
+      text = `${format(s.operands[0])} ${s.name} ${format(s.operands[1])} = ${format(s.result)}`;
+    } else { // función
+      text = `${s.name}(${s.operands.map(format).join(", ")}) = ${format(s.result)}`;
+    }
 
-      if (s.type === "Operator") {
-        const left = s.operands[0] instanceof Complex ? formatComplex(s.operands[0] as Complex) : s.operands[0];
-        const right = s.operands[1] instanceof Complex ? formatComplex(s.operands[1] as Complex) : s.operands[1];
-        text = `${left} ${s.name} ${right} = ${s.result instanceof Complex ? formatComplex(s.result) : s.result}`;
-      } else {
-        const ops = s.operands
-          .map(o => (o instanceof Complex ? formatComplex(o as Complex) : o))
-          .join(", ");
-        text = `${s.name}(${ops}) = ${s.result instanceof Complex ? formatComplex(s.result) : s.result}`;
-      }
+    return {
+      text,
+      level: 0,
+      type: s.type === "Operator" ? 'operator' : 'function',
+      name: s.name
+    };
+  });
+}
 
-      return {
-        text,
-        level: 0,
-        type: s.type === "Operator" ? "operator" : "function",
-        name: s.name,
-        operands: s.operands,
-        result: s.result
-      };
-    });
-  }
+
 
 
 
