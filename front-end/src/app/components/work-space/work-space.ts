@@ -12,9 +12,12 @@ import { ChangeDetectorRef } from '@angular/core';
 import { HumanStep } from '../../services/calculation-renderers/human-render/human-renderer';
 import { BookRenderLineComponent } from '../calculation-renderers-component/book-render/book-render-line/book-render-line';
 import { CalculationParserService } from '../../services/calculation/calculation-parser';
+import { TreeNodeComponent } from '../treeRenderComponent/tree-render/tree-render';
 import { BookRenderer } from '../../services/book-renderer-service/book-renderer';
-
-
+import { TreeRendererService } from '../../services/TreeRendererService/tree-render';
+import { TreeNode } from '../treeRenderComponent/tree-render/tree-render';
+import { BookStep } from '../../services/book-renderer-service/book-renderer';
+import { HumanRenderLineComponent } from '../calculation-renderers-component/human-render-line/human-render-line';
 
 export interface WorkspaceItem {
   id: string;
@@ -26,12 +29,15 @@ export interface WorkspaceItem {
   createdAt: Date;
   updatedAt: Date;
 }
-
+// porque opcional(?), me da pereza meterlos a la db 
 export interface WorkspaceCalculation {
   expression: string;
   result: number | Complex;
   steps: Step[];
   timestamp: Date;
+  id?: string,
+  humanSteps?: HumanStep[];  
+  bookSteps?: BookStep[];    
 }
 
 
@@ -47,9 +53,10 @@ export interface CalculationDTO {
   standalone: true,
   templateUrl: './work-space.html',
   styleUrls: ['./work-space.css'],
-  imports: [CommonModule, FormsModule, WorkspaceTagsComponent,BookRenderLineComponent]
+  imports: [CommonModule, FormsModule, WorkspaceTagsComponent, BookRenderLineComponent, TreeNodeComponent, HumanRenderLineComponent]
 })
 export class WorkSpace implements OnInit {
+  trees = new Map<string, TreeNode>();
 
   workspaceItems: WorkspaceItem[] = [];
   activeItemId: string | null = null;
@@ -57,8 +64,15 @@ export class WorkSpace implements OnInit {
   creatingItem = false;
   newItemTitle = '';
   newItemTags: string[] = [];
+  viewMode: 'human' | 'book' | 'tree' = 'human';
 
+  setViewMode(mode: 'human' | 'book' | 'tree') {
+    this.viewMode = mode;
+  }
   @ViewChildren('workspaceInput') workspaceInputs!: QueryList<ElementRef<HTMLInputElement>>;
+  get activeItem(): WorkspaceItem | undefined {
+    return this.workspaceItems.find(i => i.id === this.activeItemId);
+  }
 
   constructor(
     private cd: ChangeDetectorRef,
@@ -67,15 +81,25 @@ export class WorkSpace implements OnInit {
     private tokenizer: Tokenizer,
     private parserService: parser,
     private evaluatorPolish: evaluator,
-    private serviseParserN: CalculationParserService,
+    public serviseParserN: CalculationParserService,
     public bookRenderer: BookRenderer,
+    public treeRenderer: TreeRendererService,
   ) { }
 
   ngOnInit(): void {
-    this.wsService.workspaceItems$.subscribe(items => this.workspaceItems = items);
+    // Suscripción a workspaceItems$
+    this.wsService.workspaceItems$.subscribe(items => {
+      this.workspaceItems = items;
+      this.generateActiveItemSteps();
+    });
 
-    this.wsService.activeItemId$.subscribe(id => this.activeItemId = id);
+    // Suscripción a activeItemId$
+    this.wsService.activeItemId$.subscribe(id => {
+      this.activeItemId = id;
+      this.generateActiveItemSteps();
+    });
 
+    // Suscripción a target$ para el foco
     this.inputService.target$.subscribe(target => {
       if (target.type === 'workspace-item') {
         this.focusInput(target.itemId);
@@ -83,25 +107,47 @@ export class WorkSpace implements OnInit {
     });
   }
 
-convertToHumanSteps(steps: Step[]): HumanStep[] {
-  return steps.map(s => {
-    const format = (v: number | Complex) => this.serviseParserN.formatValue(v); 
+private generateActiveItemSteps() {
+  this.trees.clear(); 
 
-    let text: string;
-    if (s.type === "Operator") {
-      text = `${format(s.operands[0])} ${s.name} ${format(s.operands[1])} = ${format(s.result)}`;
-    } else { // función
-      text = `${s.name}(${s.operands.map(format).join(", ")}) = ${format(s.result)}`;
-    }
+  if (!this.activeItemId) return;
 
-    return {
-      text,
-      level: 0,
-      type: s.type === "Operator" ? 'operator' : 'function',
-      name: s.name
-    };
+  const item = this.workspaceItems.find(i => i.id === this.activeItemId);
+  if (!item) return;
+
+  item.calculations.forEach(calc => {
+    if (!calc.steps?.length) return;
+
+    calc.id ??= crypto.randomUUID();
+
+    const ir = this.serviseParserN.parse(calc.steps);
+
+    this.trees.set(calc.id, this.treeRenderer.buildTree(ir));
+    calc.humanSteps = this.convertToHumanSteps(calc.steps);
+    calc.bookSteps = this.bookRenderer.convertToBookSteps(calc.steps);
   });
 }
+
+
+  convertToHumanSteps(steps: Step[]): HumanStep[] {
+    return steps.map(s => {
+      const format = (v: number | Complex) => this.serviseParserN.formatValue(v);
+
+      let text: string;
+      if (s.type === "Operator") {
+        text = `${format(s.operands[0])} ${s.name} ${format(s.operands[1])} = ${format(s.result)}`;
+      } else { 
+        text = `${s.name}(${s.operands.map(format).join(", ")}) = ${format(s.result)}`;
+      }
+
+      return {
+        text,
+        level: 0,
+        type: s.type === "Operator" ? 'operator' : 'function',
+        name: s.name
+      };
+    });
+  }
 
 
 
@@ -155,6 +201,7 @@ convertToHumanSteps(steps: Step[]): HumanStep[] {
     if (typeof evaluation !== 'object' || !('steps' in evaluation)) return;
 
     const calc: WorkspaceCalculation = {
+      id: crypto.randomUUID(),
       expression: item.currentExpression,
       result: evaluation.result,
       steps: evaluation.steps,

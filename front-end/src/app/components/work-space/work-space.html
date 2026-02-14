@@ -23,20 +23,38 @@
     </div>
 
     <!-- Historial del item -->
+    <!-- Selector simple (solo en el activo) -->
+    <div class="view-switch" *ngIf="activeItemId === item.id">
+      <button (click)="$event.stopPropagation(); setViewMode('human')">Humano</button>
+      <button (click)="$event.stopPropagation(); setViewMode('book')">Libro</button>
+      <button (click)="$event.stopPropagation(); setViewMode('tree')">Árbol</button>
+    </div>
 
-    <div *ngFor="let calc of item.calculations">
-      <b>{{ calc.expression }}</b> → {{ calc.result }}
+    <!-- Historial SOLO del item activo -->
+    <div *ngIf="activeItemId === item.id">
+      <div *ngFor="let calc of item.calculations">
+        <b>{{ calc.expression }}</b> → {{ serviseParserN.formatValue(calc.result) }}
 
-      <!-- Pasos renderizados en modo libro -->
-      <div *ngIf="calc.steps.length">
-        <ng-container *ngFor="let step of bookRenderer.convertToBookSteps(calc.steps)">
-          <app-book-render-line [step]="step"></app-book-render-line>
+        <!-- HUMANO -->
+        <ng-container *ngIf="viewMode === 'human'">
+          <ng-container *ngFor="let step of calc.humanSteps">
+            <app-human-render-line [step]="step"></app-human-render-line>
+          </ng-container>
+        </ng-container>
+
+        <!-- LIBRO -->
+        <ng-container *ngIf="viewMode === 'book'">
+          <ng-container *ngFor="let step of calc.bookSteps">
+            <app-book-render-line [step]="step"></app-book-render-line>
+          </ng-container>
+        </ng-container>
+
+        <!-- ÁRBOL -->
+        <ng-container *ngIf="viewMode === 'tree'">
+          <app-tree-node *ngIf="trees.get(calc.id!) as tree" [node]="tree"></app-tree-node>
         </ng-container>
       </div>
     </div>
-
-
-
     <!-- Tags -->
     <app-workspace-tags [tags]="item.tags" (tagsChange)="wsService.updateTags(item.id, $event)">
     </app-workspace-tags>

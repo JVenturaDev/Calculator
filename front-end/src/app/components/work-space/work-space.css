@@ -7,3 +7,7 @@
     padding: 10px;
     overflow-y: auto;
 }
+.view-switch button.active {
+  background: #222;
+  color: white;
+}

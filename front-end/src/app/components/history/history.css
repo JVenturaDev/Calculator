@@ -14,6 +14,9 @@
 
 .history {
     background-color: var(--color-gray);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
     border: 0.5px solid var(--boder--liner);
     border-radius: 6px;
     padding: 15px;
@@ -46,10 +49,12 @@
 .style-A:hover #color-span {
     color: var(--color-red);
 }
-.buttonHistory{
+
+.buttonHistory {
     border: none;
     background-color: transparent;
 }
+
 .history-item {
     background: var(--contenidoArea);
     color: var(--text--general);

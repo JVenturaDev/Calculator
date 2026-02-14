@@ -1,0 +1,10 @@
+<div class="tree-node">
+    <div class="node-label">
+        {{ node.label }}
+    </div>
+
+    <div class="node-children" *ngIf="node.children.length">
+        <app-tree-node *ngFor="let child of node.children" [node]="child">
+        </app-tree-node>
+    </div>
+</div>

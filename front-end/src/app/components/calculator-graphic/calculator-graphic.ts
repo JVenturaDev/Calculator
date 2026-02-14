@@ -55,7 +55,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
     });
     this.inputService.target$.subscribe(target => {
       if (target.type === 'calculator') {
-        this.focusCalculatorInput(); 
+        this.focusCalculatorInput();
       }
     });
   }
@@ -209,6 +209,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
     if (typeof evaluation !== 'object' || !('steps' in evaluation)) return;
 
     const calc = {
+      id: crypto.randomUUID(),
       expression: item.currentExpression,
       result: evaluation.result,
       steps: evaluation.steps,

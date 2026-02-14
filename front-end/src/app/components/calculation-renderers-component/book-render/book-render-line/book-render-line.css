@@ -1,17 +1,36 @@
 .book-step {
   text-align: center;
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
-.numerator, .denominator {
+.numerator,
+.denominator {
   display: block;
 }
 
 .line {
-  border-top: 1px solid black;
-  margin: 2px 0;
+  margin: 1px 0;
+  height: 14px;
 }
 
 .equals {
   margin-top: 2px;
+}
+
+.displayFlex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.operator {
+  margin-top: auto;
+
+}
+
+.operatorContainer {
+  display: flex;
+  flex-direction: column;
+  height: 36.6px !important;
+  margin-right: 20px;
 }
