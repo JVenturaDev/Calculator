@@ -36,8 +36,8 @@ export interface WorkspaceCalculation {
   steps: Step[];
   timestamp: Date;
   id?: string,
-  humanSteps?: HumanStep[];  
-  bookSteps?: BookStep[];    
+  humanSteps?: HumanStep[];
+  bookSteps?: BookStep[];
 }
 
 
@@ -106,27 +106,32 @@ export class WorkSpace implements OnInit {
       }
     });
   }
-
-private generateActiveItemSteps() {
-  this.trees.clear(); 
-
-  if (!this.activeItemId) return;
-
-  const item = this.workspaceItems.find(i => i.id === this.activeItemId);
-  if (!item) return;
-
-  item.calculations.forEach(calc => {
-    if (!calc.steps?.length) return;
-
-    calc.id ??= crypto.randomUUID();
-
-    const ir = this.serviseParserN.parse(calc.steps);
-
-    this.trees.set(calc.id, this.treeRenderer.buildTree(ir));
-    calc.humanSteps = this.convertToHumanSteps(calc.steps);
-    calc.bookSteps = this.bookRenderer.convertToBookSteps(calc.steps);
-  });
+onDeleteItem(itemId: string) {
+  if (!confirm('¿Borrar este item?')) return;
+  this.wsService.deleteItem(itemId);
 }
+
+
+  private generateActiveItemSteps() {
+    this.trees.clear();
+
+    if (!this.activeItemId) return;
+
+    const item = this.workspaceItems.find(i => i.id === this.activeItemId);
+    if (!item) return;
+
+    item.calculations.forEach(calc => {
+      if (!calc.steps?.length) return;
+
+      calc.id ??= crypto.randomUUID();
+
+      const ir = this.serviseParserN.parse(calc.steps);
+
+      this.trees.set(calc.id, this.treeRenderer.buildTree(ir));
+      calc.humanSteps = this.convertToHumanSteps(calc.steps);
+      calc.bookSteps = this.bookRenderer.convertToBookSteps(calc.steps);
+    });
+  }
 
 
   convertToHumanSteps(steps: Step[]): HumanStep[] {
@@ -136,7 +141,7 @@ private generateActiveItemSteps() {
       let text: string;
       if (s.type === "Operator") {
         text = `${format(s.operands[0])} ${s.name} ${format(s.operands[1])} = ${format(s.result)}`;
-      } else { 
+      } else {
         text = `${s.name}(${s.operands.map(format).join(", ")}) = ${format(s.result)}`;
       }
 
@@ -211,7 +216,6 @@ private generateActiveItemSteps() {
 
     console.table(humanSteps);
 
-    console.log('WorkspaceCalculation:', calc);
     this.wsService.addCalculationToActiveItem(calc);
     setTimeout(() => this.activateItem(activeId));
   }

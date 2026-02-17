@@ -40,8 +40,9 @@ export class WorkspaceApiService {
     );
   }
 
-  deleteItem(id: string) {
-    return this.http.delete<void>(`${this.baseUrl}/items/${id}`);
-  }
+deleteItem(id: string) {
+  return this.http.delete(`${this.baseUrl}/items/${id}`, { observe: 'response' });
+}
+
 }
 

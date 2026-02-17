@@ -11,8 +11,11 @@
   </div>
 
   <!-- Items del workspace -->
-  <div *ngFor="let item of workspaceItems; trackBy: trackById" class="workspace-item" (click)="activateItem(item.id)">
-    <h3>{{ item.title }}</h3>
+  <div *ngFor="let item of (wsService.workspaceItems$ | async); trackBy: trackById" class="workspace-item"
+    (click)="activateItem(item.id)">
+    <div class="item-header">
+      <h3>{{ item.title }}</h3>
+    </div>
 
     <!-- Input del item activo -->
     <div *ngIf="activeItemId === item.id" class="item-input" (click)="$event.stopPropagation()">
@@ -28,6 +31,11 @@
       <button (click)="$event.stopPropagation(); setViewMode('human')">Humano</button>
       <button (click)="$event.stopPropagation(); setViewMode('book')">Libro</button>
       <button (click)="$event.stopPropagation(); setViewMode('tree')">Árbol</button>
+
+      <button type="button" class="delete-btn" (click)="$event.stopPropagation(); onDeleteItem(item.id)"
+        title="Borrar item">
+        🗑️
+      </button>
     </div>
 
     <!-- Historial SOLO del item activo -->
@@ -63,4 +71,5 @@
   <button *ngIf="!creatingItem" (click)="creatingItem = true">
     Nuevo Item
   </button>
+
 </div>

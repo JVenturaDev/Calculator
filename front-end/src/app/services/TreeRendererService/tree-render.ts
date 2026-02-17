@@ -29,8 +29,6 @@ export class TreeRendererService {
 
     const children: TreeNode[] = op.operands.map(operandId => {
       const producingOp = this.findOperationProducingValue(operandId, ir);
-      console.log('Operand ID:', operandId);
-      console.log('Value found:', ir.values.get(operandId));
 
       if (producingOp) {
         return this.buildFromOperation(producingOp.id, ir);
@@ -45,9 +43,6 @@ export class TreeRendererService {
         children: []
       };
     });
-    console.log('OP:', op.name);
-    console.log('OPERANDS:', op.operands);
-    console.log('VALUES MAP:', ir.values);
     return {
 
       label: op.name,
