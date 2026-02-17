@@ -1,4 +1,4 @@
-package com.tuapp.backend.model;
+package com.calculator.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

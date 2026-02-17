@@ -1,4 +1,4 @@
-package com.tuapp.backend.config;
+package com.calculator.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

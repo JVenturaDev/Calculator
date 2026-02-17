@@ -1,4 +1,4 @@
-package com.tuapp.backend.model;
+package com.calculator.backend.model;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,14 +1,16 @@
-package com.tuapp.backend.service;
+package com.calculator.backend.service;
 
-import com.tuapp.backend.model.WorkspaceItem;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tuapp.backend.model.Step;
-import com.tuapp.backend.model.WorkspaceCalculation;
-import com.tuapp.backend.repository.WorkspaceItemRepository;
-import com.tuapp.backend.repository.WorkspaceCalculationRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.lang.NonNull;
+
+import com.calculator.backend.model.Step;
+import com.calculator.backend.model.WorkspaceCalculation;
+import com.calculator.backend.model.WorkspaceItem;
+import com.calculator.backend.repository.WorkspaceCalculationRepository;
+import com.calculator.backend.repository.WorkspaceItemRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -56,6 +58,7 @@ public class WorkspaceService {
 
     @Transactional
     public void deleteItem(@NonNull UUID id) {
+        calcRepo.deleteByWorkspaceItem_Id(id);
         itemRepo.deleteById(id);
     }
 
@@ -96,6 +99,7 @@ public class WorkspaceService {
     }
 
     public List<WorkspaceCalculation> getCalculationsForItem(UUID itemId) {
-        return calcRepo.findByWorkspaceItemId(itemId);
+        return calcRepo.findByWorkspaceItem_Id(itemId);
     }
+
 }
