@@ -1,4 +1,4 @@
-package com.calculator.backend.service;
+package com.calculator.backend.workSpace.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.lang.NonNull;
 
-import com.calculator.backend.model.Step;
-import com.calculator.backend.model.WorkspaceCalculation;
-import com.calculator.backend.model.WorkspaceItem;
-import com.calculator.backend.repository.WorkspaceCalculationRepository;
-import com.calculator.backend.repository.WorkspaceItemRepository;
+import com.calculator.backend.workSpace.model.Step;
+import com.calculator.backend.workSpace.model.WorkspaceCalculation;
+import com.calculator.backend.workSpace.model.WorkspaceItem;
+import com.calculator.backend.workSpace.repository.WorkspaceCalculationRepository;
+import com.calculator.backend.workSpace.repository.WorkspaceItemRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -62,7 +62,7 @@ public class WorkspaceService {
         itemRepo.deleteById(id);
     }
 
-    public WorkspaceItem updateItemTags(UUID id, List<String> tags) {
+    public WorkspaceItem updateItemTags(@NonNull UUID id, List<String> tags) {
         WorkspaceItem item = getItem(id).orElseThrow(() -> new RuntimeException("Item not found"));
         item.setTags(tags);
         item.setUpdatedAt(LocalDateTime.now());

@@ -1,5 +1,5 @@
-package com.calculator.backend.model;
-
+package com.calculator.backend.workSpace.model;
+import com.calculator.backend.auth.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,11 +13,14 @@ import java.util.UUID;
 @Getter
 @Setter
 public class WorkspaceItem {
-
     @Id
     @GeneratedValue
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true) 
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(nullable = false, length = 255)
     private String title;

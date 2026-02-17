@@ -1,11 +1,11 @@
-package com.calculator.backend.controller;
+package com.calculator.backend.workSpace.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.calculator.backend.model.WorkspaceCalculation;
-import com.calculator.backend.model.WorkspaceItem;
-import com.calculator.backend.service.WorkspaceService;
+import com.calculator.backend.workSpace.model.WorkspaceCalculation;
+import com.calculator.backend.workSpace.model.WorkspaceItem;
+import com.calculator.backend.workSpace.service.WorkspaceService;
 
 import org.springframework.lang.NonNull;
 

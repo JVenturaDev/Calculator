@@ -1,4 +1,4 @@
-package com.calculator.backend.model;
+package com.calculator.backend.workSpace.model;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;

@@ -1,9 +1,9 @@
-package com.calculator.backend.repository;
+package com.calculator.backend.workSpace.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.calculator.backend.model.WorkspaceCalculation;
+import com.calculator.backend.workSpace.model.WorkspaceCalculation;
 
 import java.util.UUID;
 import java.util.List;
