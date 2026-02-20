@@ -1,4 +1,6 @@
 package com.calculator.backend.workSpace.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.calculator.backend.auth.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,7 +20,8 @@ public class WorkspaceItem {
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true) 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "user_id")
     private User user;
 
