@@ -1,0 +1,19 @@
+<div style="max-width:300px;margin:40px auto;">
+  <h2>register</h2>
+
+  <input
+    type="text"
+    placeholder="Username"
+    [(ngModel)]="username"
+  />
+
+  <input
+    type="password"
+    placeholder="Password"
+    [(ngModel)]="password"
+  />
+
+  <button (click)="register()">register</button>
+
+  <p *ngIf="error" style="color:red">{{ error }}</p>
+</div>

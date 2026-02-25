@@ -11,7 +11,11 @@ import { GraphicComponent } from './components/calculator-graphic/calculator-gra
 import { GraphicComponentPlot } from './components/graphic-plot/graphic-plot';
 import { parser } from './services/polish-services/polish-notation-parser-service';
 import { ToggleService } from './services/toggle-services/toggle';
+import { WorkspaceApiService } from './services/workspaceApiService/workspace-api-service';
+import { Login } from './components/pages/login/login';
 import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
@@ -28,6 +32,9 @@ import { CommonModule } from '@angular/common';
     DisplayComponent,
     CalculatorBasicComponent,
     HistoryComponent,
+    RouterOutlet,
+    Login
+    
   ]
 })
 
@@ -36,7 +43,8 @@ export class AppComponent {
   currentView: 'graph' | 'history' = 'graph';
 
   constructor(private parserPolish: parser,
-    private toggleService: ToggleService
+    private toggleService: ToggleService,
+    private api: WorkspaceApiService
   ) { }
 
   ngOnInit() {

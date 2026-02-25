@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
-import { WorkspaceItem, WorkspaceCalculation, CalculationDTO } from '../../components/work-space/work-space';
+import { WorkspaceItem, CalculationDTO } from '../../components/work-space/work-space';
 import { HttpClient } from '@angular/common/http';
+import { tap } from 'rxjs/operators';
+
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -8,7 +10,8 @@ import { Observable } from 'rxjs';
 })
 export class WorkspaceApiService {
   private readonly baseUrl = 'http://localhost:8080/api/workspace';
-
+  private readonly baseUrll = 'http://localhost:8080/auth';
+  private readonly tokenKey = 'auth_token';
   constructor(private http: HttpClient) { }
 
   getItems(): Observable<WorkspaceItem[]> {
@@ -40,9 +43,33 @@ export class WorkspaceApiService {
     );
   }
 
-deleteItem(id: string) {
-  return this.http.delete(`${this.baseUrl}/items/${id}`, { observe: 'response' });
-}
+  deleteItem(id: string) {
+    return this.http.delete(`${this.baseUrl}/items/${id}`, { observe: 'response' });
+  }
 
+  register(username: string, password: string) {
+    return this.http.post(
+      `${this.baseUrll}/register`,
+      { username, password },
+      { responseType: 'text' } 
+    );
+  }
+
+  login(username: string, password: string): Observable<{ token: string }> {
+    return this.http.post<{ token: string }>(`${this.baseUrll}/login`, { username, password })
+      .pipe(tap(res => this.setToken(res.token)));
+  }
+
+  logout(): void {
+    localStorage.removeItem(this.tokenKey);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  private setToken(token: string): void {
+    localStorage.setItem(this.tokenKey, token);
+  }
 }
 

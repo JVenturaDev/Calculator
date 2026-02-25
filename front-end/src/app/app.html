@@ -11,6 +11,7 @@
                 <app-work-space>
                 </app-work-space>
                 <app-memory></app-memory>
+
             </div>
 
             <section class="calculator" aria-label="Calculadora">
@@ -32,8 +33,9 @@
 
 
             <aside class="history" aria-label="Historial de operaciones">
-                <app-history *ngIf="currentView === 'history'"></app-history>
-                <app-graphic-plot *ngIf="currentView === 'graph'"></app-graphic-plot>
+                <router-outlet></router-outlet>
+                <app-history *ngIf="currentView === 'history'">
+                </app-history> <app-graphic-plot *ngIf="currentView === 'graph'"></app-graphic-plot>
             </aside>
 
         </section>
