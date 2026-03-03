@@ -34,4 +34,10 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @Column(name = "is_guest", nullable = false)
+    private boolean guest = false;
+
+    @Column(name = "guest_expires_at")
+    private LocalDateTime guestExpiresAt;
+
 }

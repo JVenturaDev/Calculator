@@ -19,24 +19,27 @@ public class JwtService {
   private final long expirationMs;
 
   public JwtService(
-    @Value("${security.jwt.secret}") String secret,
-    @Value("${security.jwt.expiration-minutes:60}") long expirationMinutes
-  ) {
+      @Value("${security.jwt.secret}") String secret,
+      @Value("${security.jwt.expiration-minutes:60}") long expirationMinutes) {
     this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     this.expirationMs = expirationMinutes * 60_000L;
   }
 
   public String generateToken(UUID userId, String username) {
     Date now = new Date();
-    Date exp = new Date(now.getTime() + expirationMs);
+
+    boolean isGuest = username != null && username.startsWith("guest_");
+    long expMs = isGuest ? (24L * 60L * 60L * 1000L) : expirationMs; 
+
+    Date exp = new Date(now.getTime() + expMs);
 
     return Jwts.builder()
-      .setSubject(userId.toString())      
-      .claim("username", username)        
-      .setIssuedAt(now)
-      .setExpiration(exp)
-      .signWith(signingKey, SignatureAlgorithm.HS256)
-      .compact();
+        .setSubject(userId.toString())
+        .claim("username", username)
+        .setIssuedAt(now)
+        .setExpiration(exp)
+        .signWith(signingKey, SignatureAlgorithm.HS256)
+        .compact();
   }
 
   public boolean isTokenValid(String token) {
@@ -60,9 +63,9 @@ public class JwtService {
 
   private Claims parseClaims(String token) {
     return Jwts.parserBuilder()
-      .setSigningKey(signingKey)
-      .build()
-      .parseClaimsJws(token)
-      .getBody();
+        .setSigningKey(signingKey)
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
   }
 }

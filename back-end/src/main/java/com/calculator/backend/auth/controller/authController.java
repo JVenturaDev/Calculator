@@ -23,12 +23,19 @@ public class AuthController {
     return ResponseEntity.ok().body("registered");
   }
 
-@PostMapping("/login")
-public ResponseEntity<?> login(@RequestBody AuthRequest req) {
-  String token = authService.login(req.username(), req.password());
-  return ResponseEntity.ok(new TokenResponse(token));
-}
+  @PostMapping("/login")
+  public ResponseEntity<?> login(@RequestBody AuthRequest req) {
+    String token = authService.login(req.username(), req.password());
+    return ResponseEntity.ok(new TokenResponse(token));
+  }
 
-public record TokenResponse(String token) {}
+  @PostMapping("/guest")
+  public ResponseEntity<?> guest() {
+    String token = authService.guest();
+    return ResponseEntity.ok(new TokenResponse(token));
+  }
+
+  public record TokenResponse(String token) {
+  }
 
 }

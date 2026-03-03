@@ -10,6 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface WorkspaceItemRepository extends JpaRepository<WorkspaceItem, UUID> {
+  void deleteAllByUser_Id(UUID userId);
 
   List<WorkspaceItem> findAllByUser_Id(UUID userId);
 

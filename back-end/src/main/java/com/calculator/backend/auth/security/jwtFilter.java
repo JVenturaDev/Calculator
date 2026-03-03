@@ -1,5 +1,6 @@
 package com.calculator.backend.auth.security;
 
+import com.calculator.backend.auth.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,9 +20,11 @@ import java.util.UUID;
 public class JwtFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
+  private final UserRepository userRepository;
 
-  public JwtFilter(JwtService jwtService) {
+  public JwtFilter(JwtService jwtService, UserRepository userRepository) {
     this.jwtService = jwtService;
+    this.userRepository = userRepository;
   }
 
   @Override
@@ -36,19 +40,32 @@ public class JwtFilter extends OncePerRequestFilter {
       String token = auth.substring(7);
 
       if (jwtService.isTokenValid(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
+
         UUID userId = jwtService.extractUserId(token);
-        String username = jwtService.extractUsername(token);
+
+        var userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+          filterChain.doFilter(request, response);
+          return;
+        }
+
+        var user = userOpt.get();
+
+        if (user.isGuest()
+            && user.getGuestExpiresAt() != null
+            && user.getGuestExpiresAt().isBefore(LocalDateTime.now())) {
+          filterChain.doFilter(request, response);
+          return;
+        }
 
         var authentication = new UsernamePasswordAuthenticationToken(
-            userId,                
+            userId,     
             null,
-            List.of()               
+            List.of()
         );
 
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-   
       }
     }
 
