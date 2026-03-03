@@ -51,7 +51,7 @@ export class WorkspaceApiService {
     return this.http.post(
       `${this.baseUrll}/register`,
       { username, password },
-      { responseType: 'text' } 
+      { responseType: 'text' }
     );
   }
 
@@ -59,11 +59,17 @@ export class WorkspaceApiService {
     return this.http.post<{ token: string }>(`${this.baseUrll}/login`, { username, password })
       .pipe(tap(res => this.setToken(res.token)));
   }
-
+  guest(): Observable<{ token: string }> {
+    return this.http.post<{ token: string }>(`${this.baseUrll}/guest`, {})
+      .pipe(tap(res => this.setToken(res.token)));
+  }
   logout(): void {
     localStorage.removeItem(this.tokenKey);
+    window.location.href = '/login';
   }
-
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem(this.tokenKey);
+  }
   getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
   }

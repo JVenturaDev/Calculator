@@ -2,9 +2,23 @@
     <button class="menuHamburger" (click)="toggleSidebar()">
         <span class="material-symbols-outlined">menu</span>
     </button>
-    <h2 class="logo"><img class="logo-height" src="" alt=""></h2>
+
+    <h2 class="logo">
+        <img class="logo-height" src="" alt="">
+    </h2>
+
     <div class="auth-buttons">
-        <button class="btn-secondary2" (click)="goLogin()">Log In</button>
-        <button class="btn-primary1" (click)="goRegister()">Sign Up</button>
+
+        <!-- si NO está logueado -->
+        <ng-container *ngIf="!this.ws.isLoggedIn()">
+            <button class="btn-secondary2" (click)="goLogin()">Log In</button>
+            <button class="btn-primary1" (click)="goRegister()">Sign Up</button>
+        </ng-container>
+
+        <!-- si está logueado -->
+        <button *ngIf="this.ws.isLoggedIn()" class="btn-secondary2" (click)="this.ws.logout()">
+            Logout
+        </button>
+
     </div>
 </header>

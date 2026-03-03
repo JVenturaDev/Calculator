@@ -15,19 +15,19 @@ export class WorkspaceService {
     private api: WorkspaceApiService,
     private zerialicer: CalculationMapper,
   ) {
- this.api.getItems().subscribe(items => {
-  const normalized = items.map(item => ({
-    ...item,
-    calculations: (item.calculations ?? []).map(c => ({
-      ...c,
-      id: c.id ?? crypto.randomUUID(), 
-      result: this.zerialicer.deserializeMaybe(c.result),
-      steps: this.zerialicer.normalizeSteps(c.steps),
-    }))
-  }));
+    this.api.getItems().subscribe(items => {
+      const normalized = items.map(item => ({
+        ...item,
+        calculations: (item.calculations ?? []).map(c => ({
+          ...c,
+          id: c.id ?? crypto.randomUUID(),
+          result: this.zerialicer.deserializeMaybe(c.result),
+          steps: this.zerialicer.normalizeSteps(c.steps),
+        }))
+      }));
 
-  this.workspaceItems$.next(normalized);
-});
+      this.workspaceItems$.next(normalized);
+    });
 
   }
   get activeItem(): WorkspaceItem | null {

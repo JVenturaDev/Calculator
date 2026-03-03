@@ -29,4 +29,12 @@ export class Register {
       }
     });
   }
+  continueAsGuest() {
+    this.api.guest().subscribe({
+      next: () => this.router.navigate(['/main']),
+      error: () => { "Error de capa 8" }
+    });
+  }
+  goLogin() { this.router.navigate(['/login']); }
+
 }

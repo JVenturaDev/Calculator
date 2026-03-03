@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-login',
   templateUrl: './login.html',
+  styleUrls: ['./login.css'],
   imports: [FormsModule, CommonModule]
 
 })
@@ -24,11 +25,18 @@ export class Login {
   login() {
     this.api.login(this.username, this.password).subscribe({
       next: () => {
-        this.router.navigate(['/workspace']);
+        this.router.navigate(['/main']);
       },
       error: () => {
         this.error = 'Credenciales inválidas';
       }
     });
   }
+  continueAsGuest() {
+    this.api.guest().subscribe({
+      next: () => this.router.navigate(['/main']),
+      error: () => { "Error de capa 8" }
+    });
+  }
+  goRegister() { this.router.navigate(['/register']); }
 }

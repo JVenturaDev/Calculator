@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 import { Login } from './components/pages/login/login';
 import { Register } from './components/pages/register/register/register';
-import { WorkSpace } from './components/work-space/work-space';
 import { authGuard } from './guards/auth-guard';
+import { Main } from './components/pages/main/main';
 
 export const routes: Routes = [
 
@@ -10,12 +10,12 @@ export const routes: Routes = [
   { path: 'register', component: Register },
 
   {
-    path: 'workspace',
-    component: WorkSpace,
+    path: 'main',
+    component: Main,
     canActivate: [authGuard]
   },
 
-  { path: '', redirectTo: 'workspace', pathMatch: 'full' },
+  { path: '', redirectTo: 'main', pathMatch: 'full' },
 
-  { path: '**', redirectTo: 'workspace' }
+  { path: '**', redirectTo: 'main' }
 ];

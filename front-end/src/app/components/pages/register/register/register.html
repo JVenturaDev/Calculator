@@ -1,19 +1,22 @@
-<div style="max-width:300px;margin:40px auto;">
-  <h2>register</h2>
+<div class="container">
+  <h2>Registrer</h2>
+  <div class="inputContainer">
+    <label class="input_label" for="email_field">User</label>
+    <input class="input1" type="text" placeholder="Username" [(ngModel)]="username" />
+    <label class="input_label" for="password_field">Password</label>
+    <input class="input2" type="password" placeholder="Password" [(ngModel)]="password" />
+  </div>
 
-  <input
-    type="text"
-    placeholder="Username"
-    [(ngModel)]="username"
-  />
-
-  <input
-    type="password"
-    placeholder="Password"
-    [(ngModel)]="password"
-  />
-
-  <button (click)="register()">register</button>
+  <div class="buttonsServices">
+    <button class="buttons button1" (click)="register()">Registrer</button>
+    <div class="separator">
+      <hr class="line">
+      <span>Or</span>
+      <hr class="line">
+    </div>
+    <button class="buttons button" (click)="goLogin()">Login</button>
+    <button class="buttons button" (click)="continueAsGuest()">Invitado</button>
+  </div>
 
   <p *ngIf="error" style="color:red">{{ error }}</p>
 </div>
