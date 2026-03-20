@@ -9,8 +9,8 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class WorkspaceApiService {
-  private readonly baseUrl = 'http://localhost:8080/api/workspace';
-  private readonly baseUrll = 'http://localhost:8080/auth';
+  private readonly baseUrl = '/api/workspace';
+  private readonly baseUrll = '/auth';
   private readonly tokenKey = 'auth_token';
   constructor(private http: HttpClient) { }
 

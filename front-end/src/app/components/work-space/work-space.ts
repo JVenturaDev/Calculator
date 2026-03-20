@@ -106,33 +106,28 @@ export class WorkSpace implements OnInit {
       }
     });
   }
-onDeleteItem(itemId: string) {
-  if (!confirm('¿Borrar este item?')) return;
-  this.wsService.deleteItem(itemId);
-}
-
-
-  private generateActiveItemSteps() {
-    this.trees.clear();
-
-    if (!this.activeItemId) return;
-
-    const item = this.workspaceItems.find(i => i.id === this.activeItemId);
-    if (!item) return;
-
-    item.calculations.forEach(calc => {
-      if (!calc.steps?.length) return;
-
-      calc.id ??= crypto.randomUUID();
-
-      const ir = this.serviseParserN.parse(calc.steps);
-
-      this.trees.set(calc.id, this.treeRenderer.buildTree(ir));
-      calc.humanSteps = this.convertToHumanSteps(calc.steps);
-      calc.bookSteps = this.bookRenderer.convertToBookSteps(calc.steps);
-    });
+  onDeleteItem(itemId: string) {
+    if (!confirm('¿Borrar este item?')) return;
+    this.wsService.deleteItem(itemId);
   }
 
+
+  generateActiveItemSteps() {
+    this.trees.clear();
+    if (!this.activeItemId) return;
+
+    const t = this.workspaceItems.find(o => o.id === this.activeItemId);
+
+    (t?.calculations ?? []).forEach(o => {
+      if (!o.steps?.length) return;
+
+      o.id ??= crypto.randomUUID();
+      const I = this.serviseParserN.parse(o.steps);
+      this.trees.set(o.id, this.treeRenderer.buildTree(I));
+      o.humanSteps = this.convertToHumanSteps(o.steps);
+      o.bookSteps = this.bookRenderer.convertToBookSteps(o.steps);
+    });
+  }
 
   convertToHumanSteps(steps: Step[]): HumanStep[] {
     return steps.map(s => {

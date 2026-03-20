@@ -21,11 +21,11 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtFilter jwtFilter;
+  private final JwtFilter jwtFilter;
 
-    SecurityConfig(JwtFilter jwtFilter) {
-        this.jwtFilter = jwtFilter;
-    }
+  SecurityConfig(JwtFilter jwtFilter) {
+    this.jwtFilter = jwtFilter;
+  }
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -50,9 +50,12 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOrigins(List.of("http://localhost:4200"));
+    config.setAllowedOrigins(List.of(
+        "http://localhost:4200",
+        "https://temp.alxrd.com",
+        "http://temp.alxrd.com"));
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With"));
     config.setExposedHeaders(List.of("Authorization"));
     config.setAllowCredentials(true);
 
