@@ -1,0 +1,52 @@
+# =========================
+# ENV VARIABLES
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# DOCKER
+# =========================
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Volúmenes (si los usas en local)
+data/
+db_data/
+postgres_data/
+mysql_data/
+
+# Certificados (Let's Encrypt, nginx ssl)
+certbot/
+letsencrypt/
+*.pem
+*.key
+
+# Logs de contenedores
+*.log
+logs/
+nginx/logs/
+
+# =========================
+# BUILD / CACHE GLOBAL
+# =========================
+node_modules/
+dist/
+build/
+.cache/
+
+# =========================
+# OS / EDITOR
+# =========================
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+
+# =========================
+# TEMP FILES
+# =========================
+*.tmp
+*.swp
