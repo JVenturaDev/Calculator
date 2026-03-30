@@ -50,3 +50,11 @@ Thumbs.db
 # =========================
 *.tmp
 *.swp
+# Docker volumes
+**/data/
+**/db/
+**/storage/
+
+# Logs globales
+*.log
+logs/
