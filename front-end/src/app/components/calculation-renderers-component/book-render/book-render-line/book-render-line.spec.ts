@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { BookRenderLine } from './book-render-line';
+import { BookRenderLineComponent } from './book-render-line';
 
-describe('BookRenderLine', () => {
-  let component: BookRenderLine;
-  let fixture: ComponentFixture<BookRenderLine>;
+describe('BookRenderLineComponent', () => {
+  let component: BookRenderLineComponent;
+  let fixture: ComponentFixture<BookRenderLineComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [BookRenderLine]
+      imports: [BookRenderLineComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
-    fixture = TestBed.createComponent(BookRenderLine);
+    fixture = TestBed.createComponent(BookRenderLineComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

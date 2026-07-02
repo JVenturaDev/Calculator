@@ -1,8 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
+import {
+  CALCULATION_ENGINE,
+  CalculationEngine,
+} from '../../services/engine-services/calculation-engine.contract';
 import { HistoryService } from '../../services/history-services/history';
 import { DisplayStateService } from '../../services/display-services/display';
 import { MemoryService } from '../../services/memory-services/memory';
@@ -26,7 +29,7 @@ export class CalculatorBasicComponent implements OnInit, OnDestroy {
 
   constructor(
     private display: DisplayStateService,
-    private engine: CalculatorEngineService,
+    @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
     public history: HistoryService,
     private memoryService: MemoryService,
     private stateService: StateService,
@@ -86,8 +89,7 @@ export class CalculatorBasicComponent implements OnInit, OnDestroy {
 
         case '=':
           const expr = this.display.currentValue;
-          const replaced = this.engine.replaceFunction(expr);
-          const rawResult = this.engine.evalExpresion(replaced); // number | Complex
+          const rawResult = this.engine.evaluate(expr);
           const displayResult = rawResult instanceof Complex
             ? rawResult.toString().replace('=', '')
             : String(rawResult);

@@ -72,7 +72,53 @@ body {
     overflow-y: hidden;
 
 }
+* {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    --border-light: #e5e7eb;
+    border-color: var(--border-light);
+}
 
+html {
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -moz-tab-size: 4;
+    tab-size: 4;
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+    margin: 0;
+}
+
+p {
+    margin: 0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button {
+    -webkit-appearance: button;
+    appearance: button;
+    background-color: transparent;
+    font-family: inherit;
+    font-variation-settings: inherit;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+}
 .main-container {
     position: absolute;
 }

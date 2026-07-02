@@ -17,14 +17,6 @@
       <h3>{{ item.title }}</h3>
     </div>
 
-    <!-- Input del item activo -->
-    <div *ngIf="activeItemId === item.id" class="item-input" (click)="$event.stopPropagation()">
-      <input #workspaceInput type="text" placeholder="" [ngModel]="item.currentExpression"
-        (ngModelChange)="wsService.updateCurrentExpression(item.id, $event)"
-        (focus)="inputService.setWorkspaceItemTarget(item.id)" />
-      <button (click)="$event.stopPropagation(); evaluateWorkspaceItem()">=</button>
-    </div>
-
     <!-- Historial del item -->
     <!-- Selector simple (solo en el activo) -->
     <div class="view-switch" *ngIf="activeItemId === item.id">
@@ -37,6 +29,15 @@
         🗑️
       </button>
     </div>
+
+    <!-- Input del item activo -->
+    <div *ngIf="activeItemId === item.id" class="item-input" (click)="$event.stopPropagation()">
+      <input #workspaceInput type="text" placeholder="" [ngModel]="item.currentExpression"
+        (ngModelChange)="wsService.updateCurrentExpression(item.id, $event)"
+        (focus)="inputService.setWorkspaceItemTarget(item.id)" />
+      <button (click)="$event.stopPropagation(); evaluateWorkspaceItem()">=</button>
+    </div>
+
 
     <!-- Historial SOLO del item activo -->
     <div *ngIf="activeItemId === item.id">
@@ -68,8 +69,9 @@
     </app-workspace-tags>
   </div>
 
-  <button *ngIf="!creatingItem" (click)="creatingItem = true">
-    Nuevo Item
+  <button class="moreItems" *ngIf="!creatingItem" (click)="creatingItem = true">
+    <div class="moreButton"> +</div>
+
   </button>
 
 </div>

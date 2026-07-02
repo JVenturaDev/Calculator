@@ -17,8 +17,8 @@ export class Tokenizer {
     'sech', 'csch', 'coth',
     'asinh', 'acosh', 'atanh',
     'asech', 'acsch', 'acoth',
-    'ln', 'log', 'sqrt', 'cbrt', 'abs', 'exp', 'yroot',
-    'logxy', 'mod', 'deg', 'dms', 'factorial',"xylog", '%'
+    'ln', 'log', 'sqrt', 'cbrt', 'abs', 'floor', 'ceil', 'exp', 'expe', 'yroot',
+    'logxy', 'pow', 'mod', 'deg', 'dms', 'factorial', 'xylog', '%'
   ];
 
   tokenize(expression: string): Token[] {

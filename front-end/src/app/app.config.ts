@@ -4,6 +4,8 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './services/auth/auth.interceptor';
+import { CALCULATION_ENGINE } from './services/engine-services/calculation-engine.contract';
+import { PolishCalculationEngine } from './services/engine-services/polish-calculation-engine';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,5 +15,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
 
     provideRouter(routes),
+    { provide: CALCULATION_ENGINE, useExisting: PolishCalculationEngine },
   ]
 };

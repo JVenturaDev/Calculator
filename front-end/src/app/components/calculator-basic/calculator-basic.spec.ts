@@ -1,56 +1,61 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
 import { BehaviorSubject } from 'rxjs';
 
 import { CalculatorBasicComponent } from './calculator-basic';
-import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
+import { CALCULATION_ENGINE } from '../../services/engine-services/calculation-engine.contract';
+import { DisplayStateService } from '../../services/display-services/display';
 import { StateService } from '../../services/core-services/state-object';
 import { HistoryService } from '../../services/history-services/history';
+import { MemoryService } from '../../services/memory-services/memory';
+import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
+import { ToggleService } from '../../services/toggle-services/toggle';
 
 describe('CalculatorBasicComponent', () => {
   let component: CalculatorBasicComponent;
   let fixture: ComponentFixture<CalculatorBasicComponent>;
-  let mockEngine: any;
-  let mockState: any;
-  let mockHistory: any;
-  const initialState = {
-    bd: null,
-    result: 0,
-    expression: '',
-    equalPressed: 0,
-    idEnEdicion: null,
-    memoryContainer: null,
-    valorOriginalMemoria: 0,
-    idUltimoResultado: null,
-  };
+  let displayValue: BehaviorSubject<string>;
+  let mockDisplay: jasmine.SpyObj<DisplayStateService> & { currentValue: string };
+  let mockEngine: { evaluate: jasmine.Spy };
+  let mockState: { value: Record<string, unknown>; update: jasmine.Spy };
+  let mockHistory: { agregarId: jasmine.Spy; clearHistory: jasmine.Spy };
 
   beforeEach(async () => {
-    mockEngine = {
-      calcularInverso: jasmine.createSpy('calcularInverso').and.returnValue('0.2'),
-      invertirUltimoNumero: jasmine.createSpy('invertirUltimoNumero').and.returnValue('-5'),
-      parentesisMulti: jasmine.createSpy('parentesisMulti').and.callFake((s: string) => s),
-      replaceFunction: jasmine.createSpy('replaceFunction').and.callFake((s: string) => s),
-      evalExpresion: jasmine.createSpy('evalExpresion').and.returnValue('4'),
-      processAndEval: jasmine.createSpy('processAndEval').and.returnValue('4'),
-    };
+    displayValue = new BehaviorSubject('');
+    mockDisplay = jasmine.createSpyObj<DisplayStateService>(
+      'DisplayStateService',
+      ['setValue', 'appendValue', 'clear', 'backspace'],
+      { value$: displayValue.asObservable(), currentValue: '' }
+    ) as jasmine.SpyObj<DisplayStateService> & { currentValue: string };
+    mockDisplay.setValue.and.callFake(value => {
+      mockDisplay.currentValue = value;
+      displayValue.next(value);
+    });
 
+    mockEngine = {
+      evaluate: jasmine.createSpy('evaluate').and.returnValue(4),
+    };
     mockState = {
-      state$: new BehaviorSubject(initialState),
-      value: initialState,
+      value: { result: 0, expression: '', idEnEdicion: null },
       update: jasmine.createSpy('update'),
     };
-
     mockHistory = {
       agregarId: jasmine.createSpy('agregarId'),
+      clearHistory: jasmine.createSpy('clearHistory'),
     };
 
     await TestBed.configureTestingModule({
-      imports: [FormsModule],
-      declarations: [CalculatorBasicComponent],
+      imports: [CalculatorBasicComponent],
       providers: [
-        { provide: CalculatorEngineService, useValue: mockEngine },
+        { provide: CALCULATION_ENGINE, useValue: mockEngine },
+        { provide: DisplayStateService, useValue: mockDisplay },
         { provide: StateService, useValue: mockState },
         { provide: HistoryService, useValue: mockHistory },
+        { provide: MemoryService, useValue: {} },
+        { provide: MemoryToggleService, useValue: { toggle: jasmine.createSpy('toggle') } },
+        {
+          provide: ToggleService,
+          useValue: { activeCalc$: new BehaviorSubject('basic') },
+        },
       ],
     }).compileComponents();
 
@@ -59,57 +64,17 @@ describe('CalculatorBasicComponent', () => {
     fixture.detectChanges();
   });
 
-  afterEach(() => {
-    mockState.state$.complete();
-  });
-
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('handleButtonClick "1/" should call engine.calcularInverso and update state', () => {
-    // initial expression is ''
-    component.handleButtonClick('1/');
-    expect(mockEngine.calcularInverso).toHaveBeenCalledWith(initialState.expression);
-    expect(mockState.update).toHaveBeenCalledWith(jasmine.objectContaining({ expression: '0.2' }));
-  });
+  it('evaluates through the shared calculation engine', () => {
+    mockDisplay.currentValue = '2+2';
 
-  it('handleButtonClick "+/-" should call engine.invertirUltimoNumero and update state', () => {
-    component.handleButtonClick('+/-');
-    expect(mockEngine.invertirUltimoNumero).toHaveBeenCalledWith(initialState.expression);
-    expect(mockState.update).toHaveBeenCalledWith(jasmine.objectContaining({ expression: '-5' }));
-  });
-
-  it('handleButtonClick "DEL" should slice last char and call state.update', () => {
-    // set a state value with some expression
-    mockState.value = { ...initialState, expression: '1234' };
-    component.handleButtonClick('DEL');
-    expect(mockState.update).toHaveBeenCalledWith(jasmine.objectContaining({ expression: '123' }));
-  });
-
-  it('handleButtonClick "=" should call engine pipeline, update state and add history', () => {
-    mockState.value = { ...initialState, expression: '2+2' };
     component.handleButtonClick('=');
 
-    expect(mockEngine.parentesisMulti).toHaveBeenCalledWith('2+2');
-    expect(mockEngine.replaceFunction).toHaveBeenCalled();
-    expect(mockEngine.evalExpresion).toHaveBeenCalled();
-    expect(mockState.update).toHaveBeenCalledWith(jasmine.objectContaining({ result: '4', expression: '4', equalPressed: 1 }));
-    expect(mockHistory.agregarId).toHaveBeenCalledWith('2+2', '4');
+    expect(mockEngine.evaluate).toHaveBeenCalledOnceWith('2+2');
+    expect(mockDisplay.setValue).toHaveBeenCalledWith('4');
+    expect(mockHistory.agregarId).toHaveBeenCalledWith('2+2', 4);
   });
-
-  // it('handleKeyDown Backspace should update state expression removing last char', () => {
-  //   // simulate entering expression
-  //   mockState.value = { ...initialState, expression: '55' };
-  //   const event = new KeyboardEvent('keydown', { key: 'Backspace' });
-  //   component.handleKeyDown(event);
-  //   expect(mockState.update).toHaveBeenCalledWith(jasmine.objectContaining({ expression: '5' }));
-  // });
-
-  // it('handleKeyDown Enter should call calcularResultado', () => {
-  //   spyOn(component, 'calcularResultado').and.callThrough();
-  //   const event = new KeyboardEvent('keydown', { key: 'Enter' });
-  //   component.handleKeyDown(event);
-  //   expect(component.calcularResultado).toHaveBeenCalled();
-  // });
 });

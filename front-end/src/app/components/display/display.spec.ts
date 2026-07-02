@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { DisplayComponent } from './display';
+import { CALCULATION_ENGINE } from '../../services/engine-services/calculation-engine.contract';
 
 describe('Display', () => {
   let component: DisplayComponent;
@@ -8,7 +9,10 @@ describe('Display', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DisplayComponent]
+      imports: [DisplayComponent],
+      providers: [
+        { provide: CALCULATION_ENGINE, useValue: { evaluate: () => 0 } },
+      ],
     })
     .compileComponents();
 
