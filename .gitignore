@@ -55,6 +55,9 @@ Thumbs.db
 **/db/
 **/storage/
 
+# Legacy calculator implementation (local quarantine)
+front-end/src/app/legacy/
+
 # Logs globales
 *.log
 logs/
