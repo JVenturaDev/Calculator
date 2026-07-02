@@ -1,9 +1,12 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
 import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
 import Plotly from 'plotly.js-dist-min';
+import {
+  CALCULATION_ENGINE,
+  CalculationEngine,
+} from '../../services/engine-services/calculation-engine.contract';
 
 @Component({
   selector: 'app-graphic-plot',
@@ -17,7 +20,7 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
   private sub!: Subscription;
 
   constructor(
-    private engine: CalculatorEngineService,
+    @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
     private graphicService: GraphicPlotService
   ) { }
 
@@ -47,7 +50,7 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
   private plot1D(expression: string): void {
     const xValues = this.linspace(-10, 10, 400);
     const yValues = xValues.map(x => {
-      try { return Number(this.engine.evalExpressionWithVariables(expression, { x })); }
+      try { return Number(this.engine.evaluate(expression, { variables: { x } })); }
       catch { return NaN; }
     });
 
@@ -66,7 +69,7 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
     const yRange = this.linspace(-10, 10, 100);
 
     const zValues: number[][] = yRange.map(y => xRange.map(x => {
-      try { return Number(this.engine.evalExpressionWithVariables(expression, { x, y })); }
+      try { return Number(this.engine.evaluate(expression, { variables: { x, y } })); }
       catch { return NaN; }
     }));
 

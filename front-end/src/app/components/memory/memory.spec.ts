@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MemoryComponent } from './memory';
+import { CALCULATION_ENGINE } from '../../services/engine-services/calculation-engine.contract';
 
 describe('Memory', () => {
   let component: MemoryComponent;
@@ -8,7 +9,10 @@ describe('Memory', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MemoryComponent]
+      imports: [MemoryComponent],
+      providers: [
+        { provide: CALCULATION_ENGINE, useValue: { evaluate: () => 0 } },
+      ],
     })
     .compileComponents();
 

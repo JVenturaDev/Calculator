@@ -1,13 +1,16 @@
 // src/app/components/memory/memory.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { MemoryService, MemoryRecord } from '../../services/memory-services/memory';
 import { AppInitService } from '../../services/core-services/init-app';
 import { StateService } from '../../services/core-services/state-object';
 import { DisplayStateService } from '../../services/display-services/display';
-import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
+import {
+  CALCULATION_ENGINE,
+  CalculationEngine,
+} from '../../services/engine-services/calculation-engine.contract';
 
 @Component({
   selector: 'app-memory',
@@ -28,7 +31,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
     private initApp: AppInitService,
     private stateService: StateService,
     private display: DisplayStateService,
-    private engine: CalculatorEngineService,
+    @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
     private toggleService: MemoryToggleService
   ) { }
 
@@ -147,7 +150,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
     const inputExpr = this.stateService.value.expression ?? '';
     let add = 0;
     try {
-      const res = this.engine.evalExpresion(inputExpr);
+      const res = this.engine.evaluate(inputExpr);
       add = typeof res === 'number' ? res : Number(res.toString());
     } catch {
       return;
@@ -165,7 +168,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
     const inputExpr = this.stateService.value.expression ?? '';
     let sub = 0;
     try {
-      const res = this.engine.evalExpresion(inputExpr);
+      const res = this.engine.evaluate(inputExpr);
       sub = typeof res === 'number' ? res : Number(res.toString());
     } catch {
       return;

@@ -1,7 +1,6 @@
-import { Component, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { CalculatorEngineService } from '../../services/engine-services/calculator-engine';
 import { HistoryService } from '../../services/history-services/history';
 import { DisplayStateService } from '../../services/display-services/display';
 import { MemoryService } from '../../services/memory-services/memory';
@@ -17,6 +16,10 @@ import { PreprocessModule } from '../../services/polish-services/preprocess-modu
 import { InputService } from '../../services/input-services/input-services';
 import { WorkSpace } from '../work-space/work-space';
 import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
+import {
+  CALCULATION_ENGINE,
+  CalculationEngine,
+} from '../../services/engine-services/calculation-engine.contract';
 @Component({
   selector: 'app-graphic',
   templateUrl: './calculator-graphic.html',
@@ -32,7 +35,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
 
   constructor(
     private display: DisplayStateService,
-    private engine: CalculatorEngineService,
+    @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
     public history: HistoryService,
     private memoryService: MemoryService,
     private stateService: StateService,
@@ -164,7 +167,9 @@ export class GraphicComponent implements OnInit, OnDestroy {
           if (/[xy]/i.test(preprocessed)) {
             let result: number | Complex;
             try {
-              result = this.engine.evalExpressionWithVariables(preprocessed, { x: 0, y: 0 });
+              result = this.engine.evaluate(preprocessed, {
+                variables: { x: 0, y: 0 },
+              });
             } catch {
               result = NaN;
             }

@@ -1,2 +1,2 @@
-// Compatibility shim for legacy consumers that have not migrated yet.
+// Deprecated compatibility shim. No active application flow should import it.
 export * from '../legacy/buttonFunctions';

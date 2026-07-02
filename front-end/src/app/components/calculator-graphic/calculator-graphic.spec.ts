@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 
 import { GraphicComponent } from './calculator-graphic';
 import { StateService } from '../../services/core-services/state-object';
-import { CalculatorEngineService } from '../../services/calculator-engine';
+import { CALCULATION_ENGINE } from '../../services/engine-services/calculation-engine.contract';
 
 describe('GraphicComponent', () => {
   let component: GraphicComponent;
@@ -29,14 +29,14 @@ describe('GraphicComponent', () => {
     };
 
     mockEngine = {
-      processAndEval: jasmine.createSpy('processAndEval').and.returnValue('evaluado'),
+      evaluate: jasmine.createSpy('evaluate').and.returnValue(0),
     };
 
     await TestBed.configureTestingModule({
-      declarations: [GraphicComponent],
+      imports: [GraphicComponent],
       providers: [
         { provide: StateService, useValue: mockState },
-        { provide: CalculatorEngineService, useValue: mockEngine },
+        { provide: CALCULATION_ENGINE, useValue: mockEngine },
       ],
     }).compileComponents();
 

@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TreeRender } from './tree-render';
+import { TreeRendererService } from './tree-render';
 
-describe('TreeRender', () => {
-  let service: TreeRender;
+describe('TreeRendererService', () => {
+  let service: TreeRendererService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(TreeRender);
+    service = TestBed.inject(TreeRendererService);
   });
 
   it('should be created', () => {

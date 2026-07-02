@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TreeRender } from './tree-render';
+import { TreeNodeComponent } from './tree-render';
 
-describe('TreeRender', () => {
-  let component: TreeRender;
-  let fixture: ComponentFixture<TreeRender>;
+describe('TreeNodeComponent', () => {
+  let component: TreeNodeComponent;
+  let fixture: ComponentFixture<TreeNodeComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TreeRender]
+      imports: [TreeNodeComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TreeRender);
+    fixture = TestBed.createComponent(TreeNodeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
