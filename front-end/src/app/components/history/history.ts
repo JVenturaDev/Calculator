@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { HistoryService,HistoryItem } from '../../services/history-services/history';
-import { StateService } from '../../services/core-services/state-object';
+import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 
 @Component({
   selector: 'app-history',
@@ -17,7 +17,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
 
   constructor(
     private historyService: HistoryService,
-    private state: StateService
+    private calculator: CalculatorFacade
   ) {}
 
   ngOnInit(): void {
@@ -37,10 +37,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
   }
 
   restoreHistory(item: HistoryItem): void {
-    this.state.update({
-      expression: item.expression,
-      result: item.result,
-    });
+    this.calculator.restoreCalculation(item.expression, item.result);
   }
 
   deleteItem(idi: number): void {

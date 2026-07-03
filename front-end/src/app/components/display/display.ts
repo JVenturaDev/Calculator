@@ -1,16 +1,9 @@
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DisplayStateService } from '../../services/display-services/display';
-import { StateService } from '../../services/core-services/state-object';
 import { HistoryService } from '../../services/history-services/history';
 import { InputService } from '../../services/input-services/input-services';
-import Complex from 'complex.js';
-import {
-  CALCULATION_ENGINE,
-  CalculationEngine,
-} from '../../services/engine-services/calculation-engine.contract';
-import { ToggleService } from '../../services/toggle-services/toggle';
+import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 
 @Component({
   selector: 'app-display',
@@ -20,38 +13,25 @@ import { ToggleService } from '../../services/toggle-services/toggle';
   imports: [CommonModule, FormsModule]
 })
 export class DisplayComponent {
-  value = '';
+  readonly displayValue$;
 
   constructor(
-    @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
+    private calculator: CalculatorFacade,
     public history: HistoryService,
     public inputService: InputService,
-    public display: DisplayStateService,
-    private stateService: StateService,
-    private toggleService: ToggleService,
-
   ) {
-    this.display.value$.subscribe(v => (this.value = v));
+    this.displayValue$ = this.calculator.displayValue$;
   }
 
   onKeyDown(event: KeyboardEvent) {
     if (event.key === 'Backspace') {
-      this.display.backspace();
-      this.stateService.update({ expression: this.display.currentValue });
+      this.calculator.backspace();
     } else if (event.key === 'Enter') {
-      const expr = this.display.currentValue;
-      const rawResult = this.engine.evaluate(expr, {
-        angleMode: this.toggleService.getAngleMode(),
+      const expr = this.calculator.snapshot.expression;
+      const result = this.calculator.evaluate({
+        angleMode: this.calculator.snapshot.angleMode,
       });
-      const displayResult = rawResult instanceof Complex
-        ? rawResult.toString().replace('=', '')
-        : String(rawResult);
-      const stateResult: string | number = rawResult instanceof Complex
-        ? displayResult
-        : rawResult;
-      this.display.setValue(displayResult);
-      this.stateService.update({ expression: expr, result: stateResult });
-      this.history.agregarId(expr, stateResult);
+      this.history.agregarId(expr, result);
       event.preventDefault();
     }
   }

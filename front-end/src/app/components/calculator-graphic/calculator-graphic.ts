@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { HistoryService } from '../../services/history-services/history';
 import { DisplayStateService } from '../../services/display-services/display';
-import { MemoryService } from '../../services/memory-services/memory';
+import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { StateService } from '../../services/core-services/state-object';
 import Complex from 'complex.js';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
-import { ToggleService, AngleMode } from '../../services/toggle-services/toggle';
+import { ToggleService } from '../../services/toggle-services/toggle';
 import { parser } from '../../services/polish-services/polish-notation-parser-service';
 import { Tokenizer } from '../../services/polish-services/tokenizer';
 import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
@@ -37,7 +37,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
     private display: DisplayStateService,
     @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
     public history: HistoryService,
-    private memoryService: MemoryService,
+    private calculatorMemory: CalculatorMemoryService,
     private stateService: StateService,
     private memoryToggle: MemoryToggleService,
     private toggle: ToggleService,
@@ -226,37 +226,23 @@ export class GraphicComponent implements OnInit, OnDestroy {
   }
 
   async saveMemory() {
-    const resultado = Number(this.stateService.value.result);
-    const expresion = this.stateService.value.expression || String(resultado);
-    if (isNaN(resultado)) return;
-
-    const idEdit = this.stateService.value.idEnEdicion;
-    if (idEdit != null) {
-      await this.memoryService.updateRecord(idEdit, expresion, resultado);
-      this.stateService.update({ idEnEdicion: null });
-    } else {
-      await this.memoryService.saveRecord(expresion, resultado);
-    }
+    await this.calculatorMemory.saveCurrent();
   }
 
-  async clearMemory() { await this.memoryService.clear(); }
+  async clearMemory() {
+    await this.calculatorMemory.clearAll();
+  }
+
   async memoryPlus() {
-    const last = await this.memoryService.getLastRecord();
-    if (!last) return;
-    const nuevo = Number(last.resultado) + Number(this.stateService.value.result);
-    await this.memoryService.updateRecord(last.id!, last.ecuacion, nuevo);
+    await this.calculatorMemory.addCurrentToLast();
   }
+
   async memoryMinus() {
-    const last = await this.memoryService.getLastRecord();
-    if (!last) return;
-    const nuevo = Number(last.resultado) - Number(this.stateService.value.result);
-    await this.memoryService.updateRecord(last.id!, last.ecuacion, nuevo);
+    await this.calculatorMemory.subtractCurrentFromLast();
   }
+
   async recallLast() {
-    const last = await this.memoryService.getLastRecord();
-    if (!last) return;
-    this.stateService.update({ expression: last.ecuacion, result: last.resultado });
-    this.display.setValue(last.resultado.toString());
+    await this.calculatorMemory.recallLast();
   }
 
   clearHistory(): void { this.history.clearHistory(); }

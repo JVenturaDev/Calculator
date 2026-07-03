@@ -2,42 +2,55 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 
 import { CalculatorBasicComponent } from './calculator-basic';
-import { CALCULATION_ENGINE } from '../../services/engine-services/calculation-engine.contract';
-import { DisplayStateService } from '../../services/display-services/display';
-import { StateService } from '../../services/core-services/state-object';
+import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
+import {
+  createInitialCalculatorState,
+  type CalculatorState,
+} from '../../services/calculator-state/calculator-state';
 import { HistoryService } from '../../services/history-services/history';
-import { MemoryService } from '../../services/memory-services/memory';
+import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
 import { ToggleService } from '../../services/toggle-services/toggle';
 
 describe('CalculatorBasicComponent', () => {
   let component: CalculatorBasicComponent;
   let fixture: ComponentFixture<CalculatorBasicComponent>;
-  let displayValue: BehaviorSubject<string>;
-  let mockDisplay: jasmine.SpyObj<DisplayStateService> & { currentValue: string };
-  let mockEngine: { evaluate: jasmine.Spy };
-  let mockState: { value: Record<string, unknown>; update: jasmine.Spy };
+  let calculatorState: CalculatorState;
+  let mockCalculator: jasmine.SpyObj<CalculatorFacade>;
+  let mockMemory: jasmine.SpyObj<CalculatorMemoryService>;
   let mockHistory: { agregarId: jasmine.Spy; clearHistory: jasmine.Spy };
 
   beforeEach(async () => {
-    displayValue = new BehaviorSubject('');
-    mockDisplay = jasmine.createSpyObj<DisplayStateService>(
-      'DisplayStateService',
-      ['setValue', 'appendValue', 'clear', 'backspace'],
-      { value$: displayValue.asObservable(), currentValue: '' }
-    ) as jasmine.SpyObj<DisplayStateService> & { currentValue: string };
-    mockDisplay.setValue.and.callFake(value => {
-      mockDisplay.currentValue = value;
-      displayValue.next(value);
-    });
-
-    mockEngine = {
-      evaluate: jasmine.createSpy('evaluate').and.returnValue(4),
-    };
-    mockState = {
-      value: { result: 0, expression: '', idEnEdicion: null },
-      update: jasmine.createSpy('update'),
-    };
+    calculatorState = createInitialCalculatorState();
+    mockCalculator = jasmine.createSpyObj<CalculatorFacade>(
+      'CalculatorFacade',
+      [
+        'appendToken',
+        'clear',
+        'backspace',
+        'toggleSign',
+        'evaluate',
+        'setExpression',
+        'updateCalculationContext',
+      ],
+      { snapshot: calculatorState }
+    );
+    mockCalculator.evaluate.and.returnValue(4);
+    mockMemory = jasmine.createSpyObj<CalculatorMemoryService>(
+      'CalculatorMemoryService',
+      [
+        'saveCurrent',
+        'clearAll',
+        'addCurrentToLast',
+        'subtractCurrentFromLast',
+        'recallLast',
+      ]
+    );
+    mockMemory.saveCurrent.and.resolveTo(false);
+    mockMemory.clearAll.and.resolveTo();
+    mockMemory.addCurrentToLast.and.resolveTo(false);
+    mockMemory.subtractCurrentFromLast.and.resolveTo(false);
+    mockMemory.recallLast.and.resolveTo(false);
     mockHistory = {
       agregarId: jasmine.createSpy('agregarId'),
       clearHistory: jasmine.createSpy('clearHistory'),
@@ -46,11 +59,9 @@ describe('CalculatorBasicComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CalculatorBasicComponent],
       providers: [
-        { provide: CALCULATION_ENGINE, useValue: mockEngine },
-        { provide: DisplayStateService, useValue: mockDisplay },
-        { provide: StateService, useValue: mockState },
+        { provide: CalculatorFacade, useValue: mockCalculator },
         { provide: HistoryService, useValue: mockHistory },
-        { provide: MemoryService, useValue: {} },
+        { provide: CalculatorMemoryService, useValue: mockMemory },
         { provide: MemoryToggleService, useValue: { toggle: jasmine.createSpy('toggle') } },
         {
           provide: ToggleService,
@@ -68,13 +79,49 @@ describe('CalculatorBasicComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('evaluates through the shared calculation engine', () => {
-    mockDisplay.currentValue = '2+2';
+  it('delegates editing commands to CalculatorFacade', () => {
+    component.handleButtonClick('7');
+    component.handleButtonClick('DEL');
+    component.handleButtonClick('+/-');
+    component.handleButtonClick('AC');
 
+    expect(mockCalculator.appendToken).toHaveBeenCalledOnceWith('7');
+    expect(mockCalculator.backspace).toHaveBeenCalled();
+    expect(mockCalculator.toggleSign).toHaveBeenCalled();
+    expect(mockCalculator.clear).toHaveBeenCalled();
+  });
+
+  it('evaluates through CalculatorFacade', () => {
+    calculatorState.expression = '2+2';
     component.handleButtonClick('=');
 
-    expect(mockEngine.evaluate).toHaveBeenCalledOnceWith('2+2');
-    expect(mockDisplay.setValue).toHaveBeenCalledWith('4');
+    expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith();
     expect(mockHistory.agregarId).toHaveBeenCalledWith('2+2', 4);
+  });
+
+  it('keeps reciprocal behavior through CalculatorFacade state', () => {
+    calculatorState.expression = '4';
+
+    component.handleButtonClick('1/');
+
+    expect(mockCalculator.setExpression).toHaveBeenCalledOnceWith('0.25');
+    expect(mockCalculator.updateCalculationContext).toHaveBeenCalledOnceWith({
+      lastExpression: '1/(4)',
+      result: 0.25,
+    });
+  });
+
+  it('delegates memory commands to CalculatorMemoryService', async () => {
+    await component.saveMemory();
+    await component.clearMemory();
+    await component.memoryPlus();
+    await component.memoryMinus();
+    await component.recallLast();
+
+    expect(mockMemory.saveCurrent).toHaveBeenCalled();
+    expect(mockMemory.clearAll).toHaveBeenCalled();
+    expect(mockMemory.addCurrentToLast).toHaveBeenCalled();
+    expect(mockMemory.subtractCurrentFromLast).toHaveBeenCalled();
+    expect(mockMemory.recallLast).toHaveBeenCalled();
   });
 });

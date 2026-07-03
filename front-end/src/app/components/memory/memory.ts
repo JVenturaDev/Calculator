@@ -1,16 +1,11 @@
 // src/app/components/memory/memory.component.ts
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { MemoryService, MemoryRecord } from '../../services/memory-services/memory';
+import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { AppInitService } from '../../services/core-services/init-app';
-import { StateService } from '../../services/core-services/state-object';
-import { DisplayStateService } from '../../services/display-services/display';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
-import {
-  CALCULATION_ENGINE,
-  CalculationEngine,
-} from '../../services/engine-services/calculation-engine.contract';
 
 @Component({
   selector: 'app-memory',
@@ -28,10 +23,8 @@ export class MemoryComponent implements OnInit, OnDestroy {
 
   constructor(
     private memoryService: MemoryService,
+    private calculatorMemory: CalculatorMemoryService,
     private initApp: AppInitService,
-    private stateService: StateService,
-    private display: DisplayStateService,
-    @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
     private toggleService: MemoryToggleService
   ) { }
 
@@ -64,28 +57,9 @@ export class MemoryComponent implements OnInit, OnDestroy {
   }
 
   async saveMemory() {
-    const valNum = Number(this.stateService.value.result);
-    const expr = this.stateService.value.expression ?? String(valNum);
-
-    if (isNaN(valNum)) return;
-
     try {
-      if (this.stateService.value.idEnEdicion !== null) {
-        if (this.memoryService.updateRecord) {
-          await this.memoryService.updateRecord(
-            this.stateService.value.idEnEdicion,
-            expr,
-            valNum
-          );
-        } else {
-          await this.memoryService.delete(this.stateService.value.idEnEdicion);
-          await this.memoryService.saveRecord(expr, valNum);
-        }
-        this.stateService.update({ idEnEdicion: null });
-      } else {
-        await this.memoryService.saveRecord(expr, valNum);
-      }
-      await this.loadMemory();
+      const saved = await this.calculatorMemory.saveCurrent();
+      if (saved) await this.loadMemory();
     } catch (e) {
       console.error('Error guardando en memoria:', e);
     }
@@ -93,7 +67,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
 
   async clearMemory() {
     try {
-      await this.memoryService.clear();
+      await this.calculatorMemory.clearAll();
       this.memoryList = [];
     } catch (e) {
       console.error('Error limpiando memoria:', e);
@@ -103,7 +77,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
   async deleteRecord(id?: number) {
     if (id == null) return;
     try {
-      await this.memoryService.delete(id);
+      await this.calculatorMemory.delete(id);
     } catch (e) {
       console.error('Error eliminando registro:', e);
     }
@@ -112,17 +86,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
   async editRecord(id?: number) {
     if (id == null) return;
     try {
-      const rec = this.memoryService.getRecord ? await this.memoryService.getRecord(id)
-        : (await this.memoryService.getAll()).find(r => r.id === id);
-      if (!rec) return;
-
-      this.stateService.update({
-        expression: rec.ecuacion,
-        result: rec.resultado,
-        idEnEdicion: rec.id ?? null,
-      });
-
-      this.display.setValue(String(rec.ecuacion));
+      await this.calculatorMemory.beginEdit(id);
     } catch (e) {
       console.error('Error editando registro:', e);
     }
@@ -130,52 +94,28 @@ export class MemoryComponent implements OnInit, OnDestroy {
 
   async recallLast() {
     try {
-      const last = await this.memoryService.getLastRecord();
-      if (last) {
-        this.stateService.update({ expression: last.ecuacion, result: last.resultado });
-        this.display.setValue(last.resultado.toString());
-      } else {
-        alert('No hay registros en memoria.');
-      }
+      await this.calculatorMemory.recallLast();
     } catch (e) {
       console.error('Error recuperando último registro:', e);
     }
   }
 
   async memoryPlusFor(id?: number) {
-    if (!id) return;
-    const rec = await this.memoryService.getRecord(id);
-    if (!rec) return;
-
-    const inputExpr = this.stateService.value.expression ?? '';
-    let add = 0;
-    try {
-      const res = this.engine.evaluate(inputExpr);
-      add = typeof res === 'number' ? res : Number(res.toString());
-    } catch {
-      return;
-    }
-
-    const nuevo = Number(rec.resultado) + add;
-    await this.memoryService.updateRecord(rec.id!, rec.ecuacion, nuevo);
+    if (id == null) return;
+    await this.calculatorMemory.addCurrentToRecord(id);
   }
 
   async memoryMinusFor(id?: number) {
-    if (!id) return;
-    const rec = await this.memoryService.getRecord(id);
-    if (!rec) return;
+    if (id == null) return;
+    await this.calculatorMemory.subtractCurrentFromRecord(id);
+  }
 
-    const inputExpr = this.stateService.value.expression ?? '';
-    let sub = 0;
-    try {
-      const res = this.engine.evaluate(inputExpr);
-      sub = typeof res === 'number' ? res : Number(res.toString());
-    } catch {
-      return;
-    }
+  async memoryPlus() {
+    await this.calculatorMemory.addCurrentToLast();
+  }
 
-    const nuevo = Number(rec.resultado) - sub;
-    await this.memoryService.updateRecord(rec.id!, rec.ecuacion, nuevo);
+  async memoryMinus() {
+    await this.calculatorMemory.subtractCurrentFromLast();
   }
 
   trackById(index: number, item: MemoryRecord) {

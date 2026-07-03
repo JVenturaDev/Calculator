@@ -1,18 +1,12 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import {
-  CALCULATION_ENGINE,
-  CalculationEngine,
-} from '../../services/engine-services/calculation-engine.contract';
 import { HistoryService } from '../../services/history-services/history';
-import { DisplayStateService } from '../../services/display-services/display';
-import { MemoryService } from '../../services/memory-services/memory';
-import { StateService } from '../../services/core-services/state-object';
-import Complex from "complex.js";
+import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
 import { ToggleService, } from '../../services/toggle-services/toggle';
+import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 
 @Component({
   selector: 'app-calculator-basic',
@@ -28,11 +22,9 @@ export class CalculatorBasicComponent implements OnInit, OnDestroy {
   isVisible = false;
 
   constructor(
-    private display: DisplayStateService,
-    @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
+    private calculator: CalculatorFacade,
     public history: HistoryService,
-    private memoryService: MemoryService,
-    private stateService: StateService,
+    private calculatorMemory: CalculatorMemoryService,
     private memoryToggle: MemoryToggleService,
     private toggle: ToggleService
   ) { }
@@ -40,9 +32,6 @@ export class CalculatorBasicComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub = this.toggle.activeCalc$.subscribe(v => {
       this.isVisible = (v === 'basic');
-    });
-    this.sub = this.display.value$.subscribe(val => {
-      this.stateService.update({ expression: this.display.currentValue });
     });
   }
 
@@ -59,50 +48,36 @@ export class CalculatorBasicComponent implements OnInit, OnDestroy {
       switch (value) {
         case 'AC':
         case 'C':
-          this.display.clear();
-          this.stateService.update({ expression: '', result: 0 });
+          this.calculator.clear();
           return;
 
         case 'DEL':
-          this.display.backspace();
-          this.stateService.update({ expression: this.display.currentValue });
+          this.calculator.backspace();
           return;
 
         case '+/-':
-          const currentVal = this.display.currentValue;
-          if (currentVal.startsWith('-')) {
-            this.display.setValue(currentVal.slice(1));
-          } else if (currentVal) {
-            this.display.setValue('-' + currentVal);
-          }
-          this.stateService.update({ expression: this.display.currentValue });
+          this.calculator.toggleSign();
           return;
 
         case '1/':
-          const num = Number(this.display.currentValue);
+          const num = Number(this.calculator.snapshot.expression);
           if (!isNaN(num) && num !== 0) {
             const inv = 1 / num;
-            this.display.setValue(inv.toString());
-            this.stateService.update({ expression: `1/(${num})`, result: inv });
+            this.calculator.setExpression(inv.toString());
+            this.calculator.updateCalculationContext({
+              lastExpression: `1/(${num})`,
+              result: inv,
+            });
           }
           return;
 
         case '=':
-          const expr = this.display.currentValue;
-          const rawResult = this.engine.evaluate(expr);
-          const displayResult = rawResult instanceof Complex
-            ? rawResult.toString().replace('=', '')
-            : String(rawResult);
-          const stateResult: string | number = rawResult instanceof Complex
-            ? displayResult
-            : rawResult;
-          this.display.setValue(displayResult);
-          this.stateService.update({ expression: expr, result: stateResult });
-          this.history.agregarId(expr, stateResult);
+          const expr = this.calculator.snapshot.expression;
+          const result = this.calculator.evaluate();
+          this.history.agregarId(expr, result);
           return;
         default:
-          this.display.appendValue(value);
-          this.stateService.update({ expression: this.display.currentValue });
+          this.calculator.appendToken(value);
           return;
       }
     } catch (err) {
@@ -113,44 +88,24 @@ export class CalculatorBasicComponent implements OnInit, OnDestroy {
 
 
   async saveMemory() {
-    const resultado = Number(this.stateService.value.result);
-    const expresion = this.stateService.value.expression || String(resultado);
-    if (isNaN(resultado)) return;
-
-    const idEdit = this.stateService.value.idEnEdicion;
-    if (idEdit != null) {
-
-      await this.memoryService.updateRecord(idEdit, expresion, resultado);
-      this.stateService.update({ idEnEdicion: null });
-    } else {
-      await this.memoryService.saveRecord(expresion, resultado);
-    }
+    await this.calculatorMemory.saveCurrent();
   }
 
 
   async clearMemory() {
-    await this.memoryService.clear();
+    await this.calculatorMemory.clearAll();
   }
 
   async memoryPlus() {
-    const last = await this.memoryService.getLastRecord();
-    if (!last) return;
-    const nuevo = Number(last.resultado) + Number(this.stateService.value.result);
-    await this.memoryService.updateRecord(last.id!, last.ecuacion, nuevo);
+    await this.calculatorMemory.addCurrentToLast();
   }
 
   async memoryMinus() {
-    const last = await this.memoryService.getLastRecord();
-    if (!last) return;
-    const nuevo = Number(last.resultado) - Number(this.stateService.value.result);
-    await this.memoryService.updateRecord(last.id!, last.ecuacion, nuevo);
+    await this.calculatorMemory.subtractCurrentFromLast();
   }
 
   async recallLast() {
-    const last = await this.memoryService.getLastRecord();
-    if (!last) return;
-    this.stateService.update({ expression: last.ecuacion, result: last.resultado });
-    this.display.setValue(last.resultado.toString());
+    await this.calculatorMemory.recallLast();
   }
   clearHistory(): void {
     this.history.clearHistory();

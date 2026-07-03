@@ -2,61 +2,83 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 
 import { CalculatorScientificComponent } from './calculator-scientific';
-import { CALCULATION_ENGINE } from '../../services/engine-services/calculation-engine.contract';
-import { DisplayStateService } from '../../services/display-services/display';
-import { StateService } from '../../services/core-services/state-object';
+import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
+import {
+  createInitialCalculatorState,
+  type CalculatorState,
+} from '../../services/calculator-state/calculator-state';
 import { HistoryService } from '../../services/history-services/history';
-import { MemoryService } from '../../services/memory-services/memory';
+import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
 import { ToggleService } from '../../services/toggle-services/toggle';
 
 describe('CalculatorScientificComponent', () => {
   let component: CalculatorScientificComponent;
   let fixture: ComponentFixture<CalculatorScientificComponent>;
-  let displayValue: BehaviorSubject<string>;
-  let mockDisplay: jasmine.SpyObj<DisplayStateService> & { currentValue: string };
-  let mockEngine: { evaluate: jasmine.Spy };
+  let calculatorState: CalculatorState;
+  let mockCalculator: jasmine.SpyObj<CalculatorFacade>;
+  let mockMemory: jasmine.SpyObj<CalculatorMemoryService>;
   let mockHistory: { agregarId: jasmine.Spy; clearHistory: jasmine.Spy };
+  let mockToggle: {
+    activeCalc$: BehaviorSubject<string>;
+  };
 
   beforeEach(async () => {
-    displayValue = new BehaviorSubject('');
-    mockDisplay = jasmine.createSpyObj<DisplayStateService>(
-      'DisplayStateService',
-      ['setValue', 'appendValue', 'clear', 'backspace'],
-      { value$: displayValue.asObservable(), currentValue: '' }
-    ) as jasmine.SpyObj<DisplayStateService> & { currentValue: string };
-    mockDisplay.setValue.and.callFake(value => {
-      mockDisplay.currentValue = value;
-      displayValue.next(value);
+    calculatorState = createInitialCalculatorState();
+    mockCalculator = jasmine.createSpyObj<CalculatorFacade>(
+      'CalculatorFacade',
+      [
+        'appendToken',
+        'clear',
+        'backspace',
+        'toggleSign',
+        'setExpression',
+        'cycleAngleMode',
+        'evaluate',
+      ],
+      { snapshot: calculatorState }
+    );
+    mockCalculator.cycleAngleMode.and.callFake(() => {
+      calculatorState.angleMode =
+        calculatorState.angleMode === 'RAD'
+          ? 'GRAD'
+          : calculatorState.angleMode === 'GRAD'
+            ? 'DEG'
+            : 'RAD';
     });
+    mockCalculator.evaluate.and.returnValue(3);
 
-    mockEngine = {
-      evaluate: jasmine.createSpy('evaluate').and.returnValue(3),
-    };
+    mockMemory = jasmine.createSpyObj<CalculatorMemoryService>(
+      'CalculatorMemoryService',
+      [
+        'saveCurrent',
+        'clearAll',
+        'addCurrentToLast',
+        'subtractCurrentFromLast',
+        'recallLast',
+      ]
+    );
+    mockMemory.saveCurrent.and.resolveTo(false);
+    mockMemory.clearAll.and.resolveTo();
+    mockMemory.addCurrentToLast.and.resolveTo(false);
+    mockMemory.subtractCurrentFromLast.and.resolveTo(false);
+    mockMemory.recallLast.and.resolveTo(false);
     mockHistory = {
       agregarId: jasmine.createSpy('agregarId'),
       clearHistory: jasmine.createSpy('clearHistory'),
+    };
+    mockToggle = {
+      activeCalc$: new BehaviorSubject('scientific'),
     };
 
     await TestBed.configureTestingModule({
       imports: [CalculatorScientificComponent],
       providers: [
-        { provide: CALCULATION_ENGINE, useValue: mockEngine },
-        { provide: DisplayStateService, useValue: mockDisplay },
-        {
-          provide: StateService,
-          useValue: {
-            value: { result: 0, expression: '', idEnEdicion: null },
-            update: jasmine.createSpy('update'),
-          },
-        },
+        { provide: CalculatorFacade, useValue: mockCalculator },
         { provide: HistoryService, useValue: mockHistory },
-        { provide: MemoryService, useValue: {} },
+        { provide: CalculatorMemoryService, useValue: mockMemory },
         { provide: MemoryToggleService, useValue: { toggle: jasmine.createSpy('toggle') } },
-        {
-          provide: ToggleService,
-          useValue: { activeCalc$: new BehaviorSubject('scientific') },
-        },
+        { provide: ToggleService, useValue: mockToggle },
       ],
     }).compileComponents();
 
@@ -69,13 +91,61 @@ describe('CalculatorScientificComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('evaluates through the shared engine with the selected angle mode', () => {
-    mockDisplay.currentValue = 'sqrt(9)';
+  it('delegates editing commands to CalculatorFacade', () => {
+    calculatorState.expression = 'sin(';
+
+    component.handleButtonClick('9');
+    component.handleButtonClick('DEL');
+    component.handleButtonClick('+/-');
+    component.handleButtonClick('AC');
+
+    expect(mockCalculator.appendToken).toHaveBeenCalledOnceWith('9');
+    expect(mockCalculator.backspace).toHaveBeenCalled();
+    expect(mockCalculator.toggleSign).toHaveBeenCalled();
+    expect(mockCalculator.clear).toHaveBeenCalled();
+  });
+
+  it('preserves the leading minus behavior for an empty expression', () => {
+    calculatorState.expression = '';
+
+    component.handleButtonClick('+/-');
+
+    expect(mockCalculator.setExpression).toHaveBeenCalledOnceWith('-');
+    expect(mockCalculator.toggleSign).not.toHaveBeenCalled();
+  });
+
+  it('evaluates through CalculatorFacade with the selected angle mode', () => {
+    calculatorState.expression = 'sqrt(9)';
 
     component.handleButtonClick('=');
 
-    expect(mockEngine.evaluate).toHaveBeenCalledOnceWith('sqrt(9)', { angleMode: 'RAD' });
-    expect(mockDisplay.setValue).toHaveBeenCalledWith('3');
+    expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith({ angleMode: 'RAD' });
     expect(mockHistory.agregarId).toHaveBeenCalledWith('sqrt(9)', 3);
+  });
+
+  it('cycles RAD, GRAD and DEG through CalculatorFacade', () => {
+    component.cycleAngleMode();
+    expect(calculatorState.angleMode).toBe('GRAD');
+
+    component.cycleAngleMode();
+    expect(calculatorState.angleMode).toBe('DEG');
+
+    component.cycleAngleMode();
+    expect(calculatorState.angleMode).toBe('RAD');
+    expect(mockCalculator.cycleAngleMode).toHaveBeenCalledTimes(3);
+  });
+
+  it('delegates memory commands to CalculatorMemoryService', async () => {
+    await component.saveMemory();
+    await component.clearMemory();
+    await component.memoryPlus();
+    await component.memoryMinus();
+    await component.recallLast();
+
+    expect(mockMemory.saveCurrent).toHaveBeenCalled();
+    expect(mockMemory.clearAll).toHaveBeenCalled();
+    expect(mockMemory.addCurrentToLast).toHaveBeenCalled();
+    expect(mockMemory.subtractCurrentFromLast).toHaveBeenCalled();
+    expect(mockMemory.recallLast).toHaveBeenCalled();
   });
 });

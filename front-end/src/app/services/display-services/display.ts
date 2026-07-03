@@ -1,28 +1,32 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { CalculatorFacade } from '../calculator-state/calculator-facade';
 
 @Injectable({ providedIn: 'root' })
 export class DisplayStateService {
-  private valueSubject = new BehaviorSubject<string>(''); 
-  value$ = this.valueSubject.asObservable(); 
+  readonly value$: Observable<string>;
+
+  constructor(private readonly calculator: CalculatorFacade) {
+    this.value$ = this.calculator.displayValue$;
+  }
 
   get currentValue(): string {
-    return this.valueSubject.value;
+    return this.calculator.snapshot.expression;
   }
 
-  setValue(val: string) {
-    this.valueSubject.next(val);
+  setValue(val: string): void {
+    this.calculator.setExpression(val);
   }
 
-  appendValue(val: string) {
-    this.valueSubject.next(this.valueSubject.value + val);
+  appendValue(val: string): void {
+    this.calculator.appendToken(val);
   }
 
-  clear() {
-    this.valueSubject.next('');
+  clear(): void {
+    this.calculator.clear();
   }
 
-  backspace() {
-    this.valueSubject.next(this.valueSubject.value.slice(0, -1));
+  backspace(): void {
+    this.calculator.backspace();
   }
 }

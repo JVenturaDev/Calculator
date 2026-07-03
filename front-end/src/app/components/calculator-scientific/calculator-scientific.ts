@@ -1,18 +1,12 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import {
-  CALCULATION_ENGINE,
-  CalculationEngine,
-} from '../../services/engine-services/calculation-engine.contract';
 import { HistoryService } from '../../services/history-services/history';
-import { DisplayStateService } from '../../services/display-services/display';
-import { MemoryService } from '../../services/memory-services/memory';
-import { StateService } from '../../services/core-services/state-object';
-import Complex from 'complex.js';
+import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
-import { ToggleService, AngleMode } from '../../services/toggle-services/toggle';
+import { ToggleService } from '../../services/toggle-services/toggle';
+import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 
 @Component({
   selector: 'app-calculator-scientific',
@@ -26,26 +20,18 @@ export class CalculatorScientificComponent implements OnInit, OnDestroy {
   private sub!: Subscription;
   isVisible = false;
   showMemoryButtons = false;
-  angleStates: AngleMode[] = ['RAD', 'GRAD', 'DEG'];
-  angleIndex = 0;
 
   constructor(
-    private display: DisplayStateService,
-    @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
+    private calculator: CalculatorFacade,
     public history: HistoryService,
-    private memoryService: MemoryService,
-    private stateService: StateService,
+    private calculatorMemory: CalculatorMemoryService,
     private memoryToggle: MemoryToggleService,
-    private toggle: ToggleService,
-    public toggleService: ToggleService
+    private toggle: ToggleService
   ) {
   }
 
   ngOnInit(): void {
     this.sub = this.toggle.activeCalc$.subscribe(v => this.isVisible = (v === 'scientific'));
-    this.sub = this.display.value$.subscribe(() => {
-      this.stateService.update({ expression: this.display.currentValue });
-    });
   }
 
   ngOnDestroy(): void {
@@ -55,10 +41,9 @@ export class CalculatorScientificComponent implements OnInit, OnDestroy {
 
 
   cycleAngleMode() {
-    this.angleIndex = (this.angleIndex + 1) % this.angleStates.length;
-    this.toggle.cycleAngleMode();
+    this.calculator.cycleAngleMode();
     const btn = document.getElementById('multiBtn') as HTMLButtonElement;
-    if (btn) btn.textContent = this.angleStates[this.angleIndex];
+    if (btn) btn.textContent = this.calculator.snapshot.angleMode;
   }
 
 
@@ -71,38 +56,29 @@ export class CalculatorScientificComponent implements OnInit, OnDestroy {
       switch (value) {
         case 'AC':
         case 'CE':
-          this.display.clear();
-          this.stateService.update({ expression: '', result: 0 });
+          this.calculator.clear();
           return;
 
         case 'DEL':
-          this.display.backspace();
-          this.stateService.update({ expression: this.display.currentValue });
+          this.calculator.backspace();
           return;
 
         case '+/-':
-          const currentVal = this.display.currentValue;
-          this.display.setValue(currentVal.startsWith('-') ? currentVal.slice(1) : '-' + currentVal);
-          this.stateService.update({ expression: this.display.currentValue });
+          if (this.calculator.snapshot.expression) {
+            this.calculator.toggleSign();
+          } else {
+            this.calculator.setExpression('-');
+          }
           return;
         case '=':
-          const expr = this.display.currentValue;
-          const rawResult = this.engine.evaluate(expr, {
-            angleMode: this.angleStates[this.angleIndex],
+          const expr = this.calculator.snapshot.expression;
+          const result = this.calculator.evaluate({
+            angleMode: this.calculator.snapshot.angleMode,
           });
-          const displayResult = rawResult instanceof Complex
-            ? rawResult.toString().replace('=', '')
-            : String(rawResult);
-          const stateResult: string | number = rawResult instanceof Complex
-            ? displayResult
-            : rawResult;
-          this.display.setValue(displayResult);
-          this.stateService.update({ expression: expr, result: stateResult });
-          this.history.agregarId(expr, stateResult);
+          this.history.agregarId(expr, result);
           return;
         default:
-          this.display.appendValue(value);
-          this.stateService.update({ expression: this.display.currentValue });
+          this.calculator.appendToken(value);
           return;
       }
     } catch (err) {
@@ -111,42 +87,23 @@ export class CalculatorScientificComponent implements OnInit, OnDestroy {
   }
 
   async saveMemory() {
-    const resultado = Number(this.stateService.value.result);
-    const expresion = this.stateService.value.expression || String(resultado);
-    if (isNaN(resultado)) return;
-
-    const idEdit = this.stateService.value.idEnEdicion;
-    if (idEdit != null) {
-      await this.memoryService.updateRecord(idEdit, expresion, resultado);
-      this.stateService.update({ idEnEdicion: null });
-    } else {
-      await this.memoryService.saveRecord(expresion, resultado);
-    }
+    await this.calculatorMemory.saveCurrent();
   }
 
   async clearMemory() {
-    await this.memoryService.clear();
+    await this.calculatorMemory.clearAll();
   }
 
   async memoryPlus() {
-    const last = await this.memoryService.getLastRecord();
-    if (!last) return;
-    const nuevo = Number(last.resultado) + Number(this.stateService.value.result);
-    await this.memoryService.updateRecord(last.id!, last.ecuacion, nuevo);
+    await this.calculatorMemory.addCurrentToLast();
   }
 
   async memoryMinus() {
-    const last = await this.memoryService.getLastRecord();
-    if (!last) return;
-    const nuevo = Number(last.resultado) - Number(this.stateService.value.result);
-    await this.memoryService.updateRecord(last.id!, last.ecuacion, nuevo);
+    await this.calculatorMemory.subtractCurrentFromLast();
   }
 
   async recallLast() {
-    const last = await this.memoryService.getLastRecord();
-    if (!last) return;
-    this.stateService.update({ expression: last.ecuacion, result: last.resultado });
-    this.display.setValue(last.resultado.toString());
+    await this.calculatorMemory.recallLast();
   }
 
   clearHistory(): void {

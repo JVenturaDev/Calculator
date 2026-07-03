@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 export type CalcType = 'basic' | 'scientific' | 'graphic';
-export type AngleMode = 'RAD' | 'DEG' | 'GRAD';
 
 @Injectable({ providedIn: 'root' })
 export class ToggleService {
@@ -52,18 +51,4 @@ export class ToggleService {
   getActiveCalc(): CalcType {
     return this._activeCalc.value;
   }
-
-  private _angleMode = new BehaviorSubject<AngleMode>('RAD');
-  readonly angleMode$ = this._angleMode.asObservable();
-
-
-
-  cycleAngleMode(): void {
-    const current = this._angleMode.value;
-    const next =
-      current === 'RAD' ? 'GRAD' :
-        current === 'GRAD' ? 'DEG' : 'RAD';
-    this._angleMode.next(next);
-  }
-  getAngleMode(): AngleMode { return this._angleMode.value; }
 }

@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { StateService } from '../core-services/state-object';
 
 export interface HistoryItem {
   idi: number;
@@ -13,10 +12,10 @@ export class HistoryService {
   private storageKey = 'historial';
   private history: HistoryItem[] = [];
 
-  private changedSource = new BehaviorSubject<void>(undefined);
-  changed$ = this.changedSource.asObservable();
+  private readonly changedSource = new BehaviorSubject<void>(undefined);
+  readonly changed$ = this.changedSource.asObservable();
 
-  constructor(private state: StateService) {
+  constructor() {
     this.loadHistory();
   }
 
@@ -36,16 +35,12 @@ export class HistoryService {
   }
 
   addToHistory(idi: number, expression: string, result: string | number): void {
-    this.state.update({ expression, result });
     this.history.push({ idi, expression, result });
     this.saveToLocalStorage();
   }
 
   agregarId(expression: string, result: string | number): void {
-    const idi = Date.now() + Math.random();
-    this.history.push({ idi, expression, result });
-    localStorage.setItem(this.storageKey, JSON.stringify(this.history));
-    this.changedSource.next();
+    this.addToHistory(Date.now() + Math.random(), expression, result);
   }
 
   clearHistory(): void {
@@ -56,8 +51,7 @@ export class HistoryService {
 
   removeFromLocalStorage(idi: number): void {
     this.history = this.history.filter(item => item.idi !== idi);
-    localStorage.setItem(this.storageKey, JSON.stringify(this.history));
-    this.changedSource.next();
+    this.saveToLocalStorage();
   }
 
 }
