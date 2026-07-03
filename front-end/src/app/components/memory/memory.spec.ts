@@ -78,10 +78,24 @@ describe('MemoryComponent', () => {
 
   it('should create and load records from MemoryService', () => {
     expect(component).toBeTruthy();
-    expect(repository.getAll).toHaveBeenCalled();
+    expect(repository.getAll).toHaveBeenCalledTimes(1);
     expect(component.memoryList).toEqual([
       { id: 1, ecuacion: '2+2', resultado: 4 },
     ]);
+  });
+
+  it('reloads from changed$ without an initial duplicate query', () => {
+    changed.next();
+
+    expect(repository.getAll).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not reload explicitly after saving', async () => {
+    calculatorMemory.saveCurrent.and.resolveTo(true);
+
+    await component.saveMemory();
+
+    expect(repository.getAll).toHaveBeenCalledTimes(1);
   });
 
   it('delegates calculator memory commands', async () => {
@@ -117,6 +131,16 @@ describe('MemoryComponent', () => {
     await fixture.whenStable();
 
     expect(calculatorMemory.clearAll).toHaveBeenCalled();
-    expect(component.memoryList).toEqual([]);
+  });
+
+  it('unsubscribes visibility and memory listeners on destroy', () => {
+    const loadCalls = repository.getAll.calls.count();
+
+    fixture.destroy();
+    visible.next(false);
+    changed.next();
+
+    expect(component.isVisible).toBeTrue();
+    expect(repository.getAll).toHaveBeenCalledTimes(loadCalls);
   });
 });

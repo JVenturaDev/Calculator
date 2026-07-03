@@ -1,10 +1,9 @@
-import { Component, Inject, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { HistoryService } from '../../services/history-services/history';
-import { DisplayStateService } from '../../services/display-services/display';
+import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
-import { StateService } from '../../services/core-services/state-object';
 import Complex from 'complex.js';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
 import { ToggleService } from '../../services/toggle-services/toggle';
@@ -14,7 +13,6 @@ import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
 import { evaluator } from '../../services/polish-services/polish-evaluator';
 import { PreprocessModule } from '../../services/polish-services/preprocess-module';
 import { InputService } from '../../services/input-services/input-services';
-import { WorkSpace } from '../work-space/work-space';
 import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
 import {
   CALCULATION_ENGINE,
@@ -28,17 +26,16 @@ import {
 })
 export class GraphicComponent implements OnInit, OnDestroy {
   inputValue = '';
-  private sub!: Subscription;
+  private readonly subscriptions = new Subscription();
   isVisible = false;
   showMemoryButtons = false;
   showInequalitySymbols = false;
 
   constructor(
-    private display: DisplayStateService,
+    private calculator: CalculatorFacade,
     @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
     public history: HistoryService,
     private calculatorMemory: CalculatorMemoryService,
-    private stateService: StateService,
     private memoryToggle: MemoryToggleService,
     private toggle: ToggleService,
     public toggleService: ToggleService,
@@ -52,15 +49,18 @@ export class GraphicComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.sub = this.toggle.activeCalc$.subscribe(v => this.isVisible = (v === 'graphic'));
-    this.sub = this.display.value$.subscribe(() => {
-      this.stateService.update({ expression: this.display.currentValue });
-    });
-    this.inputService.target$.subscribe(target => {
-      if (target.type === 'calculator') {
-        this.focusCalculatorInput();
-      }
-    });
+    this.subscriptions.add(
+      this.toggle.activeCalc$.subscribe(
+        v => this.isVisible = (v === 'graphic')
+      )
+    );
+    this.subscriptions.add(
+      this.inputService.target$.subscribe(target => {
+        if (target.type === 'calculator') {
+          this.focusCalculatorInput();
+        }
+      })
+    );
   }
   focusCalculatorInput() {
     const input = document.querySelector<HTMLInputElement>('#calculatorInput');
@@ -97,7 +97,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.subscriptions.unsubscribe();
   }
 
   toggleMemoryPanel(): void {
@@ -145,23 +145,23 @@ export class GraphicComponent implements OnInit, OnDestroy {
       switch (value) {
         case 'AC':
         case 'CE':
-          this.display.clear();
-          this.stateService.update({ expression: '', result: 0 });
+          this.calculator.clear();
           return;
 
         case 'DEL':
-          this.display.backspace();
-          this.stateService.update({ expression: this.display.currentValue });
+          this.calculator.backspace();
           return;
 
         case '+/-':
-          const currentVal = this.display.currentValue;
-          this.display.setValue(currentVal.startsWith('-') ? currentVal.slice(1) : '-' + currentVal);
-          this.stateService.update({ expression: this.display.currentValue });
+          if (this.calculator.snapshot.expression) {
+            this.calculator.toggleSign();
+          } else {
+            this.calculator.setExpression('-');
+          }
           return;
 
         case '=':
-          const expr = this.display.currentValue;
+          const expr = this.calculator.snapshot.expression;
           const preprocessed = this.process.preprocessExpression(expr);
 
           if (/[xy]/i.test(preprocessed)) {
@@ -174,8 +174,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
               result = NaN;
             }
             const displayResult = result instanceof Complex ? result.toString() : String(result);
-            this.display.setValue(displayResult);
-            this.stateService.update({ expression: expr, result: displayResult });
+            this.calculator.restoreCalculation(expr, displayResult);
             this.history.agregarId(expr, displayResult);
             this.graphicService.setExpression(preprocessed);
             return;
@@ -185,14 +184,12 @@ export class GraphicComponent implements OnInit, OnDestroy {
           const displayRes = rawResult instanceof Complex ? rawResult.toString().replace('=', '') : String(rawResult);
           const stateRes: string | number = rawResult instanceof Complex ? displayRes : rawResult;
 
-          this.display.setValue(displayRes);
-          this.stateService.update({ expression: expr, result: stateRes });
+          this.calculator.restoreCalculation(expr, stateRes);
           this.history.agregarId(expr, stateRes);
           return;
 
         default:
-          this.display.appendValue(value);
-          this.stateService.update({ expression: this.display.currentValue });
+          this.calculator.appendToken(value);
           return;
       }
     } catch (err) {

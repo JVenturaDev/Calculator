@@ -13,6 +13,7 @@ export interface StateObject {
   expression: string;
   /** @deprecated Use CalculatorState.phase cuando se migren los consumidores. */
   equalPressed: number;
+  /** @deprecated Use CalculatorFacade.editingMemoryId$ y sus comandos de memoria. */
   idEnEdicion: number | null;
   /** @deprecated Referencia DOM heredada; no pertenece al estado de cálculo. */
   memoryContainer: HTMLElement | null;

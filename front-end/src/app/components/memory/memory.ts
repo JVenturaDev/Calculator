@@ -1,7 +1,7 @@
 // src/app/components/memory/memory.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { skip, Subscription } from 'rxjs';
 import { MemoryService, MemoryRecord } from '../../services/memory-services/memory';
 import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { AppInitService } from '../../services/core-services/init-app';
@@ -18,7 +18,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
   memoryList: MemoryRecord[] = [];
   isLoading = true;
   showMemory = true;
-  private sub: Subscription | null = null;
+  private readonly subscriptions = new Subscription();
   isVisible = true;
 
   constructor(
@@ -30,18 +30,20 @@ export class MemoryComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     await this.initApp.initApp();
-    this.toggleService.visible$.subscribe(v => this.isVisible = v);
+    this.subscriptions.add(
+      this.toggleService.visible$.subscribe(v => this.isVisible = v)
+    );
     await this.loadMemory();
 
-    if (this.memoryService.changed$) {
-      this.sub = this.memoryService.changed$.subscribe(() => {
+    this.subscriptions.add(
+      this.memoryService.changed$.pipe(skip(1)).subscribe(() => {
         void this.loadMemory();
-      });
-    }
+      })
+    );
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.subscriptions.unsubscribe();
   }
 
   async loadMemory() {
@@ -58,8 +60,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
 
   async saveMemory() {
     try {
-      const saved = await this.calculatorMemory.saveCurrent();
-      if (saved) await this.loadMemory();
+      await this.calculatorMemory.saveCurrent();
     } catch (e) {
       console.error('Error guardando en memoria:', e);
     }
@@ -68,7 +69,6 @@ export class MemoryComponent implements OnInit, OnDestroy {
   async clearMemory() {
     try {
       await this.calculatorMemory.clearAll();
-      this.memoryList = [];
     } catch (e) {
       console.error('Error limpiando memoria:', e);
     }
