@@ -1,2 +1,51 @@
-<input class="display-input" id="calculatorInput" placeholder="0" [ngModel]="displayValue$ | async"
-  (focus)="inputService.setCalculatorTarget()" (keydown)="onKeyDown($event)" />
+<section
+  *ngIf="viewModel$ | async as vm"
+  class="display-card"
+  [attr.data-status]="vm.status"
+  aria-labelledby="expression-label"
+>
+  <header class="display-header">
+    <label id="expression-label" for="calculatorInput">Expresión</label>
+
+    <span class="status-badge" role="status" aria-live="polite">
+      <span class="status-dot" aria-hidden="true"></span>
+      {{ vm.statusLabel }}
+    </span>
+  </header>
+
+  <div class="expression-editor">
+    <input
+      id="calculatorInput"
+      class="display-input"
+      type="text"
+      inputmode="text"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder="0"
+      aria-describedby="expression-hint"
+      [ngModel]="vm.expression"
+      (ngModelChange)="onExpressionChange($event)"
+      (focus)="inputService.setCalculatorTarget()"
+      (keydown)="onKeyDown($event)"
+    />
+  </div>
+
+  <span id="expression-hint" class="sr-only">
+    Escribe una expresión y presiona Enter para evaluarla.
+  </span>
+
+  <div class="result-panel" aria-live="polite" aria-atomic="true">
+    <ng-container *ngIf="vm.error; else resultContent">
+      <span class="result-label error-label">Error</span>
+      <p class="display-error">{{ vm.error }}</p>
+    </ng-container>
+
+    <ng-template #resultContent>
+      <span class="result-label">Resultado</span>
+      <output class="result-value" [class.result-empty]="vm.result === null">
+        <span class="result-symbol" *ngIf="vm.result !== null" aria-hidden="true">=</span>
+        {{ vm.result ?? '—' }}
+      </output>
+    </ng-template>
+  </div>
+</section>

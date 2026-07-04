@@ -1,166 +1,294 @@
-
-.scientific {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    width: 90%;
-    max-height: 240px;
-    margin: 5px 10px 0 0;
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 
-.scientific-moreButtons {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    width: 90%;
-    margin: 0 10px;
-    transform: translate(0, 20px);
+.scientific-keyboard {
+  --key-border: rgba(96, 101, 116, 0.68);
+  --key-text: #e7e5ed;
+  display: flex;
+  width: 100%;
+  max-width: 680px;
+  max-height: min(60dvh, 680px);
+  min-width: 0;
+  margin-inline: auto;
+  padding: 2px 6px 8px;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+  overscroll-behavior: contain;
 }
 
-.section-special-button {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    flex-direction: column;
-    margin-top: 30px;
-
+.control-toolbar,
+.memory-toolbar,
+.advanced-grid,
+.function-grid,
+.number-grid,
+.operator-grid {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: 8px;
 }
 
-
-.blackLite-memory {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    height: 280px;
-    margin-top: 35px;
+.control-toolbar {
+  width: min(100%, 520px);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(91, 96, 110, 0.34);
 }
 
-/* =====================
-8. Botones especiales
-===================== */
-#multiBtn,
+#secondButton,
 #fBtn {
-    width: 50px;
-    height: 30px;
-    background-color: transparent;
-    border: none !important;
+  display: none;
 }
 
-.show-nt {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.memory-toolbar {
+  width: min(100%, 520px);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 8px;
+  border: 1px solid rgba(99, 125, 165, 0.34);
+  border-radius: 9px;
+  background: rgba(26, 35, 49, 0.5);
 }
 
-.specialButtons {
-    display: flex;
-    margin-left: 10px;
-    padding: 0;
-    z-index: 1;
+.advanced-panel {
+  width: 100%;
+  max-width: 680px;
+  min-width: 0;
 }
 
-/* =====================
-9. Tipos de botones
-===================== */
-.digit-button {
-    background-color: var(--color-medium-gray-1) !important;
-    color: var(--text--general) !important;
+.advanced-panel h2 {
+  margin: 0 0 8px;
+  color: #aeb2bf;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
-.digit-button:hover {
-    background-color: var(--bg-hover-digit);
-    /* Nota: --bg-hover-digit no definido */
+.advanced-scroll {
+  min-width: 0;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  overscroll-behavior: contain;
 }
 
-.color-button {
-    background-color: var(--buttons--color) !important;
-    color: var(--color-accent-red) !important;
+.advanced-grid {
+  min-width: 620px;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
 }
 
-.side-button:hover,
-.memoryB:hover {
-    background-color: var(--bg-hover-side);
+.function-grid {
+  display: flex;
+  width: min(100%, 520px);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-
-.buttons {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    width: 90%;
-    margin: 0 10px;
-    transform: translate(0, 80px);
+.function-grid > .function-key {
+  width: auto;
+  flex: 0 0 calc((100% - 32px) / 5);
 }
 
-.buttons button {
-    height: 29px;
-    margin: 3px;
-    padding: 7px;
-    font-size: 10px;
-    border: 0.5px solid var(--boder--liner);
-    cursor: pointer;
-    background: var(--buttons--color--general);
-    color: var(--buttons--color--text--general);
-    transition: background 0.2s;
+.keypad-layout {
+  display: grid;
+  width: min(100%, 480px);
+  min-width: 0;
+  grid-template-columns: minmax(0, 3fr) minmax(64px, 1fr);
+  align-items: center;
+  gap: 10px;
 }
 
-.buttons button:hover {
-    background: var(--tertiary--darkmode);
-    color: var(--text--general) !important;
+.number-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 60px;
+  align-self: center;
 }
 
-/* Botones generales */
-button {
-    width: 100%;
-    color: var(--primary--darkmode);
-    font-weight: 700;
-    border: none;
-    border-radius: 2px;
-    cursor: pointer;
+.operator-grid {
+  grid-template-rows: repeat(5, 46px);
+  align-self: center;
 }
 
-button:hover {
-    background: var(--tertiary--darkmode);
-    color: var(--text--general) !important;
+.key {
+  display: inline-flex;
+  width: 100%;
+  height: 44px;
+  min-width: 0;
+  padding: 9px 7px;
+  align-items: center;
+  justify-content: center;
+  color: var(--key-text);
+  border: 1px solid var(--key-border);
+  border-radius: 8px;
+  background: #2a2c35;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 3px 8px rgba(0, 0, 0, 0.16);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 90ms ease;
 }
 
-
-button {
-    height: 29px;
-    margin: 3px;
-    padding: 7px;
-    font-size: 10px;
-    width: 100%;
-    font-weight: 700;
-    border-radius: 2px;
-    cursor: pointer;
-    border: 0.5px solid var(--boder--liner);
-    background: var(--buttons--color--general);
-    color: var(--buttons--color--text--general);
-    transition: background 0.2s;
-
+.key:hover {
+  color: #fff;
+  border-color: #737a8b;
+  background: #343741;
 }
 
-
-.side-button .memoryB {
-    background-color: var(--buttons--color--general);
-
+.key:active {
+  transform: translateY(1px) scale(0.985);
 }
 
-
-.buttons {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    width: 90%;
-    margin: 0 10px;
-    /* transform: translateY(80px); */
+.key:focus-visible {
+  outline: 2px solid #78a9ff;
+  outline-offset: -3px;
 }
 
-/* =====================
-   0. Variables globales
-===================== */
+.key:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.control-key,
+.memory-key {
+  color: #b8c9e7;
+  border-color: rgba(99, 125, 165, 0.42);
+  background: rgba(42, 56, 77, 0.58);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 0.74rem;
+}
+
+.angle-key {
+  color: #9ec2ff;
+  border-color: rgba(84, 132, 205, 0.58);
+  background: rgba(37, 61, 96, 0.74);
+}
+
+.advanced-key,
+.function-key {
+  color: #c6c9d3;
+  background: #242630;
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 0.74rem;
+}
+
+.advanced-key sup,
+.advanced-key sub {
+  font-size: 0.68em;
+}
+
+.number-key {
+  height: 60px;
+  background: #30323c;
+  font-size: 1rem;
+}
+
+.operator-key {
+  height: 46px;
+  color: #9ec2ff;
+  border-color: rgba(84, 132, 205, 0.48);
+  background: rgba(37, 61, 96, 0.72);
+  font-size: 1.15rem;
+}
+
+.operator-key:hover {
+  border-color: #78a9ff;
+  background: rgba(48, 81, 127, 0.92);
+}
+
+.primary-key {
+  color: #10141c;
+  border-color: #8ab4ff;
+  background: #78a9ff;
+  box-shadow:
+    0 7px 18px rgba(67, 126, 224, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.primary-key:hover {
+  color: #0c1119;
+  border-color: #a5c7ff;
+  background: #91b9ff;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 500px) {
+  .scientific-keyboard {
+    max-height: 64dvh;
+    gap: 9px;
+  }
+
+  .control-toolbar {
+    gap: 6px;
+  }
+
+  .memory-toolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .function-grid {
+    gap: 6px;
+  }
+
+  .function-grid > .function-key {
+    flex-basis: calc((100% - 18px) / 4);
+  }
+
+  .keypad-layout {
+    grid-template-columns: minmax(0, 3fr) minmax(58px, 0.9fr);
+    gap: 7px;
+  }
+
+  .number-grid {
+    grid-auto-rows: 57px;
+    gap: 6px;
+  }
+
+  .operator-grid {
+    grid-template-rows: repeat(5, 44px);
+    gap: 6px;
+  }
+
+  .key {
+    padding-inline: 5px;
+  }
+
+  .number-key {
+    height: 57px;
+  }
+
+  .operator-key {
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key {
+    transition: none;
+  }
+}

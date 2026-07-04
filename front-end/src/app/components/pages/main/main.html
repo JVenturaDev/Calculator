@@ -1,42 +1,31 @@
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+<div class="layout">
+  <app-top-bar class="shell-topbar"></app-top-bar>
 
-<main class="layout">
+  <div class="gridd2">
+    <app-sidebar></app-sidebar>
 
-    <app-top-bar></app-top-bar>
+    <main class="main-container">
+      <section class="workspace shell-panel" aria-label="Workspace">
+        <app-work-space></app-work-space>
+      </section>
 
-    <div class="gridd2">
-        <app-sidebar></app-sidebar>
-        <section class="main-container">
-            <div class="workspace">
-                <app-work-space>
-                </app-work-space>
-                <app-memory></app-memory>
+      <section class="calculator shell-panel" aria-label="Calculadora">
+        <section class="calculation" aria-label="Controles de cálculo">
+          <div class="display">
+            <app-display></app-display>
+          </div>
 
+          <div class="buttons">
+            <div class="center">
+              <app-calculator-basic></app-calculator-basic>
+              <app-calculator-scientific></app-calculator-scientific>
+              <app-graphic></app-graphic>
             </div>
-
-            <section class="calculator" aria-label="Calculadora">
-                <section class="calculation" aria-label="Calculadora">
-                    <div class="display">
-                        <app-display>
-                        </app-display>
-                    </div>
-
-                    <div class="buttons">
-                        <div class="center">
-                            <app-calculator-basic></app-calculator-basic>
-                            <app-calculator-scientific></app-calculator-scientific>
-                            <app-graphic></app-graphic>
-                        </div>
-                    </div>
-                </section>
-            </section>
-
-
-            <aside class="history" aria-label="Historial de operaciones">
-                <app-history *ngIf="currentView === 'history'">
-                </app-history> <app-graphic-plot *ngIf="currentView === 'graph'"></app-graphic-plot>
-            </aside>
-
+          </div>
         </section>
-    </div>
-</main>
+      </section>
+
+      <app-inspector-shell class="history shell-panel"></app-inspector-shell>
+    </main>
+  </div>
+</div>

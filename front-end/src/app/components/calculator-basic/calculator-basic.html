@@ -1,52 +1,107 @@
-  <section class="basic" *ngIf="isVisible">
-    <!-- Memoria -->
-    <div class="basic-memory">
-      <div>
-        <button class="side-button" (click)="toggleMemoryPanel()">M</button>
-        <button class="side-button" (click)="recallLast()">MR</button>
-        <button class="memoryB button" (click)="clearMemory()">MC</button>
-        <button class="memoryB button" (click)="memoryPlus()">M+</button>
-        <button class="memoryB button" (click)="memoryMinus()">M-</button>
-        <button class="btnGuardar memoryB button" (click)="saveMemory()">MS</button>
-        <button data-number="," class="side-button button" (click)="handleButtonClick(',')">,</button>
-      </div>
+<section class="basic-keyboard" *ngIf="isVisible" aria-label="Teclado de calculadora básica">
+  <div class="memory-toolbar" role="group" aria-label="Controles de memoria">
+    <button
+      type="button"
+      class="key memory-key side-button"
+      data-memory-action="panel"
+      aria-label="Abrir panel de memoria"
+      (click)="toggleMemoryPanel()"
+    >M</button>
+    <button
+      type="button"
+      class="key memory-key side-button"
+      data-memory-action="recall"
+      aria-label="Recuperar último valor de memoria"
+      (click)="recallLast()"
+    >MR</button>
+    <button
+      type="button"
+      class="key memory-key memoryB button"
+      data-memory-action="clear"
+      aria-label="Limpiar memoria"
+      (click)="clearMemory()"
+    >MC</button>
+    <button
+      type="button"
+      class="key memory-key memoryB button"
+      data-memory-action="add"
+      aria-label="Sumar valor actual a memoria"
+      (click)="memoryPlus()"
+    >M+</button>
+    <button
+      type="button"
+      class="key memory-key memoryB button"
+      data-memory-action="subtract"
+      aria-label="Restar valor actual de memoria"
+      (click)="memoryMinus()"
+    >M−</button>
+    <button
+      type="button"
+      class="key memory-key btnGuardar memoryB button"
+      data-memory-action="save"
+      aria-label="Guardar valor actual en memoria"
+      (click)="saveMemory()"
+    >MS</button>
+  </div>
+
+  <div class="function-grid" role="group" aria-label="Funciones básicas">
+    <button type="button" class="key function-key color-button button" data-token="AC"
+      aria-label="Limpiar todo" (click)="handleButtonClick('AC')">AC</button>
+    <button type="button" class="key function-key color-button button" data-token="C"
+      aria-label="Limpiar entrada" (click)="handleButtonClick('C')">C</button>
+    <button type="button" class="key function-key color-button button" id="erase" data-token="DEL"
+      aria-label="Borrar último carácter" (click)="handleButtonClick('DEL')">DEL</button>
+    <button type="button" class="key function-key color-button button" data-token="%"
+      aria-label="Porcentaje" (click)="handleButtonClick('%')">%</button>
+    <button type="button" class="key function-key color-button button" data-token="1/"
+      aria-label="Inverso multiplicativo" (click)="handleButtonClick('1/')">1/x</button>
+    <button type="button" class="key function-key color-button button" data-token="²"
+      aria-label="Elevar al cuadrado" (click)="handleButtonClick('²')">x²</button>
+    <button type="button" class="key function-key color-button button" data-token="²√"
+      aria-label="Raíz cuadrada" (click)="handleButtonClick('²√')">²√x</button>
+    <button type="button" class="key function-key side-button button" data-token=","
+      aria-label="Separador de argumentos" (click)="handleButtonClick(',')">,</button>
+  </div>
+
+  <div class="keypad-layout">
+    <div class="number-grid" role="group" aria-label="Números">
+      <button type="button" class="key number-key digit-button button" data-token="7"
+        (click)="handleButtonClick('7')">7</button>
+      <button type="button" class="key number-key digit-button button" data-token="8"
+        (click)="handleButtonClick('8')">8</button>
+      <button type="button" class="key number-key digit-button button" data-token="9"
+        (click)="handleButtonClick('9')">9</button>
+      <button type="button" class="key number-key digit-button button" data-token="4"
+        (click)="handleButtonClick('4')">4</button>
+      <button type="button" class="key number-key digit-button button" data-token="5"
+        (click)="handleButtonClick('5')">5</button>
+      <button type="button" class="key number-key digit-button button" data-token="6"
+        (click)="handleButtonClick('6')">6</button>
+      <button type="button" class="key number-key digit-button button" data-token="1"
+        (click)="handleButtonClick('1')">1</button>
+      <button type="button" class="key number-key digit-button button" data-token="2"
+        (click)="handleButtonClick('2')">2</button>
+      <button type="button" class="key number-key digit-button button" data-token="3"
+        (click)="handleButtonClick('3')">3</button>
+      <button type="button" class="key number-key digit-button button" data-token="+/-"
+        aria-label="Cambiar signo" (click)="handleButtonClick('+/-')">+/−</button>
+      <button type="button" class="key number-key digit-button button" id="zero" data-token="0"
+        (click)="handleButtonClick('0')">0</button>
+      <button type="button" class="key number-key digit-button button" data-token="."
+        aria-label="Separador decimal" (click)="handleButtonClick('.')">.</button>
     </div>
 
-
-    <!-- Filas de botones -->
-    <div class="blackLite">
-      <button class="color-button button" (click)="handleButtonClick('%')">%</button>
-      <button class="color-button button" (click)="handleButtonClick('1/')">1/x</button>
-      <button class="digit-button button" (click)="handleButtonClick('7')">7</button>
-      <button class="digit-button button" (click)="handleButtonClick('4')">4</button>
-      <button class="digit-button button" (click)="handleButtonClick('1')">1</button>
-      <button class="digit-button button" (click)="handleButtonClick('+/-')">+/-</button>
+    <div class="operator-grid" role="group" aria-label="Operadores">
+      <button type="button" class="key operator-key operation-button button" data-token="/"
+        aria-label="Dividir" (click)="handleButtonClick('/')">÷</button>
+      <button type="button" class="key operator-key operation-button button" data-token="*"
+        aria-label="Multiplicar" (click)="handleButtonClick('*')">×</button>
+      <button type="button" class="key operator-key operation-button button" data-token="-"
+        aria-label="Restar" (click)="handleButtonClick('-')">−</button>
+      <button type="button" class="key operator-key operation-button button" data-token="+"
+        aria-label="Sumar" (click)="handleButtonClick('+')">+</button>
+      <button type="button" class="key operator-key primary-key operation-button button" id="equal"
+        data-token="=" aria-label="Evaluar expresión" (click)="handleButtonClick('=')">=</button>
     </div>
-
-    <div class="blackLite">
-      <button class="color-button button" (click)="handleButtonClick('AC')">AC</button>
-      <button class="color-button button" (click)="handleButtonClick('²')">x²</button>
-      <button class="digit-button button" (click)="handleButtonClick('8')">8</button>
-      <button class="digit-button button" (click)="handleButtonClick('5')">5</button>
-      <button class="digit-button button" (click)="handleButtonClick('2')">2</button>
-      <button class="digit-button button" id="zero" (click)="handleButtonClick('0')">0</button>
-    </div>
-
-    <div class="blackLite">
-      <button class="color-button button" (click)="handleButtonClick('C')">C</button>
-      <button class="color-button button" (click)="handleButtonClick('²√')">²√x</button>
-      <button class="digit-button button" (click)="handleButtonClick('9')">9</button>
-      <button class="digit-button button" (click)="handleButtonClick('6')">6</button>
-      <button class="digit-button button" (click)="handleButtonClick('3')">3</button>
-      <button class="digit-button button" (click)="handleButtonClick('.')">.</button>
-    </div>
-
-    <div class="orange">
-      <button class="color-button button" id="erase" (click)="handleButtonClick('DEL')">DEL</button>
-      <button class="operation-button button" (click)="handleButtonClick('/')">/</button>
-      <button class="operation-button button" (click)="handleButtonClick('*')">*</button>
-      <button class="operation-button button" (click)="handleButtonClick('-')">-</button>
-      <button class="operation-button button" (click)="handleButtonClick('+')">+</button>
-      <button class="operation-button button" id="equal" (click)="handleButtonClick('=')">=</button>
-    </div>
-  </section>
+  </div>
+</section>

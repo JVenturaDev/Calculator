@@ -1,0 +1,109 @@
+<aside class="inspector-shell" aria-labelledby="inspector-title">
+  <header class="inspector-header">
+    <div>
+      <h2 id="inspector-title">Inspector</h2>
+      <p>Datos de la sesión</p>
+    </div>
+    <span class="inspector-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M4 19V5M4 19h16" />
+        <path d="m7 15 3-4 3 2 4-6" />
+      </svg>
+    </span>
+  </header>
+
+  <div class="inspector-tabs" role="tablist" aria-label="Vistas del inspector">
+    <button
+      #historyTab
+      id="inspector-tab-history"
+      class="inspector-tab"
+      type="button"
+      role="tab"
+      [class.inspector-tab--active]="activeView === 'history'"
+      [attr.aria-selected]="activeView === 'history'"
+      [attr.tabindex]="activeView === 'history' ? 0 : -1"
+      aria-controls="inspector-panel-history"
+      (click)="selectView('history')"
+      (keydown.arrowRight)="selectView('memory'); memoryTab.focus(); $event.preventDefault()"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+        <path d="M3 3v5h5M12 7v5l3 2" />
+      </svg>
+      <span>History</span>
+    </button>
+
+    <button
+      #memoryTab
+      id="inspector-tab-memory"
+      class="inspector-tab"
+      type="button"
+      role="tab"
+      [class.inspector-tab--active]="activeView === 'memory'"
+      [attr.aria-selected]="activeView === 'memory'"
+      [attr.tabindex]="activeView === 'memory' ? 0 : -1"
+      aria-controls="inspector-panel-memory"
+      (click)="selectView('memory')"
+      (keydown.arrowLeft)="selectView('history'); historyTab.focus(); $event.preventDefault()"
+      (keydown.arrowRight)="selectView('graph'); graphTab.focus(); $event.preventDefault()"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <rect x="5" y="4" width="14" height="16" rx="2" />
+        <path d="M9 8h6M9 12h6M9 16h3" />
+      </svg>
+      <span>Memory</span>
+    </button>
+
+    <button
+      #graphTab
+      id="inspector-tab-graph"
+      class="inspector-tab"
+      type="button"
+      role="tab"
+      [class.inspector-tab--active]="activeView === 'graph'"
+      [attr.aria-selected]="activeView === 'graph'"
+      [attr.tabindex]="activeView === 'graph' ? 0 : -1"
+      aria-controls="inspector-panel-graph"
+      (click)="selectView('graph')"
+      (keydown.arrowLeft)="selectView('memory'); memoryTab.focus(); $event.preventDefault()"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M4 19V5M4 19h16" />
+        <path d="m7 15 3-4 3 2 4-6" />
+      </svg>
+      <span>Graph</span>
+    </button>
+  </div>
+
+  <div class="inspector-content">
+    <section
+      *ngIf="activeView === 'history'"
+      id="inspector-panel-history"
+      class="inspector-view"
+      role="tabpanel"
+      aria-labelledby="inspector-tab-history"
+    >
+      <app-history></app-history>
+    </section>
+
+    <section
+      id="inspector-panel-memory"
+      class="inspector-view inspector-view--memory"
+      role="tabpanel"
+      aria-labelledby="inspector-tab-memory"
+      [hidden]="activeView !== 'memory'"
+    >
+      <app-memory></app-memory>
+    </section>
+
+    <section
+      *ngIf="activeView === 'graph'"
+      id="inspector-panel-graph"
+      class="inspector-view inspector-view--graph"
+      role="tabpanel"
+      aria-labelledby="inspector-tab-graph"
+    >
+      <app-graphic-plot></app-graphic-plot>
+    </section>
+  </div>
+</aside>

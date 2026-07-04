@@ -1,17 +1,62 @@
-.human-step.operator {
-  color: white;
-}
-
-.human-step.function {
-  color: darkblue;
-}
-
-.human-step.result {
-  color: darkgreen;
-  font-weight: bold;
+:host {
+  display: block;
+  min-width: 0;
 }
 
 .human-step {
-  font-family: 'Courier New', monospace;
-  margin: 2px 0;
+  --step-accent: #8c93a3;
+  display: grid;
+  min-width: 0;
+  padding: 8px 10px;
+  grid-template-columns: 8px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  color: #d7d9e1;
+  border: 1px solid rgba(91, 96, 110, 0.36);
+  border-left: 3px solid var(--step-accent);
+  border-radius: 7px;
+  background: rgba(30, 32, 40, 0.74);
+  font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.human-step-marker {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--step-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--step-accent) 16%, transparent);
+}
+
+.human-step-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.human-step--operator {
+  --step-accent: #78a9ff;
+}
+
+.human-step--function {
+  --step-accent: #c2a7ff;
+}
+
+.human-step--result {
+  --step-accent: #70d6a3;
+  color: #c9f5df;
+  background: rgba(30, 54, 45, 0.46);
+  font-weight: 700;
+}
+
+:host + :host {
+  margin-top: 6px;
+}
+
+@media (max-width: 520px) {
+  .human-step {
+    padding: 7px 8px;
+    gap: 7px;
+    font-size: 0.73rem;
+  }
 }

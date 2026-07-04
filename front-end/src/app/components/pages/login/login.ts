@@ -3,6 +3,9 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { WorkspaceApiService } from '../../../services/workspaceApiService/workspace-api-service';
 import { CommonModule } from '@angular/common';
+import { finalize } from 'rxjs/operators';
+
+type LoginAction = 'login' | 'guest';
 
 @Component({
   selector: 'app-login',
@@ -16,6 +19,7 @@ export class Login {
   username = '';
   password = '';
   error = '';
+  loadingAction: LoginAction | null = null;
 
   constructor(
     private api: WorkspaceApiService,
@@ -23,20 +27,37 @@ export class Login {
   ) { }
 
   login() {
-    this.api.login(this.username, this.password).subscribe({
-      next: () => {
-        this.router.navigate(['/main']);
-      },
-      error: () => {
-        this.error = 'Credenciales inválidas';
-      }
-    });
+    if (this.loadingAction) return;
+
+    this.error = '';
+    this.loadingAction = 'login';
+
+    this.api.login(this.username, this.password)
+      .pipe(finalize(() => this.loadingAction = null))
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/main']);
+        },
+        error: () => {
+          this.error = 'Credenciales inválidas. Revisa tu usuario y contraseña.';
+        }
+      });
   }
+
   continueAsGuest() {
-    this.api.guest().subscribe({
-      next: () => this.router.navigate(['/main']),
-      error: () => { "Error de capa 8" }
-    });
+    if (this.loadingAction) return;
+
+    this.error = '';
+    this.loadingAction = 'guest';
+
+    this.api.guest()
+      .pipe(finalize(() => this.loadingAction = null))
+      .subscribe({
+        next: () => this.router.navigate(['/main']),
+        error: () => {
+          this.error = 'No fue posible iniciar la sesión de invitado.';
+        }
+      });
   }
   goRegister() { this.router.navigate(['/register']); }
 }

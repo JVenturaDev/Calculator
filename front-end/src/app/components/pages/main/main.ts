@@ -1,51 +1,42 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CalculatorBasicComponent } from '../../calculator-basic/calculator-basic';
 import { DisplayComponent } from '../../display/display';
-import { HistoryComponent } from '../../history/history';
-import { MemoryComponent } from '../../memory/memory';
 import { WorkSpace } from '../../work-space/work-space';
 import { TopBar } from '../../top-bar/top-bar';
 import { SidebarComponent } from '../../sidebar/sidebar';
 import { CalculatorScientificComponent } from '../../calculator-scientific/calculator-scientific';
 import { GraphicComponent } from '../../calculator-graphic/calculator-graphic';
-import { GraphicComponentPlot } from '../../graphic-plot/graphic-plot';
 import { parser } from '../../../services/polish-services/polish-notation-parser-service';
-import { ToggleService } from '../../../services/toggle-services/toggle';
 import { WorkspaceApiService } from '../../../services/workspaceApiService/workspace-api-service';
 import { Login } from '../login/login';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { InspectorShellComponent } from '../../inspector-shell/inspector-shell';
 @Component({
   selector: 'app-main',
   standalone: true,
   imports: [CommonModule,
-    GraphicComponentPlot,
     GraphicComponent,
     CalculatorScientificComponent,
     TopBar,
     SidebarComponent,
     WorkSpace,
-    MemoryComponent,
     DisplayComponent,
     CalculatorBasicComponent,
-    HistoryComponent,
+    InspectorShellComponent,
   ],
   templateUrl: './main.html',
   styleUrl: './main.css',
 })
-export class Main {
+export class Main implements OnInit {
   inputValue: string = '';
-  currentView: 'graph' | 'history' = 'graph';
 
   constructor(private parserPolish: parser,
-    private toggleService: ToggleService,
     private api: WorkspaceApiService
   ) { }
 
-  ngOnInit() {
-    this.toggleService.state$.subscribe(view => this.currentView = view);
+  ngOnInit(): void {
     this.parserPolish.testPostfix("sin(asinh(9))");
-
   }
 
   handleKeyDown(event: KeyboardEvent) {

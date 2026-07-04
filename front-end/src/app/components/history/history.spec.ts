@@ -43,8 +43,36 @@ describe('HistoryComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  afterEach(() => historyService.changed$.complete());
+
+  function renderHistory(items: HistoryItem[]): void {
+    historyService.getHistory.and.returnValue(items);
+    component.loadHistory();
+    fixture.detectChanges();
+  }
+
+  it('should create and show an accessible empty state', () => {
     expect(component).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.history-empty')).toBeTruthy();
+    expect(
+      (fixture.nativeElement.querySelector('.clear-history') as HTMLButtonElement).disabled
+    ).toBeTrue();
+  });
+
+  it('renders expression and result separately without duplicated ids or nested controls', () => {
+    const item: HistoryItem = {
+      idi: 1,
+      expression: '6*7',
+      result: 42,
+    };
+    renderHistory([item]);
+
+    expect(fixture.nativeElement.querySelector('.history-expression').textContent).toContain(
+      '6*7'
+    );
+    expect(fixture.nativeElement.querySelector('.history-result').textContent).toContain('42');
+    expect(fixture.nativeElement.querySelectorAll('#history-list').length).toBe(1);
+    expect(fixture.nativeElement.querySelector('button a, a button')).toBeNull();
   });
 
   it('restores a history item through CalculatorFacade', () => {
@@ -53,17 +81,35 @@ describe('HistoryComponent', () => {
       expression: '6*7',
       result: 42,
     };
+    renderHistory([item]);
 
-    component.restoreHistory(item);
+    (fixture.nativeElement.querySelector('.restore-history') as HTMLButtonElement).click();
 
     expect(calculator.restoreCalculation).toHaveBeenCalledOnceWith('6*7', 42);
   });
 
-  it('delegates delete and clear operations to the repository', () => {
-    component.deleteItem(3);
-    component.clearAll();
+  it('delegates delete and clear bindings to the repository', () => {
+    renderHistory([
+      {
+        idi: 3,
+        expression: '9/3',
+        result: 3,
+      },
+    ]);
+
+    (fixture.nativeElement.querySelector('.delete-history') as HTMLButtonElement).click();
+    (fixture.nativeElement.querySelector('.clear-history') as HTMLButtonElement).click();
 
     expect(historyService.removeFromLocalStorage).toHaveBeenCalledOnceWith(3);
     expect(historyService.clearHistory).toHaveBeenCalled();
+  });
+
+  it('unsubscribes from repository changes on destroy', () => {
+    const callsBeforeDestroy = historyService.getHistory.calls.count();
+    fixture.destroy();
+
+    historyService.changed$.next();
+
+    expect(historyService.getHistory).toHaveBeenCalledTimes(callsBeforeDestroy);
   });
 });

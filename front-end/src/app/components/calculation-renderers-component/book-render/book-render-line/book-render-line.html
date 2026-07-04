@@ -1,24 +1,20 @@
-<div class="book-step" *ngIf="step.denominator; else inlineStep">
-
-  <div class="stack">
-    <div class="displayFlex">
-      <div class="operatorContainer">
-        <div class="operator">{{ step.operator }}</div>
-      </div>
-      <div class="numbers">
-        <div class="numerator">{{ formatValue(step.numerator) }}</div>
-        <div class="denominator">{{ formatValue(step.denominator) }}</div>
-      </div>
+<div class="book-step book-step--stacked" *ngIf="step.denominator !== undefined; else inlineStep">
+  <div class="book-operation">
+    <span class="operator" *ngIf="step.operator">{{ step.operator }}</span>
+    <div class="operands">
+      <div class="numerator value">{{ formatValue(step.numerator) }}</div>
+      <div class="denominator value">{{ formatValue(step.denominator) }}</div>
     </div>
-    <div class="line">————</div>
-    <div class="result">{{ formatValue(step.result) }}</div>
   </div>
+  <div class="calculation-divider" aria-hidden="true"></div>
+  <div class="result value">{{ formatValue(step.result) }}</div>
 </div>
 
 <ng-template #inlineStep>
-  <div class="inline-step">
-    {{ formatValue(step.numerator) }}
-    <span *ngIf="step.operator">{{ step.operator }}</span>
-    = {{ formatValue(step.result) }}
+  <div class="book-step book-step--inline">
+    <span class="value">{{ formatValue(step.numerator) }}</span>
+    <span class="operator" *ngIf="step.operator">{{ step.operator }}</span>
+    <span class="equals" aria-hidden="true">=</span>
+    <span class="result value">{{ formatValue(step.result) }}</span>
   </div>
 </ng-template>

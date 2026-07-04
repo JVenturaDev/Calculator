@@ -1,4 +1,13 @@
-import { Component, OnInit, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  ElementRef,
+  OnInit,
+  QueryList,
+  ViewChildren,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { InputService } from '../../services/input-services/input-services';
@@ -8,7 +17,6 @@ import { evaluator, Step } from '../../services/polish-services/polish-evaluator
 import { WorkspaceTagsComponent } from '../workspace-tags/workspace-tags';
 import Complex from 'complex.js';
 import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
-import { ChangeDetectorRef } from '@angular/core';
 import { HumanStep } from '../../services/calculation-renderers/human-render/human-renderer';
 import { BookRenderLineComponent } from '../calculation-renderers-component/book-render/book-render-line/book-render-line';
 import { CalculationParserService } from '../../services/calculation/calculation-parser';
@@ -76,6 +84,7 @@ export class WorkSpace implements OnInit {
 
   constructor(
     private cd: ChangeDetectorRef,
+    private destroyRef: DestroyRef,
     public wsService: WorkspaceService,
     public inputService: InputService,
     private tokenizer: Tokenizer,
@@ -88,23 +97,29 @@ export class WorkSpace implements OnInit {
 
   ngOnInit(): void {
     // Suscripción a workspaceItems$
-    this.wsService.workspaceItems$.subscribe(items => {
-      this.workspaceItems = items;
-      this.generateActiveItemSteps();
-    });
+    this.wsService.workspaceItems$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(items => {
+        this.workspaceItems = items;
+        this.generateActiveItemSteps();
+      });
 
     // Suscripción a activeItemId$
-    this.wsService.activeItemId$.subscribe(id => {
-      this.activeItemId = id;
-      this.generateActiveItemSteps();
-    });
+    this.wsService.activeItemId$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(id => {
+        this.activeItemId = id;
+        this.generateActiveItemSteps();
+      });
 
     // Suscripción a target$ para el foco
-    this.inputService.target$.subscribe(target => {
-      if (target.type === 'workspace-item') {
-        this.focusInput(target.itemId);
-      }
-    });
+    this.inputService.target$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(target => {
+        if (target.type === 'workspace-item') {
+          this.focusActiveInput(target.itemId);
+        }
+      });
   }
   onDeleteItem(itemId: string) {
     if (!confirm('¿Borrar este item?')) return;
@@ -157,22 +172,17 @@ export class WorkSpace implements OnInit {
     this.activeItemId = id;
     this.wsService.setActiveItem(id);
     this.inputService.setWorkspaceItemTarget(id);
-
-    this.cd.detectChanges();
-
-    const input = this.workspaceInputs.find((el, i) => this.workspaceItems[i].id === id);
-    input?.nativeElement.focus();
   }
 
   trackById(_index: number, item: WorkspaceItem) {
     return item.id;
   }
 
-  focusInput(itemId: string) {
-    const index = this.workspaceItems.findIndex(i => i.id === itemId);
+  private focusActiveInput(itemId: string): void {
+    if (this.activeItemId !== itemId) return;
+
     this.cd.detectChanges();
-    const input = this.workspaceInputs.get(index);
-    input?.nativeElement.focus();
+    this.workspaceInputs.first?.nativeElement.focus();
   }
 
   saveNewItem() {
@@ -212,7 +222,7 @@ export class WorkSpace implements OnInit {
     console.table(humanSteps);
 
     this.wsService.addCalculationToActiveItem(calc);
-    setTimeout(() => this.activateItem(activeId));
+    this.focusActiveInput(activeId);
   }
 
   pressButton(value: string) {

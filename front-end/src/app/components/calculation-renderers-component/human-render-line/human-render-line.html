@@ -1,3 +1,11 @@
-<div class="human-step-line">
-  {{ step.text }}
+<div
+  class="human-step"
+  [class.human-step--expression]="step.type === 'expression'"
+  [class.human-step--operator]="step.type === 'operator'"
+  [class.human-step--function]="step.type === 'function'"
+  [class.human-step--result]="step.type === 'result'"
+  [attr.data-step-type]="step.type"
+>
+  <span class="human-step-marker" aria-hidden="true"></span>
+  <span class="human-step-text">{{ step.text }}</span>
 </div>

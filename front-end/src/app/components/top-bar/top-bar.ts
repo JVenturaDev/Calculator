@@ -3,21 +3,26 @@ import { ToggleService } from '../../services/toggle-services/toggle';
 import { Router } from '@angular/router';
 import { WorkspaceApiService } from '../../services/workspaceApiService/workspace-api-service';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-top-bar',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   standalone: true,
   templateUrl: './top-bar.html',
   styleUrls: ['./top-bar.css']
 })
 export class TopBar {
+  readonly sidebarVisible$: Observable<boolean>;
 
-  constructor(private toggleService: ToggleService,
+  constructor(
+    private toggleService: ToggleService,
     public ws: WorkspaceApiService,
     private router: Router
-  ) { }
+  ) {
+    this.sidebarVisible$ = this.toggleService.getToggle('sidebar').asObservable();
+  }
+
   toggleSidebar() {
     this.toggleService.toggle('sidebar');
   }

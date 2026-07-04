@@ -91,18 +91,53 @@ describe('CalculatorScientificComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('delegates editing commands to CalculatorFacade', () => {
+  it('keeps exactly 80 explicit button elements when memory is expanded', () => {
+    component.showMemoryButtons = true;
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('button')
+    );
+
+    expect(buttons.length).toBe(80);
+    expect(buttons.every(button => button.type === 'button')).toBeTrue();
+  });
+
+  it('keeps every scientific token unchanged', () => {
+    const handler = spyOn(component, 'handleButtonClick');
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('[data-token]')
+    );
+
+    buttons.forEach(button => button.click());
+
+    expect(buttons.length).toBe(71);
+    expect(handler.calls.allArgs().map(([token]) => token)).toEqual([
+      '2nd',
+      'acoth(', 'acsch(', 'asech(', 'asin(', 'acos(', 'atan(', 'asec(', 'acsc(',
+      'acot(', 'asinh(', 'acosh(', 'atanh(', 'coth(', 'csch(', 'sech(', 'sinh(',
+      'cosh(', 'tanh(', 'sec(', 'cot(', 'csc(', 'sin(', 'cos(', 'tan(',
+      'e^(', 'xylog(', '2^x', 'yroot(', '∛', '³', 'ln(', 'log(',
+      '10^', 'pow(', '²√', '²', '|x|(', '⌊x⌋(', '⌈x⌉(', '→dms',
+      '→deg', ',', 'π', '1/', '(', '|x|(', 'e', ')', 'AC', 'exp(', '!', 'DEL', 'MOD(',
+      '7', '8', '9', '4', '5', '6', '1', '2', '3', '+/-', '0', '.',
+      '/', '*', '-', '+', '=',
+    ]);
+  });
+
+  it('delegates AC, DEL, sign and digits from the DOM', () => {
     calculatorState.expression = 'sin(';
 
-    component.handleButtonClick('9');
-    component.handleButtonClick('DEL');
-    component.handleButtonClick('+/-');
-    component.handleButtonClick('AC');
+    clickToken('9');
+    clickToken('DEL');
+    clickToken('+/-');
+    clickToken('AC');
 
     expect(mockCalculator.appendToken).toHaveBeenCalledOnceWith('9');
-    expect(mockCalculator.backspace).toHaveBeenCalled();
-    expect(mockCalculator.toggleSign).toHaveBeenCalled();
-    expect(mockCalculator.clear).toHaveBeenCalled();
+    expect(mockCalculator.backspace).toHaveBeenCalledTimes(1);
+    expect(mockCalculator.toggleSign).toHaveBeenCalledTimes(1);
+    expect(mockCalculator.clear).toHaveBeenCalledTimes(1);
+    expect(buttonForToken('AC').textContent?.trim()).toBe('CE');
   });
 
   it('preserves the leading minus behavior for an empty expression', () => {
@@ -117,22 +152,80 @@ describe('CalculatorScientificComponent', () => {
   it('evaluates through CalculatorFacade with the selected angle mode', () => {
     calculatorState.expression = 'sqrt(9)';
 
-    component.handleButtonClick('=');
+    clickToken('=');
 
     expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith({ angleMode: 'RAD' });
     expect(mockHistory.agregarId).toHaveBeenCalledWith('sqrt(9)', 3);
   });
 
-  it('cycles RAD, GRAD and DEG through CalculatorFacade', () => {
-    component.cycleAngleMode();
+  it('keeps one childless multiBtn and cycles RAD, GRAD and DEG from the DOM', () => {
+    const buttons = nativeElement().querySelectorAll<HTMLButtonElement>('#multiBtn');
+    const angleButton = buttons.item(0);
+
+    expect(buttons.length).toBe(1);
+    expect(angleButton.childElementCount).toBe(0);
+    expect(angleButton.textContent?.trim()).toBe('RAD');
+
+    angleButton.click();
     expect(calculatorState.angleMode).toBe('GRAD');
+    expect(angleButton.textContent?.trim()).toBe('GRAD');
 
-    component.cycleAngleMode();
+    angleButton.click();
     expect(calculatorState.angleMode).toBe('DEG');
+    expect(angleButton.textContent?.trim()).toBe('DEG');
 
-    component.cycleAngleMode();
+    angleButton.click();
     expect(calculatorState.angleMode).toBe('RAD');
+    expect(angleButton.textContent?.trim()).toBe('RAD');
     expect(mockCalculator.cycleAngleMode).toHaveBeenCalledTimes(3);
+  });
+
+  it('keeps F-E hidden', () => {
+    const button = nativeElement().querySelector<HTMLButtonElement>('#fBtn');
+
+    expect(button).not.toBeNull();
+    expect(button?.hidden).toBeTrue();
+  });
+
+  it('opens and closes the memory controls with More', () => {
+    const more = nativeElement().querySelector<HTMLButtonElement>('[data-control="more"]');
+
+    expect(nativeElement().querySelector('.memory-toolbar')).toBeNull();
+    expect(more?.getAttribute('aria-expanded')).toBe('false');
+
+    more?.click();
+    fixture.detectChanges();
+
+    expect(nativeElement().querySelector('.memory-toolbar')).not.toBeNull();
+    expect(more?.getAttribute('aria-expanded')).toBe('true');
+
+    more?.click();
+    fixture.detectChanges();
+
+    expect(nativeElement().querySelector('.memory-toolbar')).toBeNull();
+    expect(more?.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('keeps memory buttons connected to their public adapters', () => {
+    component.showMemoryButtons = true;
+    fixture.detectChanges();
+
+    const clear = spyOn(component, 'clearMemory');
+    const recall = spyOn(component, 'recallLast');
+    const add = spyOn(component, 'memoryPlus');
+    const subtract = spyOn(component, 'memoryMinus');
+    const save = spyOn(component, 'saveMemory');
+
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('[data-memory-action]')
+    );
+    buttons.forEach(button => button.click());
+
+    expect(clear).toHaveBeenCalledTimes(1);
+    expect(recall).toHaveBeenCalledTimes(1);
+    expect(add).toHaveBeenCalledTimes(1);
+    expect(subtract).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
   });
 
   it('delegates memory commands to CalculatorMemoryService', async () => {
@@ -148,4 +241,21 @@ describe('CalculatorScientificComponent', () => {
     expect(mockMemory.subtractCurrentFromLast).toHaveBeenCalled();
     expect(mockMemory.recallLast).toHaveBeenCalled();
   });
+
+  function clickToken(token: string): void {
+    buttonForToken(token).click();
+  }
+
+  function buttonForToken(token: string): HTMLButtonElement {
+    const button = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('[data-token]')
+    ).find(candidate => candidate.dataset['token'] === token);
+
+    expect(button).withContext(`Missing button for token ${token}`).toBeDefined();
+    return button as HTMLButtonElement;
+  }
+
+  function nativeElement(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
 });

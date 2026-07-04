@@ -79,21 +79,50 @@ describe('CalculatorBasicComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('delegates editing commands to CalculatorFacade', () => {
-    component.handleButtonClick('7');
-    component.handleButtonClick('DEL');
-    component.handleButtonClick('+/-');
-    component.handleButtonClick('AC');
+  it('keeps every keypad token unchanged', () => {
+    const handler = spyOn(component, 'handleButtonClick');
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('[data-token]')
+    );
+
+    buttons.forEach(button => button.click());
+
+    expect(handler.calls.allArgs().map(([token]) => token)).toEqual([
+      'AC', 'C', 'DEL', '%', '1/', '²', '²√', ',',
+      '7', '8', '9', '4', '5', '6', '1', '2', '3', '+/-', '0', '.',
+      '/', '*', '-', '+', '=',
+    ]);
+  });
+
+  it('renders conventional operator labels without changing their tokens', () => {
+    const operators = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('.operator-key')
+    );
+
+    expect(operators.map(button => button.textContent?.trim())).toEqual([
+      '÷', '×', '−', '+', '=',
+    ]);
+    expect(operators.map(button => button.dataset['token'])).toEqual([
+      '/', '*', '-', '+', '=',
+    ]);
+  });
+
+  it('delegates AC, C, DEL, sign and digits from the DOM', () => {
+    clickToken('7');
+    clickToken('DEL');
+    clickToken('+/-');
+    clickToken('AC');
+    clickToken('C');
 
     expect(mockCalculator.appendToken).toHaveBeenCalledOnceWith('7');
-    expect(mockCalculator.backspace).toHaveBeenCalled();
-    expect(mockCalculator.toggleSign).toHaveBeenCalled();
-    expect(mockCalculator.clear).toHaveBeenCalled();
+    expect(mockCalculator.backspace).toHaveBeenCalledTimes(1);
+    expect(mockCalculator.toggleSign).toHaveBeenCalledTimes(1);
+    expect(mockCalculator.clear).toHaveBeenCalledTimes(2);
   });
 
   it('evaluates through CalculatorFacade', () => {
     calculatorState.expression = '2+2';
-    component.handleButtonClick('=');
+    clickToken('=');
 
     expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith();
     expect(mockHistory.agregarId).toHaveBeenCalledWith('2+2', 4);
@@ -111,6 +140,27 @@ describe('CalculatorBasicComponent', () => {
     });
   });
 
+  it('keeps memory buttons connected to their public adapters', () => {
+    const panel = spyOn(component, 'toggleMemoryPanel');
+    const recall = spyOn(component, 'recallLast');
+    const clear = spyOn(component, 'clearMemory');
+    const add = spyOn(component, 'memoryPlus');
+    const subtract = spyOn(component, 'memoryMinus');
+    const save = spyOn(component, 'saveMemory');
+
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('[data-memory-action]')
+    );
+    buttons.forEach(button => button.click());
+
+    expect(panel).toHaveBeenCalledTimes(1);
+    expect(recall).toHaveBeenCalledTimes(1);
+    expect(clear).toHaveBeenCalledTimes(1);
+    expect(add).toHaveBeenCalledTimes(1);
+    expect(subtract).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
   it('delegates memory commands to CalculatorMemoryService', async () => {
     await component.saveMemory();
     await component.clearMemory();
@@ -124,4 +174,26 @@ describe('CalculatorBasicComponent', () => {
     expect(mockMemory.subtractCurrentFromLast).toHaveBeenCalled();
     expect(mockMemory.recallLast).toHaveBeenCalled();
   });
+
+  it('uses button elements with an explicit type', () => {
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('button')
+    );
+
+    expect(buttons.length).toBe(31);
+    expect(buttons.every(button => button.type === 'button')).toBeTrue();
+  });
+
+  function clickToken(token: string): void {
+    const button = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('[data-token]')
+    ).find(candidate => candidate.dataset['token'] === token);
+
+    expect(button).withContext(`Missing button for token ${token}`).toBeDefined();
+    button?.click();
+  }
+
+  function nativeElement(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
 });

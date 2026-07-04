@@ -1,0 +1,193 @@
+:host {
+  --inspector-surface: #1a1b22;
+  --inspector-surface-high: #292931;
+  --inspector-border: #424754;
+  --inspector-primary: #adc6ff;
+  --inspector-text: #e3e1ec;
+  --inspector-muted: #c2c6d6;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.inspector-shell {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--inspector-surface);
+  color: var(--inspector-text);
+}
+
+.inspector-header {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(66, 71, 84, 0.72);
+}
+
+.inspector-header h2 {
+  margin: 0;
+  color: var(--inspector-text);
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.inspector-header p {
+  margin-top: 3px;
+  color: var(--inspector-muted);
+  font-size: 0.72rem;
+}
+
+.inspector-mark {
+  display: grid;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(173, 198, 255, 0.28);
+  border-radius: 9px;
+  background: rgba(173, 198, 255, 0.07);
+  color: var(--inspector-primary);
+}
+
+.inspector-mark svg,
+.inspector-tab svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.inspector-mark svg {
+  width: 19px;
+  height: 19px;
+}
+
+.inspector-tabs {
+  display: flex;
+  min-height: 46px;
+  padding: 0 8px;
+  border-bottom: 1px solid rgba(66, 71, 84, 0.72);
+  background: rgba(18, 19, 26, 0.35);
+}
+
+.inspector-tab {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  border-radius: 0;
+  background: transparent;
+  color: #8c909f;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.inspector-tab::after {
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  left: 10px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: transparent;
+  content: "";
+}
+
+.inspector-tab:hover {
+  background: rgba(41, 41, 49, 0.55);
+  color: var(--inspector-muted);
+}
+
+.inspector-tab--active {
+  color: var(--inspector-primary);
+}
+
+.inspector-tab--active::after {
+  background: var(--inspector-primary);
+}
+
+.inspector-tab:focus-visible {
+  outline: 2px solid var(--inspector-primary);
+  outline-offset: -3px;
+}
+
+.inspector-tab svg {
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+}
+
+.inspector-content {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.inspector-view {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+  overflow: auto;
+}
+
+.inspector-view--graph {
+  display: flex;
+  padding: 8px;
+}
+
+.inspector-view--memory {
+  height: 100%;
+}
+
+.inspector-view[hidden] {
+  display: none;
+}
+
+app-history,
+app-memory,
+app-graphic-plot {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+app-memory {
+  min-height: 0;
+}
+
+app-graphic-plot {
+  min-height: 320px;
+  flex: 1;
+}
+
+@media (max-width: 500px) {
+  .inspector-header {
+    padding-inline: 12px;
+  }
+
+  .inspector-view {
+    padding: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inspector-tab {
+    transition: none;
+  }
+}

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { ToggleService, CalcType } from '../../services/toggle-services/toggle';
 
 @Component({
@@ -7,17 +8,27 @@ import { ToggleService, CalcType } from '../../services/toggle-services/toggle';
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css']
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   isVisible = false;
+  activeCalc: CalcType = 'graphic';
+  private readonly subscriptions = new Subscription();
 
-  constructor(
-    private toggleService: ToggleService,
-    private toggle: ToggleService) { }
+  constructor(private toggleService: ToggleService) { }
 
-  ngOnInit() {
-    this.toggleService.getToggle('sidebar').subscribe(v => this.isVisible = v);
+  ngOnInit(): void {
+    this.subscriptions.add(
+      this.toggleService.getToggle('sidebar').subscribe(v => this.isVisible = v)
+    );
+    this.subscriptions.add(
+      this.toggleService.activeCalc$.subscribe(calc => this.activeCalc = calc)
+    );
   }
-  select(calc: CalcType) {
-    this.toggle.setActiveCalc(calc);
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
+
+  select(calc: CalcType): void {
+    this.toggleService.setActiveCalc(calc);
   }
+}

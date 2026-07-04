@@ -159,6 +159,95 @@ describe('GraphicComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('keeps 83 explicit buttons when memory and inequalities are open', () => {
+    component.showMemoryButtons = true;
+    component.showInequalitySymbols = true;
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('button')
+    );
+
+    expect(buttons.length).toBe(83);
+    expect(buttons.every(button => button.type === 'button')).toBeTrue();
+  });
+
+  it('keeps all 74 graphical tokens unchanged', () => {
+    component.showInequalitySymbols = true;
+    fixture.detectChanges();
+
+    const buttons = tokenButtons();
+
+    expect(buttons.length).toBe(74);
+    expect(buttons.map(button => button.dataset['token'])).toEqual([
+      '<', '≥', '⩵', '≠', '≤', '>',
+      'acoth(', 'acsch(', 'asech(', 'asin(', 'acos(', 'atan(', 'asec(', 'acsc(',
+      'acot(', 'asinh(', 'acosh(', 'atanh(', 'coth(', 'csch(', 'sech(', 'sinh(',
+      'cosh(', 'tanh(', 'sec(', 'cot(', 'csc(', 'sin(', 'cos(', 'tan(',
+      'e^(', 'xylog(', '2^', 'yroot(', '∛', '³', 'ln(', 'log(',
+      '10^', 'pow(', '²√', '²', '|x|(', '⌊x⌋(', '⌈x⌉(', ',',
+      'π', '1/', '(', 'e', '|x|(', ')', 'AC', 'x', '⩵', 'DEL', 'y',
+      '7', '8', '9', '4', '5', '6', '1', '2', '3', '-', '0', '.',
+      '/', '*', '-', '+', '=',
+    ]);
+  });
+
+  it('keeps mousedown prevention on all 74 token buttons', () => {
+    component.showInequalitySymbols = true;
+    fixture.detectChanges();
+
+    const events = tokenButtons().map(button => {
+      const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+      button.dispatchEvent(event);
+      return event;
+    });
+
+    expect(events.length).toBe(74);
+    expect(events.every(event => event.defaultPrevented)).toBeTrue();
+  });
+
+  it('keeps one childless inequality trigger and one inequality panel', () => {
+    component.showInequalitySymbols = true;
+    fixture.detectChanges();
+
+    const triggers = nativeElement().querySelectorAll<HTMLButtonElement>('.btnInequality');
+    const panels = nativeElement().querySelectorAll<HTMLElement>('.graphic-buttons');
+
+    expect(triggers.length).toBe(1);
+    expect(triggers.item(0).childElementCount).toBe(0);
+    expect(panels.length).toBe(1);
+  });
+
+  it('opens and closes the inequality panel from its trigger', () => {
+    const trigger = nativeElement().querySelector<HTMLButtonElement>('.btnInequality');
+
+    expect(nativeElement().querySelector('.graphic-buttons')).toBeNull();
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+
+    trigger?.click();
+    fixture.detectChanges();
+
+    expect(nativeElement().querySelector('.graphic-buttons')).not.toBeNull();
+    expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+
+    trigger?.click();
+    fixture.detectChanges();
+
+    expect(nativeElement().querySelector('.graphic-buttons')).toBeNull();
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('keeps the six Unicode inequality tokens', () => {
+    component.showInequalitySymbols = true;
+    fixture.detectChanges();
+
+    const tokens = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('.graphic-buttons [data-token]')
+    ).map(button => button.dataset['token']);
+
+    expect(tokens).toEqual(['<', '≥', '⩵', '≠', '≤', '>']);
+  });
+
   it('delegates calculator editing commands to CalculatorFacade', () => {
     calculatorState.expression = '12';
 
@@ -248,6 +337,28 @@ describe('GraphicComponent', () => {
     expect(memory.recallLast).toHaveBeenCalled();
   });
 
+  it('keeps memory buttons connected to their public adapters', () => {
+    component.showMemoryButtons = true;
+    fixture.detectChanges();
+
+    const clear = spyOn(component, 'clearMemory');
+    const recall = spyOn(component, 'recallLast');
+    const add = spyOn(component, 'memoryPlus');
+    const subtract = spyOn(component, 'memoryMinus');
+    const save = spyOn(component, 'saveMemory');
+
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('[data-memory-action]')
+    );
+    buttons.forEach(button => button.click());
+
+    expect(clear).toHaveBeenCalledTimes(1);
+    expect(recall).toHaveBeenCalledTimes(1);
+    expect(add).toHaveBeenCalledTimes(1);
+    expect(subtract).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
   it('unsubscribes visibility and input-target listeners on destroy', () => {
     const focus = spyOn(component, 'focusCalculatorInput');
 
@@ -258,4 +369,14 @@ describe('GraphicComponent', () => {
     expect(component.isVisible).toBeTrue();
     expect(focus).not.toHaveBeenCalled();
   });
+
+  function tokenButtons(): HTMLButtonElement[] {
+    return Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('[data-token]')
+    );
+  }
+
+  function nativeElement(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
 });

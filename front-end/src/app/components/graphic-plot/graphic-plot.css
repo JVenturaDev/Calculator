@@ -1,9 +1,108 @@
 :host {
   display: block;
   width: 100%;
+  min-width: 0;
   height: 100%;
+  min-height: 320px;
 }
 
-.js-plotly-plot {
-  height: 670px;
+.graphic-component {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 320px;
+  flex-direction: column;
+  overflow: hidden;
+  color: #e3e1ec;
+  border: 1px solid rgba(66, 71, 84, 0.72);
+  border-radius: 10px;
+  background: #11131a;
+}
+
+.graphic-header {
+  display: flex;
+  min-width: 0;
+  padding: 10px 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(66, 71, 84, 0.64);
+  background: rgba(35, 37, 46, 0.82);
+}
+
+.graphic-header p,
+.graphic-header h3 {
+  margin: 0;
+}
+
+.graphic-header p {
+  color: #8f95a4;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.graphic-header h3 {
+  margin-top: 2px;
+  color: #f0edf6;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.graphic-status {
+  min-width: 0;
+  max-width: 62%;
+  padding: 4px 7px;
+  overflow: hidden;
+  color: #adc6ff;
+  border: 1px solid rgba(120, 169, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(120, 169, 255, 0.07);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plot-viewport {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 270px;
+  flex: 1;
+  overflow: hidden;
+  background:
+    radial-gradient(rgba(139, 151, 174, 0.11) 1px, transparent 1px),
+    #0f1117;
+  background-size: 20px 20px;
+}
+
+.plot-container {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 270px;
+}
+
+@media (max-width: 500px) {
+  :host,
+  .graphic-component {
+    min-height: 300px;
+  }
+
+  .graphic-header {
+    padding: 8px 9px;
+  }
+
+  .graphic-status {
+    max-width: 55%;
+  }
+
+  .plot-viewport,
+  .plot-container {
+    min-height: 250px;
+  }
 }

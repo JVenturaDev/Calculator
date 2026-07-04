@@ -1,20 +1,118 @@
+:host {
+  display: block;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 100%;
+  padding: 14px;
+  border-radius: 6px;
+  background-color: #0f1117;
+  background-image: radial-gradient(rgba(139, 151, 174, 0.14) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+:host-context(.node-children) {
+  width: auto;
+  min-width: max-content;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
 .tree-node {
+  position: relative;
   display: flex;
+  min-width: max-content;
   flex-direction: column;
   align-items: center;
-  margin: 6px;
 }
 
 .node-label {
-  padding: 4px 8px;
-  border: 1px solid #ffffff;
-  border-radius: 4px;
-  background: #1e1b1b;
-  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  min-width: 42px;
+  max-width: 15rem;
+  padding: 6px 9px;
+  overflow-wrap: anywhere;
+  color: #e7e8ee;
+  border: 1px solid rgba(120, 169, 255, 0.58);
+  border-radius: 6px;
+  background: #20242e;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+  font-size: 0.74rem;
+  font-weight: 650;
+  line-height: 1.3;
+  text-align: center;
 }
 
 .node-children {
+  position: relative;
   display: flex;
-  gap: 16px;
-  margin-top: 10px;
+  min-width: max-content;
+  padding-top: 20px;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 18px;
+}
+
+.node-children::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 10px;
+  border-left: 1px solid rgba(133, 145, 166, 0.58);
+  content: "";
+}
+
+.node-children > app-tree-node {
+  position: relative;
+  padding-top: 10px;
+}
+
+.node-children > app-tree-node::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 10px;
+  border-left: 1px solid rgba(133, 145, 166, 0.58);
+  content: "";
+}
+
+.node-children > app-tree-node::after {
+  position: absolute;
+  top: 0;
+  right: -9px;
+  left: -9px;
+  border-top: 1px solid rgba(133, 145, 166, 0.58);
+  content: "";
+}
+
+.node-children > app-tree-node:first-child::after {
+  left: 50%;
+}
+
+.node-children > app-tree-node:last-child::after {
+  right: 50%;
+}
+
+.node-children > app-tree-node:only-child::after {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .node-label {
+    max-width: 11rem;
+    padding: 5px 7px;
+    font-size: 0.7rem;
+  }
+
+  .node-children {
+    gap: 12px;
+  }
+
+  .node-children > app-tree-node::after {
+    right: -6px;
+    left: -6px;
+  }
 }

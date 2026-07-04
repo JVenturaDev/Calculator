@@ -1,3 +1,18 @@
-<section class="graphic-component">
-  <div #plotContainer class="plot-container"></div>
+<section class="graphic-component" aria-labelledby="graphic-plot-title">
+  <header class="graphic-header">
+    <div>
+      <p>Visualización</p>
+      <h3 id="graphic-plot-title">Gráfica</h3>
+    </div>
+    <span class="graphic-status" aria-live="polite">{{ plotDescription }}</span>
+  </header>
+
+  <div class="plot-viewport">
+    <div
+      #plotContainer
+      class="plot-container"
+      role="region"
+      [attr.aria-label]="plotDescription"
+    ></div>
+  </div>
 </section>

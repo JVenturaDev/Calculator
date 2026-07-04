@@ -1,95 +1,239 @@
-.scroll {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    max-width: 500px;
-    overflow-y: auto;
-    height: 600px;
+:host {
+  --history-surface: var(--inspector-surface, #1a1b22);
+  --history-surface-low: #12131a;
+  --history-surface-high: var(--inspector-surface-high, #292931);
+  --history-border: var(--inspector-border, #424754);
+  --history-primary: var(--inspector-primary, #adc6ff);
+  --history-text: var(--inspector-text, #e3e1ec);
+  --history-muted: var(--inspector-muted, #c2c6d6);
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
-/* Oculta scrollbars */
-.scroll::-webkit-scrollbar {
-    display: none;
+.history-panel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--history-text);
 }
 
-.history {
-    background-color: var(--color-gray);
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
-    border: 0.5px solid var(--boder--liner);
-    border-radius: 6px;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.history-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 2px 10px;
+  border-bottom: 1px solid rgba(66, 71, 84, 0.58);
 }
 
-.title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.history-eyebrow,
+.history-label {
+  color: #8c909f;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
-
-
-.style-A {
-    display: flex;
-    color: var(--color-bluee);
-    text-decoration: none;
-    align-items: center;
-    font-size: 16px;
-    margin-right: 10px;
+.history-toolbar h3 {
+  margin-top: 3px;
+  color: var(--history-text);
+  font-size: 0.92rem;
+  font-weight: 650;
 }
 
-.style-A:hover {
-    color: var(--color-blue);
+button,
+svg {
+  flex-shrink: 0;
 }
 
-.style-A:hover #color-span {
-    color: var(--color-red);
+svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
-.buttonHistory {
-    border: none;
-    background-color: transparent;
-}
-
-.history-item {
-    background: var(--contenidoArea);
-    color: var(--text--general);
-    border: solid 0.5px var(--boder--liner);
-    border-radius: 8px;
-    font-size: 14px;
-    padding: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 90%;
-    margin: 3px !important;
-}
-
+.clear-history,
+.restore-history,
 .delete-history {
-    color: var(--buttons--color--text--general);
-    width: 50px !important;
-    background-color: var(--bg-delete) !important;
+  display: inline-flex;
+  width: auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--history-border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--history-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
-#historyTitle {
-    margin: 0;
-    color: var(--text--general);
+.clear-history {
+  min-height: 34px;
+  padding: 6px 9px;
 }
 
-.history h3 {
-    margin: 0;
-    color: var(--color-blue);
+.clear-history svg,
+.restore-history svg,
+.delete-history svg {
+  width: 15px;
+  height: 15px;
 }
 
-#historyContent {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 95%;
-    margin-left: 10px;
+.clear-history:hover:not(:disabled),
+.restore-history:hover {
+  border-color: rgba(173, 198, 255, 0.55);
+  background: rgba(173, 198, 255, 0.07);
+  color: var(--history-primary);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--history-primary);
+  outline-offset: 2px;
+}
+
+.history-list {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 9px;
+  overflow-y: auto;
+  padding: 1px 3px 3px 1px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--history-border) transparent;
+}
+
+.history-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(66, 71, 84, 0.72);
+  border-radius: 9px;
+  background: var(--history-surface-low);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.14);
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.history-card:hover {
+  border-color: rgba(173, 198, 255, 0.34);
+  background: #171820;
+}
+
+.history-value {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-expression,
+.history-result {
+  overflow-wrap: anywhere;
+  color: var(--history-text);
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.history-result {
+  color: var(--history-primary);
+  font-size: 0.86rem;
+}
+
+.history-divider {
+  height: 1px;
+  background: rgba(66, 71, 84, 0.46);
+}
+
+.history-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  padding-top: 2px;
+}
+
+.restore-history,
+.delete-history {
+  min-height: 32px;
+  padding: 5px 8px;
+}
+
+.delete-history:hover {
+  border-color: rgba(255, 180, 171, 0.5);
+  background: rgba(147, 0, 10, 0.13);
+  color: #ffb4ab;
+}
+
+.history-empty {
+  display: flex;
+  min-height: 210px;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  color: var(--history-muted);
+  text-align: center;
+}
+
+.empty-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 12px;
+  place-items: center;
+  border: 1px solid var(--history-border);
+  border-radius: 12px;
+  background: var(--history-surface-high);
+  color: var(--history-primary);
+}
+
+.empty-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.history-empty strong {
+  color: var(--history-text);
+  font-size: 0.86rem;
+}
+
+.history-empty p {
+  max-width: 220px;
+  margin-top: 5px;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 500px) {
+  .history-actions {
+    justify-content: stretch;
+  }
+
+  .restore-history,
+  .delete-history {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .history-card {
+    transition: none;
+  }
 }

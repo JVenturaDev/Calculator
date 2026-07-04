@@ -82,6 +82,11 @@ describe('MemoryComponent', () => {
     expect(component.memoryList).toEqual([
       { id: 1, ecuacion: '2+2', resultado: 4 },
     ]);
+    expect(fixture.nativeElement.querySelector('.memory-expression').textContent).toContain(
+      '2+2'
+    );
+    expect(fixture.nativeElement.querySelector('.memory-result').textContent).toContain('4');
+    expect(fixture.nativeElement.querySelector('a')).toBeNull();
   });
 
   it('reloads from changed$ without an initial duplicate query', () => {
@@ -110,27 +115,50 @@ describe('MemoryComponent', () => {
     expect(calculatorMemory.subtractCurrentFromLast).toHaveBeenCalled();
   });
 
-  it('delegates selected-record commands', async () => {
-    await component.editRecord(3);
-    await component.memoryPlusFor(3);
-    await component.memoryMinusFor(3);
-    await component.deleteRecord(3);
+  it('binds edit, M+, M− and delete to the selected record', async () => {
+    const edit = fixture.nativeElement.querySelector('.edit-memory') as HTMLButtonElement;
+    const adjust = fixture.nativeElement.querySelectorAll(
+      '.adjust-memory'
+    ) as NodeListOf<HTMLButtonElement>;
+    const remove = fixture.nativeElement.querySelector('.delete-memory') as HTMLButtonElement;
 
-    expect(calculatorMemory.beginEdit).toHaveBeenCalledOnceWith(3);
-    expect(calculatorMemory.addCurrentToRecord).toHaveBeenCalledOnceWith(3);
-    expect(calculatorMemory.subtractCurrentFromRecord).toHaveBeenCalledOnceWith(3);
-    expect(calculatorMemory.delete).toHaveBeenCalledOnceWith(3);
+    edit.click();
+    adjust[0].click();
+    adjust[1].click();
+    remove.click();
+    await fixture.whenStable();
+
+    expect(calculatorMemory.beginEdit).toHaveBeenCalledOnceWith(1);
+    expect(calculatorMemory.addCurrentToRecord).toHaveBeenCalledOnceWith(1);
+    expect(calculatorMemory.subtractCurrentFromRecord).toHaveBeenCalledOnceWith(1);
+    expect(calculatorMemory.delete).toHaveBeenCalledOnceWith(1);
   });
 
-  it('binds Delete all to the orchestrator', async () => {
-    const deleteAll = fixture.nativeElement.querySelector(
-      '.topBar-memory .style-A'
-    ) as HTMLAnchorElement;
+  it('binds the accessible clear button to the orchestrator', async () => {
+    const deleteAll = fixture.nativeElement.querySelector('.clear-memory') as HTMLButtonElement;
 
     deleteAll.click();
     await fixture.whenStable();
 
     expect(calculatorMemory.clearAll).toHaveBeenCalled();
+  });
+
+  it('shows loading and empty states without adding records', async () => {
+    component.isLoading = true;
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.loading-spinner')).toBeTruthy();
+
+    repository.getAll.and.resolveTo([]);
+    await component.loadMemory();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.memory-card')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.memory-state').textContent).toContain(
+      'Memoria vacía'
+    );
+    expect(
+      (fixture.nativeElement.querySelector('.clear-memory') as HTMLButtonElement).disabled
+    ).toBeTrue();
   });
 
   it('unsubscribes visibility and memory listeners on destroy', () => {

@@ -1,10 +1,16 @@
-<div class="tree-node">
-    <div class="node-label">
-        {{ node.label }}
-    </div>
+<div class="tree-node" role="group" [attr.aria-label]="'Nodo ' + node.label">
+  <div class="node-label">{{ node.label }}</div>
 
-    <div class="node-children" *ngIf="node.children.length">
-        <app-tree-node *ngFor="let child of node.children" [node]="child">
-        </app-tree-node>
-    </div>
+  <div
+    class="node-children"
+    *ngIf="node.children.length"
+    role="list"
+    [attr.aria-label]="'Nodos hijos de ' + node.label"
+  >
+    <app-tree-node
+      *ngFor="let child of node.children"
+      role="listitem"
+      [node]="child"
+    ></app-tree-node>
+  </div>
 </div>

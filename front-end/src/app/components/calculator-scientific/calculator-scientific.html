@@ -1,122 +1,230 @@
-<section class="section-special-button" *ngIf="isVisible">
-  <!-- Botón RAD / DEG / GRAD -->
-  <div class="specialButtons">
-    <button id="multiBtn" (click)="cycleAngleMode()">RAD</button>
-    <button class="side-button button" (click)="handleButtonClick('2nd')" id="secondButton">2<sup>nd</sup></button>
-    <button class="side-button button" style="display: none;" id="fBtn">F-E</button>
+<section
+  class="scientific-keyboard"
+  *ngIf="isVisible"
+  aria-label="Teclado de calculadora científica"
+>
+  <div class="control-toolbar" role="group" aria-label="Controles científicos">
+    <button
+      type="button"
+      id="multiBtn"
+      class="key control-key angle-key"
+      aria-describedby="angle-mode-help"
+      (click)="cycleAngleMode()"
+    >RAD</button>
+    <button
+      type="button"
+      id="secondButton"
+      class="key control-key"
+      data-token="2nd"
+      aria-label="Función secundaria"
+      (click)="handleButtonClick('2nd')"
+    >2<sup>nd</sup></button>
+    <button
+      type="button"
+      id="fBtn"
+      class="key control-key"
+      hidden
+    >F-E</button>
+    <button
+      type="button"
+      class="key control-key"
+      data-control="more"
+      aria-label="Mostrar u ocultar controles de memoria"
+      [attr.aria-expanded]="showMemoryButtons"
+      (click)="showMemoryButtons = !showMemoryButtons"
+    >More</button>
+    <button
+      type="button"
+      class="key control-key"
+      data-control="memory-panel"
+      aria-label="Abrir panel de memoria"
+      (click)="toggleMemoryPanel()"
+    >M</button>
   </div>
 
-  <div class="show-nt">
-    <!-- Botones científicos adicionales -->
-    <section class="scientific-moreButtons">
-      <div class="blackLite">
-        <button class="side-button button" (click)="handleButtonClick('acoth(')">coth<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('acsch(')">csch<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('asech(')">sech<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('asin(')">sin<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('acos(')">cos<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('atan(')">tan<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('asec(')">sec<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('acsc(')">csc<sup>-1</sup></button>
-      </div>
-      <div class="blackLite">
-        <button class="side-button button" (click)="handleButtonClick('acot(')">cot<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('asinh(')">sinh<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('acosh(')">cosh<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('atanh(')">tanh<sup>-1</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('coth(')">coth</button>
-        <button class="side-button button" (click)="handleButtonClick('csch(')">csch</button>
-        <button class="side-button button" (click)="handleButtonClick('sech(')">sech</button>
-        <button class="side-button button" (click)="handleButtonClick('sinh(')">sinh</button>
-      </div>
-      <div class="blackLite">
-        <button class="side-button button" (click)="handleButtonClick('cosh(')">cosh</button>
-        <button class="side-button button" (click)="handleButtonClick('tanh(')">tanh</button>
-        <button class="side-button button" (click)="handleButtonClick('sec(')">sec</button>
-        <button class="side-button button" (click)="handleButtonClick('cot(')">cot</button>
-        <button class="side-button button" (click)="handleButtonClick('csc(')">csc</button>
-        <button class="side-button button" (click)="handleButtonClick('sin(')">sin</button>
-        <button class="side-button button" (click)="handleButtonClick('cos(')">cos</button>
-        <button class="side-button button" (click)="handleButtonClick('tan(')">tan</button>
-      </div>
-      <div class="blackLite">
-        <button class="side-button button" (click)="handleButtonClick('e^(')">eˣ</button>
-        <button class="side-button button" (click)="handleButtonClick('xylog(')">log<sub>y</sub>x</button>
-        <button class="side-button button" (click)="handleButtonClick('2^x')">2<sup>x</sup></button>
-        <button class="side-button button" (click)="handleButtonClick('yroot(')">ʸ√x</button>
-        <button class="side-button button" (click)="handleButtonClick('∛')">∛x</button>
-        <button class="side-button button" (click)="handleButtonClick('³')">x³</button>
-        <button class="side-button button" (click)="handleButtonClick('ln(')">ln</button>
-        <button class="side-button button" (click)="handleButtonClick('log(')">log</button>
-      </div>
-      <div class="orange">
-        <button class="side-button button" (click)="handleButtonClick('10^')">10ˣ</button>
-        <button class="side-button button" (click)="handleButtonClick('pow(')">xʸ</button>
-        <button class="side-button button" (click)="handleButtonClick('²√')">²√x</button>
-        <button class="side-button button" (click)="handleButtonClick('²')">x²</button>
-        <button class="side-button button" (click)="handleButtonClick('|x|(')">|x|</button>
-        <button class="side-button button" (click)="handleButtonClick('⌊x⌋(')">⌊x⌋</button>
-        <button class="side-button button" (click)="handleButtonClick('⌈x⌉(')">⌈x⌉</button>
-        <button class="side-button button" (click)="handleButtonClick('→dms')">→dms</button>
-      </div>
-    </section>
+  <span id="angle-mode-help" class="sr-only">
+    Cambia entre radianes, gradianes y grados.
+  </span>
 
-    <!-- Sección científica con memoria -->
-    <section class="scientific">
-      <div class="blackLite-memory">
-        <button class="side-button" (click)="showMemoryButtons = !showMemoryButtons">More</button>
-        <button class="side-button" (click)="toggleMemoryPanel()">M <!--<span
-            class="material-symbols-outlined">arrow_drop_down</span>--></button>
-        <div class="memoryButton" *ngIf="showMemoryButtons">
-          <button class="memoryB" (click)="clearMemory()">MC</button>
-          <button class="memoryB" (click)="recallLast()">MR</button>
-          <button class="memoryB" (click)="memoryPlus()">M+</button>
-          <button class="memoryB" (click)="memoryMinus()">M-</button>
-          <button class="memoryB" (click)="saveMemory()">MS</button>
-        </div>
-        <button class="side-button button" (click)="handleButtonClick('→deg')">→deg</button>
-        <button class="side-button button" (click)="handleButtonClick(',')">,</button>
-      </div>
+  <div
+    *ngIf="showMemoryButtons"
+    class="memory-toolbar"
+    role="group"
+    aria-label="Controles de memoria"
+  >
+    <button type="button" class="key memory-key" data-memory-action="clear"
+      aria-label="Limpiar memoria" (click)="clearMemory()">MC</button>
+    <button type="button" class="key memory-key" data-memory-action="recall"
+      aria-label="Recuperar último valor de memoria" (click)="recallLast()">MR</button>
+    <button type="button" class="key memory-key" data-memory-action="add"
+      aria-label="Sumar valor actual a memoria" (click)="memoryPlus()">M+</button>
+    <button type="button" class="key memory-key" data-memory-action="subtract"
+      aria-label="Restar valor actual de memoria" (click)="memoryMinus()">M−</button>
+    <button type="button" class="key memory-key" data-memory-action="save"
+      aria-label="Guardar valor actual en memoria" (click)="saveMemory()">MS</button>
+  </div>
 
-      <div class="blackLite">
-        <button class="color-button button" (click)="handleButtonClick('π')">π</button>
-        <button class="color-button button" (click)="handleButtonClick('1/')">1/x</button>
-        <button class="color-button button" (click)="handleButtonClick('(')">(</button>
-        <button class="digit-button button" (click)="handleButtonClick('7')">7</button>
-        <button class="digit-button button" (click)="handleButtonClick('4')">4</button>
-        <button class="digit-button button" (click)="handleButtonClick('1')">1</button>
-        <button class="digit-button button" (click)="handleButtonClick('+/-')">+/-</button>
-      </div>
+  <section class="advanced-panel" aria-labelledby="advanced-functions-title">
+    <h2 id="advanced-functions-title">Funciones científicas</h2>
+    <div class="advanced-scroll">
+      <div class="advanced-grid" role="group" aria-label="Funciones científicas avanzadas">
+        <button type="button" class="key advanced-key" data-token="acoth("
+          (click)="handleButtonClick('acoth(')">coth<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="acsch("
+          (click)="handleButtonClick('acsch(')">csch<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="asech("
+          (click)="handleButtonClick('asech(')">sech<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="asin("
+          (click)="handleButtonClick('asin(')">sin<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="acos("
+          (click)="handleButtonClick('acos(')">cos<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="atan("
+          (click)="handleButtonClick('atan(')">tan<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="asec("
+          (click)="handleButtonClick('asec(')">sec<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="acsc("
+          (click)="handleButtonClick('acsc(')">csc<sup>−1</sup></button>
 
-      <div class="blackLite">
-        <button class="color-button button" (click)="handleButtonClick('|x|(')">|x|</button>
-        <button class="color-button button" (click)="handleButtonClick('e')">e</button>
-        <button class="color-button button" (click)="handleButtonClick(')')">)</button>
-        <button class="digit-button button" (click)="handleButtonClick('8')">8</button>
-        <button class="digit-button button" (click)="handleButtonClick('5')">5</button>
-        <button class="digit-button button" (click)="handleButtonClick('2')">2</button>
-        <button class="digit-button button" (click)="handleButtonClick('0')">0</button>
-      </div>
+        <button type="button" class="key advanced-key" data-token="acot("
+          (click)="handleButtonClick('acot(')">cot<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="asinh("
+          (click)="handleButtonClick('asinh(')">sinh<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="acosh("
+          (click)="handleButtonClick('acosh(')">cosh<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="atanh("
+          (click)="handleButtonClick('atanh(')">tanh<sup>−1</sup></button>
+        <button type="button" class="key advanced-key" data-token="coth("
+          (click)="handleButtonClick('coth(')">coth</button>
+        <button type="button" class="key advanced-key" data-token="csch("
+          (click)="handleButtonClick('csch(')">csch</button>
+        <button type="button" class="key advanced-key" data-token="sech("
+          (click)="handleButtonClick('sech(')">sech</button>
+        <button type="button" class="key advanced-key" data-token="sinh("
+          (click)="handleButtonClick('sinh(')">sinh</button>
 
-      <div class="blackLite">
-        <button class="color-button button" (click)="handleButtonClick('AC')">CE</button>
-        <button class="color-button button" (click)="handleButtonClick('exp(')">EXP</button>
-        <button class="color-button button" (click)="handleButtonClick('!')">!</button>
-        <button class="digit-button button" (click)="handleButtonClick('9')">9</button>
-        <button class="digit-button button" (click)="handleButtonClick('6')">6</button>
-        <button class="digit-button button" (click)="handleButtonClick('3')">3</button>
-        <button class="digit-button button" (click)="handleButtonClick('.')">.</button>
-      </div>
+        <button type="button" class="key advanced-key" data-token="cosh("
+          (click)="handleButtonClick('cosh(')">cosh</button>
+        <button type="button" class="key advanced-key" data-token="tanh("
+          (click)="handleButtonClick('tanh(')">tanh</button>
+        <button type="button" class="key advanced-key" data-token="sec("
+          (click)="handleButtonClick('sec(')">sec</button>
+        <button type="button" class="key advanced-key" data-token="cot("
+          (click)="handleButtonClick('cot(')">cot</button>
+        <button type="button" class="key advanced-key" data-token="csc("
+          (click)="handleButtonClick('csc(')">csc</button>
+        <button type="button" class="key advanced-key" data-token="sin("
+          (click)="handleButtonClick('sin(')">sin</button>
+        <button type="button" class="key advanced-key" data-token="cos("
+          (click)="handleButtonClick('cos(')">cos</button>
+        <button type="button" class="key advanced-key" data-token="tan("
+          (click)="handleButtonClick('tan(')">tan</button>
 
-      <div class="orange">
-        <button class="color-button button" (click)="handleButtonClick('DEL')">DEL</button>
-        <button class="color-button button" (click)="handleButtonClick('MOD(')">MOD</button>
-        <button class="operation-button button" (click)="handleButtonClick('/')">/</button>
-        <button class="operation-button button" (click)="handleButtonClick('*')">*</button>
-        <button class="operation-button button" (click)="handleButtonClick('-')">-</button>
-        <button class="operation-button button" (click)="handleButtonClick('+')">+</button>
-        <button class="operation-button button" (click)="handleButtonClick('=')">=</button>
+        <button type="button" class="key advanced-key" data-token="e^("
+          (click)="handleButtonClick('e^(')">eˣ</button>
+        <button type="button" class="key advanced-key" data-token="xylog("
+          (click)="handleButtonClick('xylog(')">log<sub>y</sub>x</button>
+        <button type="button" class="key advanced-key" data-token="2^x"
+          (click)="handleButtonClick('2^x')">2<sup>x</sup></button>
+        <button type="button" class="key advanced-key" data-token="yroot("
+          (click)="handleButtonClick('yroot(')">ʸ√x</button>
+        <button type="button" class="key advanced-key" data-token="∛"
+          aria-label="Raíz cúbica" (click)="handleButtonClick('∛')">∛x</button>
+        <button type="button" class="key advanced-key" data-token="³"
+          aria-label="Elevar al cubo" (click)="handleButtonClick('³')">x³</button>
+        <button type="button" class="key advanced-key" data-token="ln("
+          (click)="handleButtonClick('ln(')">ln</button>
+        <button type="button" class="key advanced-key" data-token="log("
+          (click)="handleButtonClick('log(')">log</button>
+
+        <button type="button" class="key advanced-key" data-token="10^"
+          (click)="handleButtonClick('10^')">10ˣ</button>
+        <button type="button" class="key advanced-key" data-token="pow("
+          (click)="handleButtonClick('pow(')">xʸ</button>
+        <button type="button" class="key advanced-key" data-token="²√"
+          aria-label="Raíz cuadrada" (click)="handleButtonClick('²√')">²√x</button>
+        <button type="button" class="key advanced-key" data-token="²"
+          aria-label="Elevar al cuadrado" (click)="handleButtonClick('²')">x²</button>
+        <button type="button" class="key advanced-key" data-token="|x|("
+          aria-label="Valor absoluto" (click)="handleButtonClick('|x|(')">|x|</button>
+        <button type="button" class="key advanced-key" data-token="⌊x⌋("
+          aria-label="Redondear hacia abajo" (click)="handleButtonClick('⌊x⌋(')">⌊x⌋</button>
+        <button type="button" class="key advanced-key" data-token="⌈x⌉("
+          aria-label="Redondear hacia arriba" (click)="handleButtonClick('⌈x⌉(')">⌈x⌉</button>
+        <button type="button" class="key advanced-key" data-token="→dms"
+          aria-label="Convertir a grados, minutos y segundos"
+          (click)="handleButtonClick('→dms')">→dms</button>
       </div>
-    </section>
+    </div>
+  </section>
+
+  <div class="function-grid" role="group" aria-label="Funciones principales">
+    <button type="button" class="key function-key" data-token="→deg"
+      aria-label="Convertir a grados" (click)="handleButtonClick('→deg')">→deg</button>
+    <button type="button" class="key function-key" data-token=","
+      aria-label="Separador de argumentos" (click)="handleButtonClick(',')">,</button>
+    <button type="button" class="key function-key" data-token="π"
+      aria-label="Pi" (click)="handleButtonClick('π')">π</button>
+    <button type="button" class="key function-key" data-token="1/"
+      aria-label="Inverso multiplicativo" (click)="handleButtonClick('1/')">1/x</button>
+    <button type="button" class="key function-key" data-token="("
+      aria-label="Abrir paréntesis" (click)="handleButtonClick('(')">(</button>
+    <button type="button" class="key function-key" data-token="|x|("
+      aria-label="Valor absoluto" (click)="handleButtonClick('|x|(')">|x|</button>
+    <button type="button" class="key function-key" data-token="e"
+      aria-label="Número e" (click)="handleButtonClick('e')">e</button>
+    <button type="button" class="key function-key" data-token=")"
+      aria-label="Cerrar paréntesis" (click)="handleButtonClick(')')">)</button>
+    <button type="button" class="key function-key" data-token="AC"
+      aria-label="Limpiar entrada" (click)="handleButtonClick('AC')">CE</button>
+    <button type="button" class="key function-key" data-token="exp("
+      (click)="handleButtonClick('exp(')">EXP</button>
+    <button type="button" class="key function-key" data-token="!"
+      aria-label="Factorial" (click)="handleButtonClick('!')">!</button>
+    <button type="button" class="key function-key" data-token="DEL"
+      aria-label="Borrar último carácter" (click)="handleButtonClick('DEL')">DEL</button>
+    <button type="button" class="key function-key" data-token="MOD("
+      aria-label="Módulo" (click)="handleButtonClick('MOD(')">MOD</button>
+  </div>
+
+  <div class="keypad-layout">
+    <div class="number-grid" role="group" aria-label="Números">
+      <button type="button" class="key number-key" data-token="7"
+        (click)="handleButtonClick('7')">7</button>
+      <button type="button" class="key number-key" data-token="8"
+        (click)="handleButtonClick('8')">8</button>
+      <button type="button" class="key number-key" data-token="9"
+        (click)="handleButtonClick('9')">9</button>
+      <button type="button" class="key number-key" data-token="4"
+        (click)="handleButtonClick('4')">4</button>
+      <button type="button" class="key number-key" data-token="5"
+        (click)="handleButtonClick('5')">5</button>
+      <button type="button" class="key number-key" data-token="6"
+        (click)="handleButtonClick('6')">6</button>
+      <button type="button" class="key number-key" data-token="1"
+        (click)="handleButtonClick('1')">1</button>
+      <button type="button" class="key number-key" data-token="2"
+        (click)="handleButtonClick('2')">2</button>
+      <button type="button" class="key number-key" data-token="3"
+        (click)="handleButtonClick('3')">3</button>
+      <button type="button" class="key number-key" data-token="+/-"
+        aria-label="Cambiar signo" (click)="handleButtonClick('+/-')">+/−</button>
+      <button type="button" class="key number-key" data-token="0"
+        (click)="handleButtonClick('0')">0</button>
+      <button type="button" class="key number-key" data-token="."
+        aria-label="Separador decimal" (click)="handleButtonClick('.')">.</button>
+    </div>
+
+    <div class="operator-grid" role="group" aria-label="Operadores">
+      <button type="button" class="key operator-key" data-token="/"
+        aria-label="Dividir" (click)="handleButtonClick('/')">÷</button>
+      <button type="button" class="key operator-key" data-token="*"
+        aria-label="Multiplicar" (click)="handleButtonClick('*')">×</button>
+      <button type="button" class="key operator-key" data-token="-"
+        aria-label="Restar" (click)="handleButtonClick('-')">−</button>
+      <button type="button" class="key operator-key" data-token="+"
+        aria-label="Sumar" (click)="handleButtonClick('+')">+</button>
+      <button type="button" class="key operator-key primary-key" data-token="="
+        aria-label="Evaluar expresión" (click)="handleButtonClick('=')">=</button>
+    </div>
   </div>
 </section>

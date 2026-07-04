@@ -1,77 +1,182 @@
-<div class="workspace-area">
+<section class="workspace-area" aria-labelledby="workspace-title">
+  <header class="workspace-header">
+    <div>
+      <p class="workspace-eyebrow">Calculator Workspace</p>
+      <h2 id="workspace-title">Cálculos guardados</h2>
+    </div>
+    <button
+      *ngIf="!creatingItem"
+      type="button"
+      class="new-item-button"
+      aria-label="Crear espacio de cálculo"
+      (click)="creatingItem = true"
+    >
+      <span aria-hidden="true">+</span>
+      Nuevo
+    </button>
+  </header>
 
-  <!-- Crear nuevo item -->
-  <div *ngIf="creatingItem" class="new-item" (click)="$event.stopPropagation()">
-    <input type="text" placeholder="Título del cálculo" [(ngModel)]="newItemTitle" (click)="$event.stopPropagation()" />
-
+  <section *ngIf="creatingItem" class="new-item" aria-labelledby="new-item-title">
+    <h3 id="new-item-title">Nuevo espacio</h3>
+    <label for="workspaceItemTitle">Título</label>
+    <input
+      id="workspaceItemTitle"
+      type="text"
+      placeholder="Título del cálculo"
+      [(ngModel)]="newItemTitle"
+    />
     <app-workspace-tags [tags]="newItemTags"></app-workspace-tags>
+    <div class="form-actions">
+      <button type="button" class="secondary-button" (click)="creatingItem = false">Cancelar</button>
+      <button type="button" class="primary-button" (click)="saveNewItem()">Guardar</button>
+    </div>
+  </section>
 
-    <button (click)="$event.stopPropagation()" (click)="saveNewItem()">Guardar</button>
-    <button (click)="$event.stopPropagation()" (click)="creatingItem = false">Cancelar</button>
-  </div>
+  <ng-container *ngIf="wsService.workspaceItems$ | async as items">
+    <div class="workspace-list" *ngIf="items.length; else workspaceEmpty">
+      <article
+        *ngFor="let item of items; trackBy: trackById"
+        class="workspace-item"
+        [class.workspace-item-active]="activeItemId === item.id"
+        (click)="activateItem(item.id)"
+      >
+        <header class="item-header">
+          <div class="item-title">
+            <span class="item-type">{{ item.type }}</span>
+            <h3>{{ item.title }}</h3>
+          </div>
+          <button
+            *ngIf="activeItemId === item.id"
+            type="button"
+            class="delete-btn"
+            aria-label="Eliminar espacio de cálculo"
+            title="Borrar item"
+            (click)="$event.stopPropagation(); onDeleteItem(item.id)"
+          >
+            Eliminar
+          </button>
+        </header>
 
-  <!-- Items del workspace -->
-  <div *ngFor="let item of (wsService.workspaceItems$ | async); trackBy: trackById" class="workspace-item"
-    (click)="activateItem(item.id)">
-    <div class="item-header">
-      <h3>{{ item.title }}</h3>
+        <app-workspace-tags
+          [tags]="item.tags"
+          (tagsChange)="wsService.updateTags(item.id, $event)"
+        ></app-workspace-tags>
+
+        <section *ngIf="activeItemId === item.id" class="active-workspace">
+          <div class="view-switch" role="group" aria-label="Formato de los pasos">
+            <button
+              type="button"
+              data-view="human"
+              [class.active]="viewMode === 'human'"
+              [attr.aria-pressed]="viewMode === 'human'"
+              (click)="$event.stopPropagation(); setViewMode('human')"
+            >Humano</button>
+            <button
+              type="button"
+              data-view="book"
+              [class.active]="viewMode === 'book'"
+              [attr.aria-pressed]="viewMode === 'book'"
+              (click)="$event.stopPropagation(); setViewMode('book')"
+            >Libro</button>
+            <button
+              type="button"
+              data-view="tree"
+              [class.active]="viewMode === 'tree'"
+              [attr.aria-pressed]="viewMode === 'tree'"
+              (click)="$event.stopPropagation(); setViewMode('tree')"
+            >Árbol</button>
+          </div>
+
+          <div class="expression-editor" (click)="$event.stopPropagation()">
+            <label [for]="'workspace-input-' + item.id">Expresión</label>
+            <div class="editor-row">
+              <input
+                #workspaceInput
+                [id]="'workspace-input-' + item.id"
+                type="text"
+                placeholder="Escribe una expresión"
+                [ngModel]="item.currentExpression"
+                (ngModelChange)="wsService.updateCurrentExpression(item.id, $event)"
+                (focus)="inputService.setWorkspaceItemTarget(item.id)"
+              />
+              <button
+                type="button"
+                class="evaluate-button"
+                aria-label="Evaluar expresión"
+                (click)="$event.stopPropagation(); evaluateWorkspaceItem()"
+              >Evaluar</button>
+            </div>
+          </div>
+
+          <div
+            *ngIf="item.calculations.length; else calculationsEmpty"
+            class="calculation-stream"
+            aria-label="Cálculos del espacio activo"
+          >
+            <article *ngFor="let calc of item.calculations" class="calculation-card">
+              <header class="calculation-header">
+                <span *ngIf="calc.id" class="calculation-id">{{ calc.id }}</span>
+                <time *ngIf="calc.timestamp" [attr.datetime]="calc.timestamp | date:'yyyy-MM-ddTHH:mm:ss'">
+                  {{ calc.timestamp | date:'medium' }}
+                </time>
+              </header>
+
+              <div class="calculation-body">
+                <section>
+                  <span class="calculation-label">Expresión</span>
+                  <div class="calculation-expression">{{ calc.expression }}</div>
+                </section>
+                <section>
+                  <span class="calculation-label">Resultado</span>
+                  <output class="calculation-result">
+                    {{ serviseParserN.formatValue(calc.result) }}
+                  </output>
+                </section>
+              </div>
+
+              <section class="renderer-area" [attr.aria-label]="'Pasos en modo ' + viewMode">
+                <span class="calculation-label">Desarrollo · {{ viewMode }}</span>
+                <div class="renderer-content">
+                  <ng-container *ngIf="viewMode === 'human'">
+                    <app-human-render-line
+                      *ngFor="let step of calc.humanSteps"
+                      [step]="step"
+                    ></app-human-render-line>
+                  </ng-container>
+
+                  <ng-container *ngIf="viewMode === 'book'">
+                    <app-book-render-line
+                      *ngFor="let step of calc.bookSteps"
+                      [step]="step"
+                    ></app-book-render-line>
+                  </ng-container>
+
+                  <ng-container *ngIf="viewMode === 'tree'">
+                    <app-tree-node
+                      *ngIf="trees.get(calc.id!) as tree"
+                      [node]="tree"
+                    ></app-tree-node>
+                  </ng-container>
+                </div>
+              </section>
+            </article>
+          </div>
+
+          <ng-template #calculationsEmpty>
+            <div class="empty-state" role="status">
+              <strong>Aún no hay cálculos</strong>
+              <span>Escribe una expresión y evalúala para crear la primera card.</span>
+            </div>
+          </ng-template>
+        </section>
+      </article>
     </div>
 
-    <!-- Historial del item -->
-    <!-- Selector simple (solo en el activo) -->
-    <div class="view-switch" *ngIf="activeItemId === item.id">
-      <button (click)="$event.stopPropagation(); setViewMode('human')">Humano</button>
-      <button (click)="$event.stopPropagation(); setViewMode('book')">Libro</button>
-      <button (click)="$event.stopPropagation(); setViewMode('tree')">Árbol</button>
-
-      <button type="button" class="delete-btn" (click)="$event.stopPropagation(); onDeleteItem(item.id)"
-        title="Borrar item">
-        🗑️
-      </button>
-    </div>
-
-    <!-- Input del item activo -->
-    <div *ngIf="activeItemId === item.id" class="item-input" (click)="$event.stopPropagation()">
-      <input #workspaceInput type="text" placeholder="" [ngModel]="item.currentExpression"
-        (ngModelChange)="wsService.updateCurrentExpression(item.id, $event)"
-        (focus)="inputService.setWorkspaceItemTarget(item.id)" />
-      <button (click)="$event.stopPropagation(); evaluateWorkspaceItem()">=</button>
-    </div>
-
-
-    <!-- Historial SOLO del item activo -->
-    <div *ngIf="activeItemId === item.id">
-      <div *ngFor="let calc of item.calculations">
-        <b>{{ calc.expression }}</b> → {{ serviseParserN.formatValue(calc.result) }}
-
-        <!-- HUMANO -->
-        <ng-container *ngIf="viewMode === 'human'">
-          <ng-container *ngFor="let step of calc.humanSteps">
-            <app-human-render-line [step]="step"></app-human-render-line>
-          </ng-container>
-        </ng-container>
-
-        <!-- LIBRO -->
-        <ng-container *ngIf="viewMode === 'book'">
-          <ng-container *ngFor="let step of calc.bookSteps">
-            <app-book-render-line [step]="step"></app-book-render-line>
-          </ng-container>
-        </ng-container>
-
-        <!-- ÁRBOL -->
-        <ng-container *ngIf="viewMode === 'tree'">
-          <app-tree-node *ngIf="trees.get(calc.id!) as tree" [node]="tree"></app-tree-node>
-        </ng-container>
+    <ng-template #workspaceEmpty>
+      <div class="empty-state workspace-empty" role="status">
+        <strong>No hay espacios de cálculo</strong>
+        <span>Crea uno para guardar expresiones, resultados y pasos.</span>
       </div>
-    </div>
-    <!-- Tags -->
-    <app-workspace-tags [tags]="item.tags" (tagsChange)="wsService.updateTags(item.id, $event)">
-    </app-workspace-tags>
-  </div>
-
-  <button class="moreItems" *ngIf="!creatingItem" (click)="creatingItem = true">
-    <div class="moreButton"> +</div>
-
-  </button>
-
-</div>
+    </ng-template>
+  </ng-container>
+</section>
