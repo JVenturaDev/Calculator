@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BehaviorSubject } from 'rxjs';
 
 import { CalculatorBasicComponent } from './calculator-basic';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
@@ -10,7 +9,6 @@ import {
 import { HistoryService } from '../../services/history-services/history';
 import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
-import { ToggleService } from '../../services/toggle-services/toggle';
 
 describe('CalculatorBasicComponent', () => {
   let component: CalculatorBasicComponent;
@@ -63,10 +61,6 @@ describe('CalculatorBasicComponent', () => {
         { provide: HistoryService, useValue: mockHistory },
         { provide: CalculatorMemoryService, useValue: mockMemory },
         { provide: MemoryToggleService, useValue: { toggle: jasmine.createSpy('toggle') } },
-        {
-          provide: ToggleService,
-          useValue: { activeCalc$: new BehaviorSubject('basic') },
-        },
       ],
     }).compileComponents();
 
@@ -126,6 +120,24 @@ describe('CalculatorBasicComponent', () => {
 
     expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith();
     expect(mockHistory.agregarId).toHaveBeenCalledWith('2+2', 4);
+  });
+
+  it('captures evaluation errors without alerting or duplicating a message', () => {
+    const alertSpy = spyOn(window, 'alert');
+    const facadeError = {
+      code: 'EVALUATION_ERROR',
+      message: 'Invalid expression',
+    };
+    calculatorState.error = facadeError;
+    mockCalculator.evaluate.and.throwError('Invalid expression');
+
+    expect(() => component.handleButtonClick('=')).not.toThrow();
+
+    expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith();
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(mockHistory.agregarId).not.toHaveBeenCalled();
+    expect(calculatorState.error).toBe(facadeError);
+    expect('error' in component).toBeFalse();
   });
 
   it('keeps reciprocal behavior through CalculatorFacade state', () => {

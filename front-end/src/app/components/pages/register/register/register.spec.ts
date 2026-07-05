@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { WorkspaceApiService } from '../../../../services/workspaceApiService/workspace-api-service';
+import { ToastService } from '../../../../services/toast-services/toast';
 import { Register } from './register';
 
 describe('Register', () => {
@@ -10,16 +11,19 @@ describe('Register', () => {
   let fixture: ComponentFixture<Register>;
   let api: jasmine.SpyObj<WorkspaceApiService>;
   let router: jasmine.SpyObj<Router>;
+  let toast: jasmine.SpyObj<ToastService>;
 
   beforeEach(async () => {
     api = jasmine.createSpyObj<WorkspaceApiService>('WorkspaceApiService', ['register', 'guest']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
+    toast = jasmine.createSpyObj<ToastService>('ToastService', ['success']);
 
     await TestBed.configureTestingModule({
       imports: [Register],
       providers: [
         { provide: WorkspaceApiService, useValue: api },
         { provide: Router, useValue: router },
+        { provide: ToastService, useValue: toast },
       ],
     }).compileComponents();
 
@@ -58,7 +62,10 @@ describe('Register', () => {
     form.dispatchEvent(new Event('submit'));
 
     expect(api.register).toHaveBeenCalledOnceWith('jon', 'secret');
-    expect(window.alert).toHaveBeenCalledOnceWith('registered');
+    expect(toast.success).toHaveBeenCalledOnceWith(
+      'Registro completado. Ya puedes iniciar sesión.'
+    );
+    expect(window.alert).not.toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledOnceWith(['/login']);
   });
 

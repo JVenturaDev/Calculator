@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChildren,
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
@@ -19,7 +26,11 @@ type PersistentInspectorView = Exclude<InspectorView, 'memory'>;
   styleUrls: ['./inspector-shell.css'],
 })
 export class InspectorShellComponent implements OnInit, OnDestroy {
+  @ViewChildren('inspectorTab')
+  private inspectorTabs!: QueryList<ElementRef<HTMLButtonElement>>;
+
   activeView: InspectorView = 'history';
+  private readonly tabOrder: readonly InspectorView[] = ['history', 'memory', 'graph'];
   private lastPersistentView: PersistentInspectorView = 'history';
   private readonly subscriptions = new Subscription();
 
@@ -68,5 +79,35 @@ export class InspectorShellComponent implements OnInit, OnDestroy {
       this.lastPersistentView = view;
       this.activeView = view;
     }
+  }
+
+  onTabKeydown(event: KeyboardEvent, currentView: InspectorView): void {
+    const currentIndex = this.tabOrder.indexOf(currentView);
+    let targetView: InspectorView;
+
+    switch (event.key) {
+      case 'ArrowRight':
+        targetView = this.tabOrder[(currentIndex + 1) % this.tabOrder.length];
+        break;
+      case 'ArrowLeft':
+        targetView = this.tabOrder[
+          (currentIndex - 1 + this.tabOrder.length) % this.tabOrder.length
+        ];
+        break;
+      case 'Home':
+        targetView = this.tabOrder[0];
+        break;
+      case 'End':
+        targetView = this.tabOrder[this.tabOrder.length - 1];
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    this.selectView(targetView);
+    this.inspectorTabs
+      .find(({ nativeElement }) => nativeElement.dataset['view'] === targetView)
+      ?.nativeElement.focus();
   }
 }

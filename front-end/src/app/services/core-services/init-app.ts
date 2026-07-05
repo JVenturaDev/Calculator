@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { DisplayStateService } from '../display-services/display';
 import { MemoryService } from '../memory-services/memory';
 import { StateService } from './state-object';
+import { ToastService } from '../toast-services/toast';
 
 @Injectable({ providedIn: 'root' })
 export class AppInitService {
@@ -10,7 +11,8 @@ export class AppInitService {
   constructor(
     private display: DisplayStateService,
     private memory: MemoryService,
-    private state: StateService
+    private state: StateService,
+    private toast: ToastService
   ) {}
 
   async initApp() {
@@ -24,15 +26,11 @@ export class AppInitService {
       await this.memory.initDB();
     } catch (err) {
       console.error('Error inicializando la memoria:', err);
-      alert('Error inicializando la memoria');
+      this.toast.error(
+        'No se pudo inicializar la memoria. Algunas funciones de memoria podrían no estar disponibles.'
+      );
       return;
     }
 
-    window.addEventListener('resize', this.handleResize);
-    this.handleResize();
-  }
-
-  private handleResize() {
-  
   }
 }

@@ -18,7 +18,7 @@ describe('PolishParser', () => {
 
   it('keeps stack snapshots disabled for existing low-level consumers', () => {
     const tokenizer = new Tokenizer();
-    const parserService = new parser(tokenizer);
+    const parserService = new parser();
     const postfix = parserService.toPostFix(tokenizer.tokenize('2+3'));
     const evaluation = service.evaluatePostFix(postfix, {}, true);
 
@@ -33,7 +33,7 @@ describe('PolishParser', () => {
 
   it('includes stack snapshots only when explicitly requested', () => {
     const tokenizer = new Tokenizer();
-    const parserService = new parser(tokenizer);
+    const parserService = new parser();
     const postfix = parserService.toPostFix(tokenizer.tokenize('2+3'));
     const evaluation = service.evaluatePostFix(postfix, {}, true, 'RAD', true);
 

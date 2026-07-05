@@ -20,12 +20,13 @@ import { WorkspaceService } from '../../services/workSpace-services/worsk-space-
 import { HumanStep } from '../../services/calculation-renderers/human-render/human-renderer';
 import { BookRenderLineComponent } from '../calculation-renderers-component/book-render/book-render-line/book-render-line';
 import { CalculationParserService } from '../../services/calculation/calculation-parser';
-import { TreeNodeComponent } from '../treeRenderComponent/tree-render/tree-render';
 import { BookRenderer } from '../../services/book-renderer-service/book-renderer';
 import { TreeRendererService } from '../../services/TreeRendererService/tree-render';
 import { TreeNode } from '../treeRenderComponent/tree-render/tree-render';
 import { BookStep } from '../../services/book-renderer-service/book-renderer';
 import { HumanRenderLineComponent } from '../calculation-renderers-component/human-render-line/human-render-line';
+import { TreeViewportComponent } from '../treeRenderComponent/tree-viewport/tree-viewport';
+import { ConfirmationDialogService } from '../../services/confirmation-dialog-services/confirmation-dialog';
 
 export interface WorkspaceItem {
   id: string;
@@ -61,7 +62,7 @@ export interface CalculationDTO {
   standalone: true,
   templateUrl: './work-space.html',
   styleUrls: ['./work-space.css'],
-  imports: [CommonModule, FormsModule, WorkspaceTagsComponent, BookRenderLineComponent, TreeNodeComponent, HumanRenderLineComponent]
+  imports: [CommonModule, FormsModule, WorkspaceTagsComponent, BookRenderLineComponent, TreeViewportComponent, HumanRenderLineComponent]
 })
 export class WorkSpace implements OnInit {
   trees = new Map<string, TreeNode>();
@@ -93,6 +94,7 @@ export class WorkSpace implements OnInit {
     public serviseParserN: CalculationParserService,
     public bookRenderer: BookRenderer,
     public treeRenderer: TreeRendererService,
+    private confirmation: ConfirmationDialogService,
   ) { }
 
   ngOnInit(): void {
@@ -121,8 +123,18 @@ export class WorkSpace implements OnInit {
         }
       });
   }
-  onDeleteItem(itemId: string) {
-    if (!confirm('¿Borrar este item?')) return;
+  async onDeleteItem(itemId: string): Promise<void> {
+    const item = this.workspaceItems.find(candidate => candidate.id === itemId);
+    const title = item?.title ?? 'este espacio';
+    const confirmed = await this.confirmation.confirm({
+      title: 'Eliminar espacio',
+      message: `¿Quieres eliminar “${title}”? Esta acción no se puede deshacer.`,
+      confirmLabel: 'Eliminar',
+      cancelLabel: 'Cancelar',
+      tone: 'danger',
+    });
+
+    if (!confirmed) return;
     this.wsService.deleteItem(itemId);
   }
 
@@ -217,10 +229,6 @@ export class WorkSpace implements OnInit {
       steps: evaluation.steps,
       timestamp: new Date()
     };
-    const humanSteps: HumanStep[] = this.convertToHumanSteps(calc.steps);
-
-    console.table(humanSteps);
-
     this.wsService.addCalculationToActiveItem(calc);
     this.focusActiveInput(activeId);
   }

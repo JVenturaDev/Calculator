@@ -4,6 +4,7 @@
       class="menuHamburger icon-button"
       type="button"
       aria-label="Abrir o cerrar el menú principal"
+      aria-controls="calculator-sidebar"
       [attr.aria-expanded]="(sidebarVisible$ | async) ?? false"
       (click)="toggleSidebar()"
     >

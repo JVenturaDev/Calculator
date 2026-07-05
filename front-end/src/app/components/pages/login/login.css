@@ -18,7 +18,7 @@
   display: grid;
   min-height: 100dvh;
   place-items: center;
-  overflow: hidden;
+  overflow: hidden auto;
   padding: 24px;
   isolation: isolate;
   background:
@@ -156,7 +156,7 @@ button:disabled {
 }
 
 button {
-  min-height: 42px;
+  min-height: 44px;
   border-radius: 8px;
 }
 
@@ -247,16 +247,16 @@ button:focus-visible {
 
 .login-footer {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   justify-content: center;
   gap: 5px;
   color: var(--muted);
   font-size: 0.8rem;
-  text-align: center;
 }
 
 .login-footer button {
-  min-height: auto;
+  min-height: 44px;
   padding: 2px;
   color: var(--primary);
   font-size: inherit;

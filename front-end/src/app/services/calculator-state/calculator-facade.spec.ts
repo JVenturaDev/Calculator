@@ -106,6 +106,33 @@ describe('CalculatorFacade', () => {
     expect(facade.snapshot.status).toBe('idle');
   });
 
+  it('reports an error without changing the calculation context', () => {
+    facade.restoreCalculation('2+2', 4);
+    const context = {
+      expression: facade.snapshot.expression,
+      lastExpression: facade.snapshot.lastExpression,
+      result: facade.snapshot.result,
+      phase: facade.snapshot.phase,
+    };
+
+    facade.reportError(
+      new Error('Invalid graphical expression'),
+      'GRAPHIC_EVALUATION_ERROR'
+    );
+
+    expect(facade.snapshot.status).toBe('error');
+    expect(facade.snapshot.error).toEqual({
+      code: 'GRAPHIC_EVALUATION_ERROR',
+      message: 'Invalid graphical expression',
+    });
+    expect({
+      expression: facade.snapshot.expression,
+      lastExpression: facade.snapshot.lastExpression,
+      result: facade.snapshot.result,
+      phase: facade.snapshot.phase,
+    }).toEqual(context);
+  });
+
   it('evaluates the current expression and stores its display result', () => {
     engine.evaluate.and.returnValue(4);
     facade.setExpression('2+2');

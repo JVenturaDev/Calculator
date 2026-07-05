@@ -13,7 +13,7 @@ describe('PolishCalculationEngine', () => {
     engine = new PolishCalculationEngine(
       new PreprocessModule(),
       tokenizer,
-      new parser(tokenizer),
+      new parser(),
       new evaluator()
     );
   });

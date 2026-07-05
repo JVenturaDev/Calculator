@@ -2,7 +2,6 @@
   --shell-background: #12131a;
   --shell-surface: #1a1b22;
   --shell-surface-raised: #1e1f26;
-  --shell-border: #424754;
   --shell-text: #e3e1ec;
   display: block;
   min-height: 100dvh;
@@ -118,10 +117,6 @@ app-work-space {
   justify-content: center;
 }
 
-.buttons {
-  transform: none;
-}
-
 .history {
   display: flex;
   height: 100%;
@@ -155,14 +150,21 @@ app-inspector-shell {
 }
 
 @media (max-width: 760px) {
+  .layout {
+    grid-template-rows: auto auto;
+  }
+
   .gridd2 {
-    overflow: auto;
+    height: auto;
+    min-height: calc(100dvh - 64px);
+    overflow: visible;
   }
 
   .main-container {
     position: relative;
     display: grid;
     height: auto;
+    min-height: 0;
     grid-template-columns: minmax(0, 1fr);
     overflow: visible;
   }
@@ -172,12 +174,27 @@ app-inspector-shell {
   .history {
     display: flex;
     width: 100%;
-    min-height: 420px;
+    height: auto;
     grid-column: 1;
   }
 
+  .workspace {
+    min-height: 420px;
+  }
+
   .calculator {
-    min-height: 560px;
+    min-height: 0;
+    align-items: flex-start;
+    overflow: visible;
+  }
+
+  .calculation {
+    justify-content: flex-start;
+  }
+
+  .history {
+    min-height: 540px;
+    overflow: visible;
   }
 }
 

@@ -12,19 +12,25 @@
     </span>
   </header>
 
-  <div class="inspector-tabs" role="tablist" aria-label="Vistas del inspector">
+  <div
+    class="inspector-tabs"
+    role="tablist"
+    aria-label="Vistas del inspector"
+    aria-orientation="horizontal"
+  >
     <button
-      #historyTab
+      #inspectorTab
       id="inspector-tab-history"
       class="inspector-tab"
       type="button"
       role="tab"
+      data-view="history"
       [class.inspector-tab--active]="activeView === 'history'"
       [attr.aria-selected]="activeView === 'history'"
       [attr.tabindex]="activeView === 'history' ? 0 : -1"
       aria-controls="inspector-panel-history"
       (click)="selectView('history')"
-      (keydown.arrowRight)="selectView('memory'); memoryTab.focus(); $event.preventDefault()"
+      (keydown)="onTabKeydown($event, 'history')"
     >
       <svg aria-hidden="true" viewBox="0 0 24 24">
         <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
@@ -34,18 +40,18 @@
     </button>
 
     <button
-      #memoryTab
+      #inspectorTab
       id="inspector-tab-memory"
       class="inspector-tab"
       type="button"
       role="tab"
+      data-view="memory"
       [class.inspector-tab--active]="activeView === 'memory'"
       [attr.aria-selected]="activeView === 'memory'"
       [attr.tabindex]="activeView === 'memory' ? 0 : -1"
       aria-controls="inspector-panel-memory"
       (click)="selectView('memory')"
-      (keydown.arrowLeft)="selectView('history'); historyTab.focus(); $event.preventDefault()"
-      (keydown.arrowRight)="selectView('graph'); graphTab.focus(); $event.preventDefault()"
+      (keydown)="onTabKeydown($event, 'memory')"
     >
       <svg aria-hidden="true" viewBox="0 0 24 24">
         <rect x="5" y="4" width="14" height="16" rx="2" />
@@ -55,17 +61,18 @@
     </button>
 
     <button
-      #graphTab
+      #inspectorTab
       id="inspector-tab-graph"
       class="inspector-tab"
       type="button"
       role="tab"
+      data-view="graph"
       [class.inspector-tab--active]="activeView === 'graph'"
       [attr.aria-selected]="activeView === 'graph'"
       [attr.tabindex]="activeView === 'graph' ? 0 : -1"
       aria-controls="inspector-panel-graph"
       (click)="selectView('graph')"
-      (keydown.arrowLeft)="selectView('memory'); memoryTab.focus(); $event.preventDefault()"
+      (keydown)="onTabKeydown($event, 'graph')"
     >
       <svg aria-hidden="true" viewBox="0 0 24 24">
         <path d="M4 19V5M4 19h16" />
@@ -77,13 +84,13 @@
 
   <div class="inspector-content">
     <section
-      *ngIf="activeView === 'history'"
       id="inspector-panel-history"
       class="inspector-view"
       role="tabpanel"
       aria-labelledby="inspector-tab-history"
+      [hidden]="activeView !== 'history'"
     >
-      <app-history></app-history>
+      <app-history *ngIf="activeView === 'history'"></app-history>
     </section>
 
     <section
@@ -97,13 +104,13 @@
     </section>
 
     <section
-      *ngIf="activeView === 'graph'"
       id="inspector-panel-graph"
       class="inspector-view inspector-view--graph"
       role="tabpanel"
       aria-labelledby="inspector-tab-graph"
+      [hidden]="activeView !== 'graph'"
     >
-      <app-graphic-plot></app-graphic-plot>
+      <app-graphic-plot *ngIf="activeView === 'graph'"></app-graphic-plot>
     </section>
   </div>
 </aside>

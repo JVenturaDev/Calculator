@@ -28,7 +28,7 @@
 
 .workspace-header h2,
 .new-item h3,
-.item-header h3 {
+.item-heading {
   margin: 0;
   color: #f0edf6;
 }
@@ -47,12 +47,8 @@
   text-transform: uppercase;
 }
 
-button,
-input {
-  font: inherit;
-}
-
 button {
+  min-height: 44px;
   cursor: pointer;
 }
 
@@ -131,8 +127,7 @@ input:focus-visible {
   transition: border-color 140ms ease, background-color 140ms ease;
 }
 
-.workspace-item:hover,
-.workspace-item-active {
+.workspace-item:is(:hover, :focus-within, .workspace-item-active) {
   border-color: rgba(120, 169, 255, 0.68);
   background: #232630;
 }
@@ -141,9 +136,16 @@ input:focus-visible {
   min-width: 0;
 }
 
-.item-header h3 {
+.item-activation {
+  flex: 1;
+  text-align: left;
+}
+
+.item-heading {
+  display: block;
   overflow: hidden;
   font-size: 0.9rem;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -262,14 +264,9 @@ input:focus-visible {
 }
 
 .renderer-content {
-  box-sizing: border-box;
   max-width: 100%;
   color: #d6d4dd;
   overscroll-behavior: contain;
-}
-
-.renderer-content app-tree-node {
-  display: block;
 }
 
 .empty-state {

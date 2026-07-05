@@ -17,9 +17,17 @@
 
           <div class="buttons">
             <div class="center">
-              <app-calculator-basic></app-calculator-basic>
-              <app-calculator-scientific></app-calculator-scientific>
-              <app-graphic></app-graphic>
+              @switch (activeCalc$ | async) {
+                @case ('basic') {
+                  <app-calculator-basic></app-calculator-basic>
+                }
+                @case ('scientific') {
+                  <app-calculator-scientific></app-calculator-scientific>
+                }
+                @case ('graphic') {
+                  <app-graphic></app-graphic>
+                }
+              }
             </div>
           </div>
         </section>

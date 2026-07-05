@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BehaviorSubject } from 'rxjs';
 
 import { CalculatorScientificComponent } from './calculator-scientific';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
@@ -10,7 +9,6 @@ import {
 import { HistoryService } from '../../services/history-services/history';
 import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
-import { ToggleService } from '../../services/toggle-services/toggle';
 
 describe('CalculatorScientificComponent', () => {
   let component: CalculatorScientificComponent;
@@ -19,9 +17,6 @@ describe('CalculatorScientificComponent', () => {
   let mockCalculator: jasmine.SpyObj<CalculatorFacade>;
   let mockMemory: jasmine.SpyObj<CalculatorMemoryService>;
   let mockHistory: { agregarId: jasmine.Spy; clearHistory: jasmine.Spy };
-  let mockToggle: {
-    activeCalc$: BehaviorSubject<string>;
-  };
 
   beforeEach(async () => {
     calculatorState = createInitialCalculatorState();
@@ -67,10 +62,6 @@ describe('CalculatorScientificComponent', () => {
       agregarId: jasmine.createSpy('agregarId'),
       clearHistory: jasmine.createSpy('clearHistory'),
     };
-    mockToggle = {
-      activeCalc$: new BehaviorSubject('scientific'),
-    };
-
     await TestBed.configureTestingModule({
       imports: [CalculatorScientificComponent],
       providers: [
@@ -78,7 +69,6 @@ describe('CalculatorScientificComponent', () => {
         { provide: HistoryService, useValue: mockHistory },
         { provide: CalculatorMemoryService, useValue: mockMemory },
         { provide: MemoryToggleService, useValue: { toggle: jasmine.createSpy('toggle') } },
-        { provide: ToggleService, useValue: mockToggle },
       ],
     }).compileComponents();
 
@@ -158,6 +148,24 @@ describe('CalculatorScientificComponent', () => {
     expect(mockHistory.agregarId).toHaveBeenCalledWith('sqrt(9)', 3);
   });
 
+  it('captures evaluation errors without alerting or duplicating a message', () => {
+    const alertSpy = spyOn(window, 'alert');
+    const facadeError = {
+      code: 'EVALUATION_ERROR',
+      message: 'Invalid expression',
+    };
+    calculatorState.error = facadeError;
+    mockCalculator.evaluate.and.throwError('Invalid expression');
+
+    expect(() => component.handleButtonClick('=')).not.toThrow();
+
+    expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith({ angleMode: 'RAD' });
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(mockHistory.agregarId).not.toHaveBeenCalled();
+    expect(calculatorState.error).toBe(facadeError);
+    expect('error' in component).toBeFalse();
+  });
+
   it('keeps one childless multiBtn and cycles RAD, GRAD and DEG from the DOM', () => {
     const buttons = nativeElement().querySelectorAll<HTMLButtonElement>('#multiBtn');
     const angleButton = buttons.item(0);
@@ -167,17 +175,39 @@ describe('CalculatorScientificComponent', () => {
     expect(angleButton.textContent?.trim()).toBe('RAD');
 
     angleButton.click();
+    fixture.detectChanges();
     expect(calculatorState.angleMode).toBe('GRAD');
     expect(angleButton.textContent?.trim()).toBe('GRAD');
 
     angleButton.click();
+    fixture.detectChanges();
     expect(calculatorState.angleMode).toBe('DEG');
     expect(angleButton.textContent?.trim()).toBe('DEG');
 
     angleButton.click();
+    fixture.detectChanges();
     expect(calculatorState.angleMode).toBe('RAD');
     expect(angleButton.textContent?.trim()).toBe('RAD');
     expect(mockCalculator.cycleAngleMode).toHaveBeenCalledTimes(3);
+  });
+
+  it('restores GRAD and DEG from real state after being mounted again', () => {
+    fixture.destroy();
+
+    for (const angleMode of ['GRAD', 'DEG'] as const) {
+      calculatorState.angleMode = angleMode;
+      fixture = TestBed.createComponent(CalculatorScientificComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      const angleButtons =
+        nativeElement().querySelectorAll<HTMLButtonElement>('#multiBtn');
+      expect(angleButtons.length).toBe(1);
+      expect(angleButtons.item(0).childElementCount).toBe(0);
+      expect(angleButtons.item(0).textContent?.trim()).toBe(angleMode);
+
+      fixture.destroy();
+    }
   });
 
   it('keeps F-E hidden', () => {

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
-import Plotly from 'plotly.js-dist-min';
+import Plotly from 'plotly.js-cartesian-dist-min';
 
 import { GraphicComponentPlot } from './graphic-plot';
 import {
@@ -10,7 +10,6 @@ import {
 import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
 
 describe('GraphicPlot', () => {
-  let component: GraphicComponentPlot;
   let fixture: ComponentFixture<GraphicComponentPlot>;
   let expression$: BehaviorSubject<string>;
   let engine: jasmine.SpyObj<CalculationEngine>;
@@ -64,7 +63,6 @@ describe('GraphicPlot', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(GraphicComponentPlot);
-    component = fixture.componentInstance;
     fixture.detectChanges();
   });
 

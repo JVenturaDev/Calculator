@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 
 import { CalcType, ToggleService } from '../../services/toggle-services/toggle';
@@ -16,7 +16,7 @@ describe('Sidebar', () => {
     activeCalc = new BehaviorSubject<CalcType>('graphic');
     toggleService = jasmine.createSpyObj<ToggleService>(
       'ToggleService',
-      ['getToggle', 'setActiveCalc']
+      ['getToggle', 'setActiveCalc', 'hide']
     );
     toggleService.getToggle.and.returnValue(visibility);
     Object.defineProperty(toggleService, 'activeCalc$', {
@@ -57,7 +57,84 @@ describe('Sidebar', () => {
 
     expect(sidebar.classList.contains('sidebar--visible')).toBeTrue();
     expect(sidebar.getAttribute('aria-hidden')).toBe('false');
+    expect(sidebar.getAttribute('role')).toBe('dialog');
+    expect(sidebar.getAttribute('aria-modal')).toBe('true');
   });
+
+  it('renders the backdrop only while open and closes it through ToggleService', () => {
+    expect(fixture.nativeElement.querySelector('.sidebar-backdrop')).toBeNull();
+
+    visibility.next(true);
+    fixture.detectChanges();
+
+    const backdrop = fixture.nativeElement.querySelector(
+      '.sidebar-backdrop'
+    ) as HTMLElement;
+    expect(backdrop).toBeTruthy();
+
+    backdrop.click();
+    expect(toggleService.hide).toHaveBeenCalledOnceWith('sidebar');
+  });
+
+  it('closes with Escape while open', () => {
+    visibility.next(true);
+    fixture.detectChanges();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(toggleService.hide).toHaveBeenCalledOnceWith('sidebar');
+  });
+
+  it('focuses the active mode when opened', fakeAsync(() => {
+    activeCalc.next('scientific');
+    visibility.next(true);
+    fixture.detectChanges();
+    tick();
+
+    const scientific = fixture.nativeElement.querySelector(
+      '[data-mode="scientific"]'
+    ) as HTMLButtonElement;
+    expect(document.activeElement).toBe(scientific);
+  }));
+
+  it('restores the previously focused element when closed', fakeAsync(() => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+
+    visibility.next(true);
+    fixture.detectChanges();
+    tick();
+    visibility.next(false);
+    fixture.detectChanges();
+    tick();
+
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  }));
+
+  it('cycles Tab and Shift+Tab inside the sidebar', fakeAsync(() => {
+    visibility.next(true);
+    fixture.detectChanges();
+    tick();
+
+    const buttons = fixture.nativeElement.querySelectorAll(
+      '.nav-item'
+    ) as NodeListOf<HTMLButtonElement>;
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+    const sidebar = fixture.nativeElement.querySelector('.sidebar') as HTMLElement;
+
+    last.focus();
+    sidebar.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    expect(document.activeElement).toBe(first);
+
+    first.focus();
+    sidebar.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true })
+    );
+    expect(document.activeElement).toBe(last);
+  }));
 
   it('shows the active mode visually and accessibly', () => {
     activeCalc.next('scientific');
@@ -90,6 +167,7 @@ describe('Sidebar', () => {
       ['graphic'],
     ]);
     expect(toggleService.getToggle).toHaveBeenCalledOnceWith('sidebar');
+    expect(toggleService.hide).not.toHaveBeenCalled();
     expect(component.isVisible).toBeTrue();
   });
 

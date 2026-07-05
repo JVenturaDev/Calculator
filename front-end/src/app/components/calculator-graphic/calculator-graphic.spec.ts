@@ -22,16 +22,17 @@ import { PreprocessModule } from '../../services/polish-services/preprocess-modu
 import { Tokenizer } from '../../services/polish-services/tokenizer';
 import { ToggleService } from '../../services/toggle-services/toggle';
 import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
+import { ToastService } from '../../services/toast-services/toast';
 
 describe('GraphicComponent', () => {
   let component: GraphicComponent;
   let fixture: ComponentFixture<GraphicComponent>;
   let calculatorState: CalculatorState;
   let calculator: jasmine.SpyObj<CalculatorFacade>;
+  let toast: jasmine.SpyObj<ToastService>;
   let engine: jasmine.SpyObj<CalculationEngine>;
   let memory: jasmine.SpyObj<CalculatorMemoryService>;
   let history: { agregarId: jasmine.Spy; clearHistory: jasmine.Spy };
-  let activeCalculator: BehaviorSubject<string>;
   let inputTarget: BehaviorSubject<InputTarget>;
   let inputService: { target$: BehaviorSubject<InputTarget>; target: InputTarget };
   let plot: { setExpression: jasmine.Spy };
@@ -60,12 +61,14 @@ describe('GraphicComponent', () => {
         'toggleSign',
         'setExpression',
         'restoreCalculation',
+        'reportError',
       ],
       { snapshot: calculatorState }
     );
     engine = jasmine.createSpyObj<CalculationEngine>('CalculationEngine', [
       'evaluate',
     ]);
+    toast = jasmine.createSpyObj<ToastService>('ToastService', ['error']);
     memory = jasmine.createSpyObj<CalculatorMemoryService>(
       'CalculatorMemoryService',
       [
@@ -85,7 +88,6 @@ describe('GraphicComponent', () => {
       agregarId: jasmine.createSpy('agregarId'),
       clearHistory: jasmine.createSpy('clearHistory'),
     };
-    activeCalculator = new BehaviorSubject('graphic');
     inputTarget = new BehaviorSubject<InputTarget>({ type: 'calculator' });
     inputService = {
       target$: inputTarget,
@@ -129,7 +131,6 @@ describe('GraphicComponent', () => {
         {
           provide: ToggleService,
           useValue: {
-            activeCalc$: activeCalculator,
             GHtoggle: jasmine.createSpy('GHtoggle'),
           },
         },
@@ -140,6 +141,7 @@ describe('GraphicComponent', () => {
         { provide: evaluator, useValue: polishEvaluator },
         { provide: PreprocessModule, useValue: preprocess },
         { provide: WorkspaceService, useValue: workspace },
+        { provide: ToastService, useValue: toast },
       ],
     }).compileComponents();
 
@@ -149,7 +151,6 @@ describe('GraphicComponent', () => {
   });
 
   afterEach(() => {
-    activeCalculator.complete();
     inputTarget.complete();
     workspace.activeItemId$.complete();
     workspace.workspaceItems$.complete();
@@ -305,6 +306,25 @@ describe('GraphicComponent', () => {
 
     expect(calculator.restoreCalculation).toHaveBeenCalledOnceWith('x/0', 'NaN');
     expect(plot.setExpression).toHaveBeenCalledOnceWith('x/0');
+    expect(calculator.reportError).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('reports calculator evaluation errors through CalculatorFacade without alerting', () => {
+    const error = new Error('invalid scalar expression');
+    const alertSpy = spyOn(window, 'alert');
+    calculatorState.expression = '2+';
+    tokenizer.tokenize.and.throwError(error);
+
+    expect(() => component.handleButtonClick('=')).not.toThrow();
+
+    expect(calculator.reportError).toHaveBeenCalledOnceWith(
+      error,
+      'GRAPHIC_EVALUATION_ERROR'
+    );
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(history.agregarId).not.toHaveBeenCalled();
+    expect(alertSpy).not.toHaveBeenCalled();
   });
 
   it('returns workspace commands before touching calculator state', () => {
@@ -321,6 +341,43 @@ describe('GraphicComponent', () => {
     expect(calculator.appendToken).not.toHaveBeenCalled();
     expect(calculator.clear).not.toHaveBeenCalled();
     expect(calculator.restoreCalculation).not.toHaveBeenCalled();
+  });
+
+  it('reports workspace evaluation errors through a finite toast only', () => {
+    const alertSpy = spyOn(window, 'alert');
+    inputService.target = { type: 'workspace-item', itemId: 'item-1' };
+    workspace.activeItemId$.next('item-1');
+    workspace.workspaceItems$.next([
+      { id: 'item-1', currentExpression: '2+' },
+    ]);
+    tokenizer.tokenize.and.throwError('invalid workspace expression');
+
+    expect(() => component.handleButtonClick('=')).not.toThrow();
+
+    expect(toast.error).toHaveBeenCalledOnceWith(
+      'No se pudo evaluar la expresión del Workspace: invalid workspace expression',
+      8000
+    );
+    expect(calculator.reportError).not.toHaveBeenCalled();
+    expect(workspace.addCalculationToActiveItem).not.toHaveBeenCalled();
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps successful workspace evaluation on the low-level path', () => {
+    inputService.target = { type: 'workspace-item', itemId: 'item-1' };
+    workspace.activeItemId$.next('item-1');
+    workspace.workspaceItems$.next([
+      { id: 'item-1', currentExpression: '2+2' },
+    ]);
+
+    component.handleButtonClick('=');
+
+    expect(tokenizer.tokenize).toHaveBeenCalledOnceWith('2+2');
+    expect(polishParser.toPostFix).toHaveBeenCalled();
+    expect(polishEvaluator.evaluatePostFix).toHaveBeenCalledWith([], {}, true);
+    expect(workspace.addCalculationToActiveItem).toHaveBeenCalledTimes(1);
+    expect(calculator.reportError).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it('delegates memory commands to CalculatorMemoryService', async () => {
@@ -359,15 +416,39 @@ describe('GraphicComponent', () => {
     expect(save).toHaveBeenCalledTimes(1);
   });
 
-  it('unsubscribes visibility and input-target listeners on destroy', () => {
+  it('ignores the initial input target so mounting does not steal focus', () => {
     const focus = spyOn(component, 'focusCalculatorInput');
 
+    expect(focus).not.toHaveBeenCalled();
+  });
+
+  it('focuses only on later calculator-target requests and unsubscribes on destroy', () => {
+    const focus = spyOn(component, 'focusCalculatorInput');
+
+    inputTarget.next({ type: 'workspace-item', itemId: 'item-1' });
+    inputTarget.next({ type: 'calculator' });
+    expect(focus).toHaveBeenCalledTimes(1);
+
     fixture.destroy();
-    activeCalculator.next('basic');
     inputTarget.next({ type: 'calculator' });
 
-    expect(component.isVisible).toBeTrue();
-    expect(focus).not.toHaveBeenCalled();
+    expect(focus).toHaveBeenCalledTimes(1);
+  });
+
+  it('resets More and inequalities when the keyboard is mounted again', () => {
+    component.showMemoryButtons = true;
+    component.showInequalitySymbols = true;
+    fixture.detectChanges();
+    fixture.destroy();
+
+    fixture = TestBed.createComponent(GraphicComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.showMemoryButtons).toBeFalse();
+    expect(component.showInequalitySymbols).toBeFalse();
+    expect(nativeElement().querySelector('.memory-toolbar')).toBeNull();
+    expect(nativeElement().querySelector('.graphic-buttons')).toBeNull();
   });
 
   function tokenButtons(): HTMLButtonElement[] {

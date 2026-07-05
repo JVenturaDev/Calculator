@@ -1,11 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
 import { HistoryService } from '../../services/history-services/history';
 import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
-import { ToggleService } from '../../services/toggle-services/toggle';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 
 @Component({
@@ -15,35 +13,26 @@ import { CalculatorFacade } from '../../services/calculator-state/calculator-fac
   templateUrl: './calculator-scientific.html',
   styleUrls: ['./calculator-scientific.css']
 })
-export class CalculatorScientificComponent implements OnInit, OnDestroy {
+export class CalculatorScientificComponent {
   inputValue = '';
-  private sub!: Subscription;
-  isVisible = false;
   showMemoryButtons = false;
 
   constructor(
     private calculator: CalculatorFacade,
     public history: HistoryService,
     private calculatorMemory: CalculatorMemoryService,
-    private memoryToggle: MemoryToggleService,
-    private toggle: ToggleService
+    private memoryToggle: MemoryToggleService
   ) {
   }
 
-  ngOnInit(): void {
-    this.sub = this.toggle.activeCalc$.subscribe(v => this.isVisible = (v === 'scientific'));
-  }
-
-  ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+  get angleMode(): string {
+    return this.calculator.snapshot.angleMode;
   }
 
 
 
   cycleAngleMode() {
     this.calculator.cycleAngleMode();
-    const btn = document.getElementById('multiBtn') as HTMLButtonElement;
-    if (btn) btn.textContent = this.calculator.snapshot.angleMode;
   }
 
 
@@ -81,8 +70,8 @@ export class CalculatorScientificComponent implements OnInit, OnDestroy {
           this.calculator.appendToken(value);
           return;
       }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+    } catch {
+      // CalculatorFacade conserva el error para que Display lo presente.
     }
   }
 

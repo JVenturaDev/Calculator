@@ -1,7 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HumanStep } from '../../../services/calculation-renderers/human-render/human-renderer';
-import Complex from 'complex.js';
 
 
 @Component({

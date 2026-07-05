@@ -9,7 +9,6 @@ export class CalculationParserService {
   parse(steps: Step[]): CalculationIR {
     const values = new Map<string, ValueNode>();
     const operations = new Map<string, OperationNode>();
-    const valueStack: string[] = [];
 
     let rootOperationId: string | null = null;
 

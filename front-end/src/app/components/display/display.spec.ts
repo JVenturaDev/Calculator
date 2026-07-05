@@ -56,21 +56,25 @@ describe('DisplayComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders the expression from CalculatorFacade state', () => {
+  it('renders the expression from CalculatorFacade state', async () => {
     emitState({ expression: '12+3' });
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     const input = getInput();
     expect(input.value).toBe('12+3');
   });
 
-  it('renders the original expression and result when phase is result', () => {
+  it('renders the original expression and result when phase is result', async () => {
     emitState({
       expression: '4',
       lastExpression: '2+2',
       result: 4,
       phase: 'result',
     });
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(getInput().value).toBe('2+2');

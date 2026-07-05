@@ -54,6 +54,7 @@ describe('TopBar', () => {
     const menu = fixture.nativeElement.querySelector('.menuHamburger') as HTMLButtonElement;
 
     expect(menu.getAttribute('aria-expanded')).toBe('false');
+    expect(menu.getAttribute('aria-controls')).toBe('calculator-sidebar');
     menu.click();
 
     expect(toggleService.toggle).toHaveBeenCalledOnceWith('sidebar');

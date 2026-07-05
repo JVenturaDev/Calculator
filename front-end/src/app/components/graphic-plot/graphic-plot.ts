@@ -2,7 +2,7 @@ import { Component, Inject, OnInit, OnDestroy, ElementRef, ViewChild } from '@an
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
-import Plotly from 'plotly.js-dist-min';
+import Plotly from 'plotly.js-cartesian-dist-min';
 import {
   CALCULATION_ENGINE,
   CalculationEngine,

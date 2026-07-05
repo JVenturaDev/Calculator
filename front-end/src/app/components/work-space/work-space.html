@@ -16,24 +16,35 @@
     </button>
   </header>
 
-  <section *ngIf="creatingItem" class="new-item" aria-labelledby="new-item-title">
+  <form
+    *ngIf="creatingItem"
+    class="new-item"
+    aria-labelledby="new-item-title"
+    (ngSubmit)="saveNewItem()"
+  >
     <h3 id="new-item-title">Nuevo espacio</h3>
     <label for="workspaceItemTitle">Título</label>
     <input
       id="workspaceItemTitle"
+      name="workspaceItemTitle"
       type="text"
       placeholder="Título del cálculo"
+      autocomplete="off"
       [(ngModel)]="newItemTitle"
     />
     <app-workspace-tags [tags]="newItemTags"></app-workspace-tags>
     <div class="form-actions">
       <button type="button" class="secondary-button" (click)="creatingItem = false">Cancelar</button>
-      <button type="button" class="primary-button" (click)="saveNewItem()">Guardar</button>
+      <button type="submit" class="primary-button">Guardar</button>
     </div>
-  </section>
+  </form>
 
   <ng-container *ngIf="wsService.workspaceItems$ | async as items">
-    <div class="workspace-list" *ngIf="items.length; else workspaceEmpty">
+    <div
+      class="workspace-list"
+      *ngIf="items.length; else workspaceEmpty"
+      aria-label="Espacios de cálculo"
+    >
       <article
         *ngFor="let item of items; trackBy: trackById"
         class="workspace-item"
@@ -41,15 +52,24 @@
         (click)="activateItem(item.id)"
       >
         <header class="item-header">
-          <div class="item-title">
+          <button
+            type="button"
+            class="item-title item-activation"
+            [attr.aria-expanded]="activeItemId === item.id"
+            [attr.aria-controls]="'workspace-panel-' + item.id"
+            [attr.aria-labelledby]="'workspace-title-' + item.id"
+            (click)="$event.stopPropagation(); activateItem(item.id)"
+            (keydown.enter)="$event.preventDefault(); $event.stopPropagation(); activateItem(item.id)"
+            (keydown.space)="$event.preventDefault(); $event.stopPropagation(); activateItem(item.id)"
+          >
             <span class="item-type">{{ item.type }}</span>
-            <h3>{{ item.title }}</h3>
-          </div>
+            <span class="item-heading" [id]="'workspace-title-' + item.id">{{ item.title }}</span>
+          </button>
           <button
             *ngIf="activeItemId === item.id"
             type="button"
             class="delete-btn"
-            aria-label="Eliminar espacio de cálculo"
+            [attr.aria-label]="'Eliminar espacio ' + item.title"
             title="Borrar item"
             (click)="$event.stopPropagation(); onDeleteItem(item.id)"
           >
@@ -59,10 +79,17 @@
 
         <app-workspace-tags
           [tags]="item.tags"
+          (click)="$event.stopPropagation()"
           (tagsChange)="wsService.updateTags(item.id, $event)"
         ></app-workspace-tags>
 
-        <section *ngIf="activeItemId === item.id" class="active-workspace">
+        <section
+          *ngIf="activeItemId === item.id"
+          class="active-workspace"
+          [id]="'workspace-panel-' + item.id"
+          role="region"
+          [attr.aria-labelledby]="'workspace-title-' + item.id"
+        >
           <div class="view-switch" role="group" aria-label="Formato de los pasos">
             <button
               type="button"
@@ -152,10 +179,10 @@
                   </ng-container>
 
                   <ng-container *ngIf="viewMode === 'tree'">
-                    <app-tree-node
+                    <app-tree-viewport
                       *ngIf="trees.get(calc.id!) as tree"
                       [node]="tree"
-                    ></app-tree-node>
+                    ></app-tree-viewport>
                   </ng-container>
                 </div>
               </section>

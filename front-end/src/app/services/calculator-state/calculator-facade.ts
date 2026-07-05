@@ -192,6 +192,16 @@ export class CalculatorFacade {
     this.update(context);
   }
 
+  reportError(error: unknown, code = 'EVALUATION_ERROR'): void {
+    this.update({
+      status: 'error',
+      error: {
+        code,
+        message: error instanceof Error ? error.message : String(error),
+      },
+    });
+  }
+
   clearError(): void {
     this.update({
       error: null,

@@ -176,6 +176,18 @@ app-graphic-plot {
   flex: 1;
 }
 
+@media (max-width: 760px) {
+  :host,
+  .inspector-shell {
+    height: auto;
+    min-height: 510px;
+  }
+
+  .inspector-content {
+    min-height: 390px;
+  }
+}
+
 @media (max-width: 500px) {
   .inspector-header {
     padding-inline: 12px;
@@ -183,11 +195,5 @@ app-graphic-plot {
 
   .inspector-view {
     padding: 8px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .inspector-tab {
-    transition: none;
   }
 }

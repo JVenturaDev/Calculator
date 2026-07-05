@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Step } from '../polish-services/polish-evaluator';
-import { CalculationParserService } from '../calculation/calculation-parser';
 import Complex from 'complex.js';
 
 export type BookStep = {
@@ -14,8 +13,6 @@ export type BookStep = {
 
 @Injectable({ providedIn: 'root' })
 export class BookRenderer {
-  constructor(private parser: CalculationParserService) { }
-
   convertToBookSteps(steps: Step[]): BookStep[] {
     return steps.map(s => ({
       numerator: s.operands[0],

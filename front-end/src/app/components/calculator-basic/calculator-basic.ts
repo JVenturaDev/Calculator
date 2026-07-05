@@ -1,11 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
 import { HistoryService } from '../../services/history-services/history';
 import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
-import { ToggleService, } from '../../services/toggle-services/toggle';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 
 @Component({
@@ -16,28 +14,15 @@ import { CalculatorFacade } from '../../services/calculator-state/calculator-fac
   styleUrls: ['./calculator-basic.css']
 })
 
-export class CalculatorBasicComponent implements OnInit, OnDestroy {
+export class CalculatorBasicComponent {
   inputValue = '';
-  private sub!: Subscription;
-  isVisible = false;
 
   constructor(
     private calculator: CalculatorFacade,
     public history: HistoryService,
     private calculatorMemory: CalculatorMemoryService,
-    private memoryToggle: MemoryToggleService,
-    private toggle: ToggleService
+    private memoryToggle: MemoryToggleService
   ) { }
-
-  ngOnInit(): void {
-    this.sub = this.toggle.activeCalc$.subscribe(v => {
-      this.isVisible = (v === 'basic');
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.sub?.unsubscribe();
-  }
   toggleMemoryPanel(): void {
     this.memoryToggle.toggle();
   }
@@ -80,8 +65,8 @@ export class CalculatorBasicComponent implements OnInit, OnDestroy {
           this.calculator.appendToken(value);
           return;
       }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+    } catch {
+      // CalculatorFacade conserva el error para que Display lo presente.
     }
   }
 

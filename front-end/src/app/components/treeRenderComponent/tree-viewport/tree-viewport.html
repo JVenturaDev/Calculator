@@ -1,0 +1,47 @@
+<section
+  class="tree-viewport-shell"
+  aria-label="Controles y vista del árbol de pasos"
+  (click)="$event.stopPropagation()"
+>
+  <div class="tree-toolbar" role="toolbar" aria-label="Controles de zoom del árbol">
+    <button
+      type="button"
+      class="zoom-button"
+      aria-label="Alejar árbol"
+      [disabled]="!canZoomOut"
+      (click)="zoomOut()"
+    >−</button>
+
+    <button
+      type="button"
+      class="zoom-reset"
+      aria-label="Restablecer zoom del árbol al cien por ciento"
+      [disabled]="zoom === 1"
+      (click)="resetZoom()"
+    >
+      <output aria-live="polite">{{ zoomPercent }}%</output>
+    </button>
+
+    <button
+      type="button"
+      class="zoom-button"
+      aria-label="Acercar árbol"
+      [disabled]="!canZoomIn"
+      (click)="zoomIn()"
+    >+</button>
+  </div>
+
+  <div
+    class="tree-scroll-viewport"
+    role="region"
+    tabindex="0"
+    [attr.aria-label]="'Árbol de pasos al ' + zoomPercent + ' por ciento; usa el desplazamiento para recorrerlo'"
+  >
+    <div
+      class="tree-stage"
+      [style.transform]="'scale(' + zoom + ')'"
+    >
+      <app-tree-node [node]="node"></app-tree-node>
+    </div>
+  </div>
+</section>

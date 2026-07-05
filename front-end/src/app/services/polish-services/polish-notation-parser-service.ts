@@ -1,18 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Token, Tokenizer } from './tokenizer';
+import { Token } from './tokenizer';
 @Injectable({
   providedIn: 'root'
 })
 export class parser {
-  constructor(private tokenizer: Tokenizer) { }
-  public testPostfix(expression: string): void {
-    const tokens = this.tokenizer.tokenize(expression);
-    console.log('Tokens:', tokens);
-    const postfix = this.toPostFix(tokens);
-    console.log('Postfija:', postfix.map(t => t.value).join(''));
-
-  }
-
   public toPostFix(tokens: Token[]): Token[] {
     const output: Token[] = [];
     const opStack: Token[] = [];

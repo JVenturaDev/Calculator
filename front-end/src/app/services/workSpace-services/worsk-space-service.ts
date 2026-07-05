@@ -76,8 +76,6 @@ export class WorkspaceService {
       )
 
     );
-    console.log('Saving tags to backend:', itemId, tags);
-
     this.api.updateTags(itemId, tags).subscribe({
       error: err => console.error('Error updating tags', err)
     });

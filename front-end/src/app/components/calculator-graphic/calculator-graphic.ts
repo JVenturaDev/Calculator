@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { skip, Subscription } from 'rxjs';
 import { HistoryService } from '../../services/history-services/history';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 import { CalculatorMemoryService } from '../../services/memory-services/calculator-memory';
@@ -18,6 +18,7 @@ import {
   CALCULATION_ENGINE,
   CalculationEngine,
 } from '../../services/engine-services/calculation-engine.contract';
+import { ToastService } from '../../services/toast-services/toast';
 @Component({
   selector: 'app-graphic',
   templateUrl: './calculator-graphic.html',
@@ -27,7 +28,6 @@ import {
 export class GraphicComponent implements OnInit, OnDestroy {
   inputValue = '';
   private readonly subscriptions = new Subscription();
-  isVisible = false;
   showMemoryButtons = false;
   showInequalitySymbols = false;
 
@@ -37,7 +37,6 @@ export class GraphicComponent implements OnInit, OnDestroy {
     public history: HistoryService,
     private calculatorMemory: CalculatorMemoryService,
     private memoryToggle: MemoryToggleService,
-    private toggle: ToggleService,
     public toggleService: ToggleService,
     private parserService: parser,
     private tokenizer: Tokenizer,
@@ -45,17 +44,13 @@ export class GraphicComponent implements OnInit, OnDestroy {
     private process: PreprocessModule,
     private inputService: InputService,
     private wsService: WorkspaceService,
-    private evalutorPolish: evaluator
+    private evalutorPolish: evaluator,
+    private toast: ToastService
   ) { }
 
   ngOnInit(): void {
     this.subscriptions.add(
-      this.toggle.activeCalc$.subscribe(
-        v => this.isVisible = (v === 'graphic')
-      )
-    );
-    this.subscriptions.add(
-      this.inputService.target$.subscribe(target => {
+      this.inputService.target$.pipe(skip(1)).subscribe(target => {
         if (target.type === 'calculator') {
           this.focusCalculatorInput();
         }
@@ -78,8 +73,6 @@ export class GraphicComponent implements OnInit, OnDestroy {
     const evaluation = this.evalutorPolish.evaluatePostFix(postfix, variables, true);
     // para que el motor polaco muestre pasos
     if (typeof evaluation === 'object' && 'result' in evaluation && 'steps' in evaluation) {
-      console.log("Resultado final:", evaluation.result);
-      console.log("Pasos del cálculo:", evaluation.steps);
       return evaluation.result;
     }
 
@@ -121,9 +114,9 @@ export class GraphicComponent implements OnInit, OnDestroy {
   }
 
   handleButtonClick(value: string): void {
-    try {
-      const target = this.inputService.target;
-      if (target.type === 'workspace-item') {
+    const target = this.inputService.target;
+    if (target.type === 'workspace-item') {
+      try {
         switch (value) {
           case 'AC':
           case 'CE':
@@ -139,9 +132,17 @@ export class GraphicComponent implements OnInit, OnDestroy {
           default:
             this.wsService.appendToCurrentExpression(target.itemId, value);
         }
-        return;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.toast.error(
+          `No se pudo evaluar la expresión del Workspace: ${message}`,
+          8000
+        );
       }
+      return;
+    }
 
+    try {
       switch (value) {
         case 'AC':
         case 'CE':
@@ -192,8 +193,8 @@ export class GraphicComponent implements OnInit, OnDestroy {
           this.calculator.appendToken(value);
           return;
       }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+    } catch (error) {
+      this.calculator.reportError(error, 'GRAPHIC_EVALUATION_ERROR');
     }
   }
 

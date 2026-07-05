@@ -1,0 +1,50 @@
+<dialog
+  #dialogElement
+  class="confirmation-dialog"
+  role="alertdialog"
+  aria-modal="true"
+  aria-labelledby="confirmation-dialog-title"
+  aria-describedby="confirmation-dialog-message"
+  (cancel)="onNativeCancel($event)"
+  (click)="onDialogClick($event)"
+>
+  @if (confirmation.activeRequest(); as request) {
+    <section class="dialog-card" (click)="$event.stopPropagation()">
+      <span class="dialog-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3 2.8 19h18.4L12 3Z" />
+          <path d="M12 9v4M12 17h.01" />
+        </svg>
+      </span>
+
+      <header>
+        <p class="dialog-eyebrow">Confirmación requerida</p>
+        <h2 id="confirmation-dialog-title">{{ request.title }}</h2>
+      </header>
+
+      <p id="confirmation-dialog-message" class="dialog-message">
+        {{ request.message }}
+      </p>
+
+      <footer class="dialog-actions">
+        <button
+          #cancelButton
+          type="button"
+          class="dialog-button dialog-button--cancel"
+          autofocus
+          (click)="cancel()"
+        >
+          {{ request.cancelLabel }}
+        </button>
+        <button
+          type="button"
+          class="dialog-button dialog-button--confirm"
+          [class.dialog-button--danger]="request.tone === 'danger'"
+          (click)="accept()"
+        >
+          {{ request.confirmLabel }}
+        </button>
+      </footer>
+    </section>
+  }
+</dialog>

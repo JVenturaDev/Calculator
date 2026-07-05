@@ -51,9 +51,9 @@
 
 .icon-button {
   display: grid;
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
   place-items: center;
   padding: 0;
   border-radius: 50%;
@@ -134,7 +134,7 @@
 
 .auth-action {
   display: inline-flex;
-  min-height: 38px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -197,7 +197,8 @@ button:active {
   }
 
   .auth-action {
-    min-width: 40px;
+    min-width: 44px;
+    min-height: 44px;
     padding: 8px 10px;
   }
 }

@@ -1,0 +1,46 @@
+<section class="toast-viewport" aria-label="Notificaciones">
+  @for (toast of toastService.messages(); track toast.id) {
+    <article
+      class="toast"
+      [class]="'toast toast--' + toast.kind"
+      [attr.role]="toast.kind === 'error' ? 'alert' : 'status'"
+      aria-atomic="true"
+    >
+      <span class="toast-icon" aria-hidden="true">
+        @switch (toast.kind) {
+          @case ('success') {
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="m8 12 2.6 2.6L16.5 9" />
+            </svg>
+          }
+          @case ('error') {
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v6M12 17h.01" />
+            </svg>
+          }
+          @default {
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v6M12 7h.01" />
+            </svg>
+          }
+        }
+      </span>
+
+      <p>{{ toast.message }}</p>
+
+      <button
+        type="button"
+        class="toast-close"
+        [attr.aria-label]="'Cerrar notificación: ' + toast.message"
+        (click)="dismiss(toast.id)"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="m7 7 10 10M17 7 7 17" />
+        </svg>
+      </button>
+    </article>
+  }
+</section>

@@ -1,8 +1,20 @@
+<div
+  *ngIf="isVisible"
+  class="sidebar-backdrop"
+  aria-hidden="true"
+  (click)="closeSidebar()"
+></div>
+
 <aside
+  id="calculator-sidebar"
   class="sidebar"
   [class.sidebar--visible]="isVisible"
   [attr.aria-hidden]="!isVisible"
+  [attr.role]="isVisible ? 'dialog' : null"
+  [attr.aria-modal]="isVisible ? 'true' : null"
   aria-label="Selector de calculadora"
+  tabindex="-1"
+  (keydown)="onSidebarKeydown($event)"
 >
   <header class="sidebar-header">
     <span class="sidebar-mark" aria-hidden="true">
@@ -21,6 +33,7 @@
     <span class="navigation-label">Calculadora</span>
 
     <button
+      #modeButton
       class="nav-item"
       type="button"
       data-mode="basic"
@@ -39,6 +52,7 @@
     </button>
 
     <button
+      #modeButton
       class="nav-item"
       type="button"
       data-mode="scientific"
@@ -57,6 +71,7 @@
     </button>
 
     <button
+      #modeButton
       class="nav-item"
       type="button"
       data-mode="graphic"

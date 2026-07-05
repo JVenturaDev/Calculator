@@ -14,6 +14,7 @@ import { evaluator } from '../../services/polish-services/polish-evaluator';
 import { CalculationParserService } from '../../services/calculation/calculation-parser';
 import { BookRenderer } from '../../services/book-renderer-service/book-renderer';
 import { TreeRendererService } from '../../services/TreeRendererService/tree-render';
+import { ConfirmationDialogService } from '../../services/confirmation-dialog-services/confirmation-dialog';
 
 describe('WorkSpace', () => {
   let component: WorkSpace;
@@ -21,6 +22,7 @@ describe('WorkSpace', () => {
   let tokenizer: jasmine.SpyObj<Tokenizer>;
   let polishParser: jasmine.SpyObj<parser>;
   let polishEvaluator: jasmine.SpyObj<evaluator>;
+  let confirmation: jasmine.SpyObj<ConfirmationDialogService>;
   let items$: BehaviorSubject<WorkspaceItem[]>;
   let activeItemId$: BehaviorSubject<string | null>;
   let target$: BehaviorSubject<InputTarget>;
@@ -62,6 +64,11 @@ describe('WorkSpace', () => {
     tokenizer = jasmine.createSpyObj<Tokenizer>('Tokenizer', ['tokenize']);
     polishParser = jasmine.createSpyObj<parser>('parser', ['toPostFix']);
     polishEvaluator = jasmine.createSpyObj<evaluator>('evaluator', ['evaluatePostFix']);
+    confirmation = jasmine.createSpyObj<ConfirmationDialogService>(
+      'ConfirmationDialogService',
+      ['confirm']
+    );
+    confirmation.confirm.and.resolveTo(false);
 
     workspaceService.setActiveItem.and.callFake((id: string) => activeItemId$.next(id));
     inputService.setWorkspaceItemTarget.and.callFake((itemId: string) => {
@@ -93,6 +100,7 @@ describe('WorkSpace', () => {
           provide: TreeRendererService,
           useValue: { buildTree: jasmine.createSpy('buildTree') },
         },
+        { provide: ConfirmationDialogService, useValue: confirmation },
       ],
     }).compileComponents();
 
@@ -182,6 +190,130 @@ describe('WorkSpace', () => {
       .toContain('No hay espacios de cálculo');
   });
 
+  it('renders a real button to activate each workspace item', () => {
+    items$.next([createWorkspaceItem('item-1')]);
+    fixture.detectChanges();
+
+    const activation = nativeElement().querySelector<HTMLButtonElement>('.item-activation');
+
+    expect(activation?.tagName).toBe('BUTTON');
+    expect(activation?.type).toBe('button');
+  });
+
+  it('activates an item with Enter and Space', () => {
+    items$.next([createWorkspaceItem('item-1')]);
+    fixture.detectChanges();
+
+    let activation = nativeElement().querySelector<HTMLButtonElement>('.item-activation');
+    activation?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    expect(workspaceService.setActiveItem).toHaveBeenCalledOnceWith('item-1');
+
+    workspaceService.setActiveItem.calls.reset();
+    activation = nativeElement().querySelector<HTMLButtonElement>('.item-activation');
+    activation?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+
+    expect(workspaceService.setActiveItem).toHaveBeenCalledOnceWith('item-1');
+  });
+
+  it('connects aria-expanded and aria-controls to the active item panel', () => {
+    const firstItem = createWorkspaceItem('item-1');
+    const secondItem = createWorkspaceItem('item-2');
+    items$.next([firstItem, secondItem]);
+    activeItemId$.next(firstItem.id);
+    fixture.detectChanges();
+
+    const firstActivation = nativeElement().querySelector<HTMLButtonElement>(
+      '[aria-controls="workspace-panel-item-1"]'
+    );
+    const secondActivation = nativeElement().querySelector<HTMLButtonElement>(
+      '[aria-controls="workspace-panel-item-2"]'
+    );
+    const panel = nativeElement().querySelector('#workspace-panel-item-1');
+
+    expect(firstActivation?.getAttribute('aria-expanded')).toBe('true');
+    expect(secondActivation?.getAttribute('aria-expanded')).toBe('false');
+    expect(panel?.getAttribute('role')).toBe('region');
+    expect(panel?.getAttribute('aria-labelledby')).toBe('workspace-title-item-1');
+  });
+
+  it('submits the new workspace form through saveNewItem', () => {
+    component.creatingItem = true;
+    fixture.detectChanges();
+    const save = spyOn(component, 'saveNewItem');
+    const form = nativeElement().querySelector('form.new-item') as HTMLFormElement;
+
+    form.dispatchEvent(new Event('submit'));
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(form.querySelector<HTMLButtonElement>('.primary-button')?.type).toBe('submit');
+    expect(form.querySelector<HTMLInputElement>('#workspaceItemTitle')?.name)
+      .toBe('workspaceItemTitle');
+  });
+
+  it('gives the delete action a contextual accessible label', () => {
+    showActiveItem();
+
+    const deleteButton = nativeElement().querySelector<HTMLButtonElement>('.delete-btn');
+    expect(deleteButton?.getAttribute('aria-label')).toBe(
+      'Eliminar espacio Pruebas científicas'
+    );
+  });
+
+  it('does not delete an item when confirmation is cancelled', async () => {
+    showActiveItem();
+    confirmation.confirm.and.resolveTo(false);
+
+    await component.onDeleteItem('item-1');
+
+    expect(confirmation.confirm).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        title: 'Eliminar espacio',
+        message: jasmine.stringContaining('Pruebas científicas'),
+        tone: 'danger',
+      })
+    );
+    expect(workspaceService.deleteItem).not.toHaveBeenCalled();
+  });
+
+  it('deletes an item once when confirmation is accepted', async () => {
+    showActiveItem();
+    confirmation.confirm.and.resolveTo(true);
+
+    await component.onDeleteItem('item-1');
+
+    expect(workspaceService.deleteItem).toHaveBeenCalledOnceWith('item-1');
+  });
+
+  it('keeps the original item id when the active item changes', async () => {
+    const firstItem = createWorkspaceItem('item-1');
+    const secondItem = createWorkspaceItem('item-2');
+    let resolveConfirmation!: (confirmed: boolean) => void;
+    confirmation.confirm.and.returnValue(
+      new Promise(resolve => resolveConfirmation = resolve)
+    );
+    items$.next([firstItem, secondItem]);
+    activeItemId$.next(firstItem.id);
+    fixture.detectChanges();
+
+    const deletion = component.onDeleteItem(firstItem.id);
+    activeItemId$.next(secondItem.id);
+    resolveConfirmation(true);
+    await deletion;
+
+    expect(workspaceService.deleteItem).toHaveBeenCalledOnceWith(firstItem.id);
+  });
+
+  it('does not reactivate the item when workspace tags are clicked', () => {
+    showActiveItem();
+    workspaceService.setActiveItem.calls.reset();
+
+    const tags = nativeElement().querySelector('app-workspace-tags') as HTMLElement;
+    tags.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(workspaceService.setActiveItem).not.toHaveBeenCalled();
+  });
+
   it('renders each calculation as a card with real metadata', () => {
     const calculation: WorkspaceCalculation = {
       id: 'calc-1',
@@ -214,6 +346,77 @@ describe('WorkSpace', () => {
     expect(component.viewMode).toBe('book');
     expect(bookButton?.getAttribute('aria-pressed')).toBe('true');
     expect(nativeElement().querySelectorAll('.view-switch').length).toBe(1);
+  });
+
+  it('shows Tree zoom only inside calculation cards in tree mode', () => {
+    const calculation: WorkspaceCalculation = {
+      id: 'calc-tree',
+      expression: '2+3',
+      result: 5,
+      steps: [],
+      timestamp: new Date('2026-01-02T03:04:05'),
+      humanSteps: [{ text: '2 + 3 = 5', level: 0, type: 'operator' }],
+      bookSteps: [],
+    };
+    showActiveItem(calculation);
+    component.trees.set('calc-tree', {
+      label: '5',
+      children: [{ label: '+', children: [] }],
+    });
+
+    component.setViewMode('tree');
+    fixture.detectChanges();
+
+    const card = nativeElement().querySelector('.calculation-card');
+    expect(card?.querySelector('app-tree-viewport')).not.toBeNull();
+    expect(card?.querySelectorAll('[role="toolbar"]').length).toBe(1);
+
+    component.setViewMode('human');
+    fixture.detectChanges();
+    expect(nativeElement().querySelector('app-human-render-line')).not.toBeNull();
+    expect(nativeElement().querySelector('[role="toolbar"]')).toBeNull();
+
+    component.setViewMode('book');
+    fixture.detectChanges();
+    expect(nativeElement().querySelector('app-tree-viewport')).toBeNull();
+    expect(nativeElement().querySelector('[role="toolbar"]')).toBeNull();
+  });
+
+  it('does not reactivate or focus the Workspace input when Tree zoom is clicked', () => {
+    const calculation: WorkspaceCalculation = {
+      id: 'calc-tree-focus',
+      expression: '4+5',
+      result: 9,
+      steps: [],
+      timestamp: new Date('2026-01-02T03:04:05'),
+      humanSteps: [],
+      bookSteps: [],
+    };
+    showActiveItem(calculation);
+    component.trees.set('calc-tree-focus', {
+      label: '9',
+      children: [{ label: '+', children: [] }],
+    });
+    component.setViewMode('tree');
+    fixture.detectChanges();
+
+    const activateItem = spyOn(component, 'activateItem').and.callThrough();
+    const focusInput = spyOn(HTMLInputElement.prototype, 'focus');
+    workspaceService.setActiveItem.calls.reset();
+    inputService.setWorkspaceItemTarget.calls.reset();
+    const zoomIn = nativeElement().querySelector<HTMLButtonElement>(
+      '[aria-label="Acercar árbol"]'
+    ) as HTMLButtonElement;
+
+    zoomIn.focus();
+    zoomIn.click();
+    fixture.detectChanges();
+
+    expect(activateItem).not.toHaveBeenCalled();
+    expect(workspaceService.setActiveItem).not.toHaveBeenCalled();
+    expect(inputService.setWorkspaceItemTarget).not.toHaveBeenCalled();
+    expect(focusInput).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(zoomIn);
   });
 
   it('keeps expression editing connected to WorkspaceService', async () => {

@@ -1,6 +1,5 @@
 <section
   class="scientific-keyboard"
-  *ngIf="isVisible"
   aria-label="Teclado de calculadora científica"
 >
   <div class="control-toolbar" role="group" aria-label="Controles científicos">
@@ -10,7 +9,7 @@
       class="key control-key angle-key"
       aria-describedby="angle-mode-help"
       (click)="cycleAngleMode()"
-    >RAD</button>
+    >{{ angleMode }}</button>
     <button
       type="button"
       id="secondButton"
