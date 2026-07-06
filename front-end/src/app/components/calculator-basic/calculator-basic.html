@@ -1,4 +1,8 @@
-<section class="basic-keyboard" aria-label="Teclado de calculadora básica">
+<section
+  class="basic-keyboard"
+  aria-label="Teclado de calculadora básica"
+  (pointerdown)="onCalculatorPointerDown($event)"
+>
   <div class="memory-toolbar" role="group" aria-label="Controles de memoria">
     <button
       type="button"

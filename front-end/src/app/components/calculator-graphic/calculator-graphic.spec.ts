@@ -207,6 +207,37 @@ describe('GraphicComponent', () => {
     expect(events.every(event => event.defaultPrevented)).toBeTrue();
   });
 
+  it('blurs calculatorInput on touch when the logical target is calculator', () => {
+    const input = attachFocusedInput('calculatorInput');
+    const event = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      pointerType: 'touch',
+    });
+
+    tokenButtons()[0].dispatchEvent(event);
+
+    expect(document.activeElement).not.toBe(input);
+    expect(event.defaultPrevented).toBeFalse();
+    input.remove();
+  });
+
+  it('keeps the Workspace input focused for touch buttons', () => {
+    inputService.target = { type: 'workspace-item', itemId: 'item-1' };
+    const input = attachFocusedInput('workspace-input-item-1');
+    const event = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      pointerType: 'touch',
+    });
+
+    tokenButtons()[0].dispatchEvent(event);
+
+    expect(document.activeElement).toBe(input);
+    expect(event.defaultPrevented).toBeFalse();
+    input.remove();
+  });
+
   it('keeps one childless inequality trigger and one inequality panel', () => {
     component.showInequalitySymbols = true;
     fixture.detectChanges();
@@ -459,5 +490,14 @@ describe('GraphicComponent', () => {
 
   function nativeElement(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
+  }
+
+  function attachFocusedInput(id: string): HTMLInputElement {
+    const input = document.createElement('input');
+    input.id = id;
+    document.body.appendChild(input);
+    input.focus();
+    expect(document.activeElement).toBe(input);
+    return input;
   }
 });

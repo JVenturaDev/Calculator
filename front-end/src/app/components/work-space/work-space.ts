@@ -88,7 +88,7 @@ export class WorkSpace implements OnInit {
     private tokenizer: Tokenizer,
     private parserService: parser,
     private evaluatorPolish: evaluator,
-    public serviseParserN: CalculationParserService,
+    public calculationParser: CalculationParserService,
     public bookRenderer: BookRenderer,
     public treeRenderer: TreeRendererService,
     private confirmation: ConfirmationDialogService,
@@ -148,7 +148,7 @@ export class WorkSpace implements OnInit {
       if (!o.steps?.length) return;
 
       o.id ??= crypto.randomUUID();
-      const I = this.serviseParserN.parse(o.steps);
+      const I = this.calculationParser.parse(o.steps);
       this.trees.set(o.id, this.treeRenderer.buildTree(I));
       o.humanSteps = this.convertToHumanSteps(o.steps);
       o.bookSteps = this.bookRenderer.convertToBookSteps(o.steps);
@@ -157,7 +157,7 @@ export class WorkSpace implements OnInit {
 
   convertToHumanSteps(steps: Step[]): HumanStep[] {
     return steps.map(s => {
-      const format = (v: number | Complex) => this.serviseParserN.formatValue(v);
+      const format = (v: number | Complex) => this.calculationParser.formatValue(v);
 
       let text: string;
       if (s.type === "Operator") {

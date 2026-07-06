@@ -81,6 +81,44 @@ describe('CalculatorScientificComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('blurs calculatorInput on touch buttons and still sends the token', () => {
+    const input = attachFocusedInput('calculatorInput');
+    const button = buttonForToken('7');
+    const event = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      pointerType: 'touch',
+    });
+
+    button.dispatchEvent(event);
+    button.click();
+
+    expect(document.activeElement).not.toBe(input);
+    expect(event.defaultPrevented).toBeFalse();
+    expect(mockCalculator.appendToken).toHaveBeenCalledOnceWith('7');
+    input.remove();
+  });
+
+  it('applies touch blur to toolbar controls but not mouse interaction', () => {
+    const angleButton = nativeElement().querySelector<HTMLButtonElement>('#multiBtn')!;
+    const touchInput = attachFocusedInput('calculatorInput');
+
+    angleButton.dispatchEvent(new PointerEvent('pointerdown', {
+      bubbles: true,
+      pointerType: 'touch',
+    }));
+    expect(document.activeElement).not.toBe(touchInput);
+    touchInput.remove();
+
+    const mouseInput = attachFocusedInput('calculatorInput');
+    angleButton.dispatchEvent(new PointerEvent('pointerdown', {
+      bubbles: true,
+      pointerType: 'mouse',
+    }));
+    expect(document.activeElement).toBe(mouseInput);
+    mouseInput.remove();
+  });
+
   it('keeps exactly 80 explicit button elements when memory is expanded', () => {
     component.showMemoryButtons = true;
     fixture.detectChanges();
@@ -287,5 +325,14 @@ describe('CalculatorScientificComponent', () => {
 
   function nativeElement(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
+  }
+
+  function attachFocusedInput(id: string): HTMLInputElement {
+    const input = document.createElement('input');
+    input.id = id;
+    document.body.appendChild(input);
+    input.focus();
+    expect(document.activeElement).toBe(input);
+    return input;
   }
 });

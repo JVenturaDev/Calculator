@@ -29,7 +29,20 @@ export class CalculatorScientificComponent {
     return this.calculator.snapshot.angleMode;
   }
 
+  onCalculatorPointerDown(event: PointerEvent): void {
+    if (event.pointerType === 'mouse') return;
 
+    const target = event.target;
+    if (!(target instanceof Element) || !target.closest('button')) return;
+
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLInputElement &&
+      activeElement.id === 'calculatorInput'
+    ) {
+      activeElement.blur();
+    }
+  }
 
   cycleAngleMode() {
     this.calculator.cycleAngleMode();

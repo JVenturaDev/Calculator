@@ -71,10 +71,28 @@ deserializeMaybe(value: any): number | Complex {
 normalizeSteps(steps: any): Step[] {
   const arr = typeof steps === 'string' ? JSON.parse(steps) : steps;
 
-  return (arr ?? []).map((s: any) => ({
-    ...s,
-    operands: (s.operands ?? []).map((o: any) => this.deserializeMaybe(o)),
-    result: this.deserializeMaybe(s.result),
-  })) as Step[];
+  return (arr ?? []).map((s: any) => {
+    const { stackBefore, stackAfter, ...step } = s;
+
+    return {
+      ...step,
+      operands: (s.operands ?? []).map((o: any) => this.deserializeMaybe(o)),
+      result: this.deserializeMaybe(s.result),
+      ...(Array.isArray(stackBefore)
+        ? {
+            stackBefore: stackBefore.map((value: any) =>
+              this.deserializeMaybe(value)
+            ),
+          }
+        : {}),
+      ...(Array.isArray(stackAfter)
+        ? {
+            stackAfter: stackAfter.map((value: any) =>
+              this.deserializeMaybe(value)
+            ),
+          }
+        : {}),
+    };
+  }) as Step[];
 }
 }

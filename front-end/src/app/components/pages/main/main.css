@@ -180,6 +180,12 @@ app-inspector-shell {
 
   .workspace {
     min-height: 420px;
+    overflow: visible;
+  }
+
+  .workspace > app-work-space {
+    flex: 0 0 auto;
+    overflow: visible;
   }
 
   .calculator {

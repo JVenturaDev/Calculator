@@ -9,6 +9,7 @@ export class CalculationParserService {
   parse(steps: Step[]): CalculationIR {
     const values = new Map<string, ValueNode>();
     const operations = new Map<string, OperationNode>();
+    const producedResults: ValueNode[] = [];
 
     let rootOperationId: string | null = null;
 
@@ -20,9 +21,12 @@ export class CalculationParserService {
       const operandIds: string[] = [];
 
       step.operands.forEach((operand) => {
-
-        const existing = [...values.values()]
-          .find(v => v.value === operand);
+        // Steps only carry values, not provenance. Prefer the latest matching
+        // operation result; repeated equal values can still be ambiguous.
+        const existing = this.findLatestProducedResult(
+          producedResults,
+          operand
+        );
 
         if (existing) {
           operandIds.push(existing.id);
@@ -41,10 +45,12 @@ export class CalculationParserService {
         result: resultId
       });
 
-      values.set(resultId, {
+      const resultNode = {
         id: resultId,
         value: step.result
-      });
+      };
+      values.set(resultId, resultNode);
+      producedResults.push(resultNode);
 
       rootOperationId = opId;
     });
@@ -54,6 +60,34 @@ export class CalculationParserService {
       operations,
       rootOperationId: rootOperationId!
     };
+  }
+
+  private findLatestProducedResult(
+    producedResults: ValueNode[],
+    operand: unknown
+  ): ValueNode | undefined {
+    for (let index = producedResults.length - 1; index >= 0; index--) {
+      if (this.valuesEqual(producedResults[index].value, operand)) {
+        return producedResults[index];
+      }
+    }
+
+    return undefined;
+  }
+
+  private valuesEqual(left: unknown, right: unknown): boolean {
+    if (typeof left === 'number' && typeof right === 'number') {
+      return left === right || (Number.isNaN(left) && Number.isNaN(right));
+    }
+
+    if (left instanceof Complex && right instanceof Complex) {
+      return (
+        this.valuesEqual(left.re, right.re) &&
+        this.valuesEqual(left.im, right.im)
+      );
+    }
+
+    return left === right;
   }
 
   formatValue(value: any): string {

@@ -3,10 +3,12 @@ import { of, Subject } from 'rxjs';
 import Complex from 'complex.js';
 
 import {
+  CalculationDTO,
   WorkspaceCalculation,
   WorkspaceItem,
 } from '../../components/work-space/work-space';
 import { AuthSessionService } from '../auth/auth-session';
+import { CalculationParserService } from '../calculation/calculation-parser';
 import { CalculationMapper } from '../mappers/calculation-mapper';
 import { ToastService } from '../toast-services/toast';
 import { WorkspaceApiService } from '../workspaceApiService/workspace-api-service';
@@ -163,6 +165,26 @@ describe('WorkspaceService', () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
+  it('normalizes nullable expressions, calculations and tags loaded from the backend', () => {
+    demoMode = false;
+    realToken = 'real-token';
+    api.getItems.and.returnValue(of([
+      {
+        ...createItem('nullable-real-item'),
+        currentExpression: null,
+        calculations: null,
+        tags: null,
+      } as unknown as WorkspaceItem,
+    ]));
+
+    createService();
+
+    const loaded = service.workspaceItems$.value[0];
+    expect(loaded.currentExpression).toBe('');
+    expect(loaded.calculations).toEqual([]);
+    expect(loaded.tags).toEqual([]);
+  });
+
   it('creates and activates an item locally in demo without calling the API', () => {
     createService();
 
@@ -299,6 +321,57 @@ describe('WorkspaceService', () => {
     expect(demoStorage.save).not.toHaveBeenCalled();
   });
 
+  it('normalizes nullable fields returned after creating a real item', () => {
+    demoMode = false;
+    realToken = 'real-token';
+    api.createItem.and.returnValue(of({
+      ...createItem('backend-id'),
+      currentExpression: null,
+      calculations: null,
+      tags: null,
+    } as unknown as WorkspaceItem));
+    createService();
+
+    service.createItem({
+      title: 'Backend nullable',
+      type: 'scientific',
+      tags: [],
+    });
+
+    const created = service.workspaceItems$.value[0];
+    expect(created.id).toBe('backend-id');
+    expect(created.currentExpression).toBe('');
+    expect(created.calculations).toEqual([]);
+    expect(created.tags).toEqual([]);
+  });
+
+  it('preserves text entered while the create request is pending', () => {
+    demoMode = false;
+    realToken = 'real-token';
+    const response$ = new Subject<WorkspaceItem>();
+    api.createItem.and.returnValue(response$);
+    createService();
+
+    service.createItem({
+      title: 'Pending backend item',
+      type: 'scientific',
+      tags: [],
+    });
+    const temporaryId = service.workspaceItems$.value[0].id;
+    service.updateCurrentExpression(temporaryId, '2+2');
+
+    response$.next({
+      ...createItem('backend-id'),
+      currentExpression: null,
+      calculations: null,
+    } as unknown as WorkspaceItem);
+
+    const created = service.workspaceItems$.value[0];
+    expect(created.id).toBe('backend-id');
+    expect(created.currentExpression).toBe('2+2');
+    expect(created.calculations).toEqual([]);
+  });
+
   it('persists active item selection and clearing in demo', () => {
     const item = createItem('demo-item');
     setDemoSnapshot(snapshot([item], null));
@@ -337,6 +410,20 @@ describe('WorkspaceService', () => {
     expect(latestSnapshot().items[0].currentExpression).toBe('');
     expect(demoStorage.save).toHaveBeenCalledTimes(4);
     expect(api.updateExpression).not.toHaveBeenCalled();
+  });
+
+  it('appends to a nullable expression without producing a null prefix', () => {
+    const item = {
+      ...createItem('nullable-demo-item'),
+      currentExpression: null,
+    } as unknown as WorkspaceItem;
+    setDemoSnapshot(snapshot([item], item.id));
+    createService();
+
+    service.appendToCurrentExpression(item.id, '2');
+
+    expect(service.workspaceItems$.value[0].currentExpression).toBe('2');
+    expect(latestSnapshot().items[0].currentExpression).toBe('2');
   });
 
   it('deletes and persists an item locally in demo without calling the API', () => {
@@ -378,6 +465,202 @@ describe('WorkspaceService', () => {
     expect(savedItem.calculations).toEqual([calculation]);
     expect(savedItem.calculations[0].steps.length).toBe(1);
     expect(api.addCalculationDTO).not.toHaveBeenCalled();
+  });
+
+  it('adds a calculation when calculations is null and clears the expression', () => {
+    const item = {
+      ...createItem('nullable-calculations', '2+2'),
+      calculations: null,
+    } as unknown as WorkspaceItem;
+    setDemoSnapshot(snapshot([item], item.id));
+    createService();
+    const calculation: WorkspaceCalculation = {
+      id: 'calculation-1',
+      expression: '2+2',
+      result: 4,
+      steps: [],
+      timestamp: new Date('2026-01-03T12:00:00.000Z'),
+    };
+
+    expect(() => service.addCalculationToActiveItem(calculation)).not.toThrow();
+
+    const updated = service.workspaceItems$.value[0];
+    expect(updated.calculations).toEqual([calculation]);
+    expect(updated.currentExpression).toBe('');
+  });
+
+  it('allows a newly created real item to calculate without reloading', () => {
+    demoMode = false;
+    realToken = 'real-token';
+    api.createItem.and.returnValue(of({
+      ...createItem('backend-id'),
+      currentExpression: null,
+      calculations: null,
+    } as unknown as WorkspaceItem));
+    api.addCalculationDTO.and.returnValue(new Subject<CalculationDTO>());
+    createService();
+
+    service.createItem({
+      title: 'Immediate calculation',
+      type: 'scientific',
+      tags: [],
+    });
+    service.updateCurrentExpression('backend-id', '2+2');
+
+    const calculation: WorkspaceCalculation = {
+      id: 'calculation-1',
+      expression: '2+2',
+      result: 4,
+      steps: [],
+      timestamp: new Date('2026-01-03T12:00:00.000Z'),
+    };
+    expect(() => service.addCalculationToActiveItem(calculation)).not.toThrow();
+
+    const updated = service.workspaceItems$.value[0];
+    expect(updated.calculations).toEqual([calculation]);
+    expect(updated.currentExpression).toBe('');
+    expect(api.addCalculationDTO).toHaveBeenCalledTimes(1);
+  });
+
+  it('normalizes optimistic and backend multi-step pi values identically', () => {
+    demoMode = false;
+    realToken = 'real-token';
+    const item = createItem('real-item', '(Ï€+1)*2');
+    api.getItems.and.returnValue(of([item]));
+    const response$ = new Subject<CalculationDTO>();
+    api.addCalculationDTO.and.returnValue(response$);
+    createService();
+    service.setActiveItem(item.id);
+
+    const intermediate = new Complex(Math.PI + 1, 0);
+    const finalResult = intermediate.mul(2);
+    const calculation: WorkspaceCalculation = {
+      id: 'optimistic-calculation',
+      expression: '(Ï€+1)*2',
+      result: finalResult,
+      steps: [
+        {
+          type: 'Operator',
+          name: '+',
+          operands: [Math.PI, 1],
+          result: intermediate,
+        },
+        {
+          type: 'Operator',
+          name: '*',
+          operands: [intermediate, 2],
+          result: finalResult,
+        },
+      ],
+      timestamp: new Date('2026-01-03T12:00:00.000Z'),
+    };
+
+    service.addCalculationToActiveItem(calculation);
+
+    const optimistic =
+      service.workspaceItems$.value[0].calculations[0];
+    expect(optimistic.result).toBeInstanceOf(Complex);
+    expect(optimistic.steps[1].operands[0]).toBeInstanceOf(Complex);
+    expect(optimistic.steps[1].result).toBeInstanceOf(Complex);
+
+    response$.next({
+      id: 'backend-calculation',
+      expression: '(Ï€+1)*2',
+      result: JSON.stringify({
+        type: 'complex',
+        re: finalResult.re,
+        im: finalResult.im,
+      }),
+      steps: [
+        {
+          type: 'Operator',
+          name: '+',
+          operands: [Math.PI, 1],
+          result: {
+            type: 'complex',
+            re: intermediate.re,
+            im: intermediate.im,
+          },
+        },
+        {
+          type: 'Operator',
+          name: '*',
+          operands: [{ re: intermediate.re, im: intermediate.im }, 2],
+          result: { re: finalResult.re, im: finalResult.im },
+        },
+      ],
+      timestamp: '2026-01-03T12:00:01.000Z',
+    } as unknown as CalculationDTO);
+
+    const normalized =
+      service.workspaceItems$.value[0].calculations[0];
+    const formatter = TestBed.inject(CalculationParserService);
+
+    expect(normalized.id).toBe('backend-calculation');
+    expect(normalized.timestamp).toEqual(
+      new Date('2026-01-03T12:00:01.000Z')
+    );
+    expect(normalized.result).toBeInstanceOf(Complex);
+    expect(normalized.steps[0].result).toBeInstanceOf(Complex);
+    expect(normalized.steps[1].operands[0]).toBeInstanceOf(Complex);
+    expect(normalized.steps[1].result).toBeInstanceOf(Complex);
+    expect(
+      normalized.steps.flatMap(step => [
+        ...step.operands.map(value => formatter.formatValue(value)),
+        formatter.formatValue(step.result),
+      ])
+    ).not.toContain('[object Object]');
+  });
+
+  it('normalizes calculations equivalently from GET and create POST responses', () => {
+    demoMode = false;
+    realToken = 'real-token';
+    const rawCalculation = {
+      id: 'backend-calculation',
+      expression: '(Ï€+1)*2',
+      result: JSON.stringify({ type: 'real', value: 8.283185307179586 }),
+      steps: [
+        {
+          type: 'Operator',
+          name: '+',
+          operands: [Math.PI, 1],
+          result: { re: Math.PI + 1, im: 0 },
+        },
+        {
+          type: 'Operator',
+          name: '*',
+          operands: [{ re: Math.PI + 1, im: 0 }, 2],
+          result: { re: 8.283185307179586, im: 0 },
+        },
+      ],
+      timestamp: '2026-01-03T12:00:00.000Z',
+    } as unknown as WorkspaceCalculation;
+    const loadedItem = {
+      ...createItem('loaded-item'),
+      calculations: [rawCalculation],
+    };
+    api.getItems.and.returnValue(of([loadedItem]));
+    createService();
+    const loadedCalculation =
+      service.workspaceItems$.value[0].calculations[0];
+
+    api.createItem.and.returnValue(of({
+      ...createItem('created-item'),
+      calculations: [rawCalculation],
+    }));
+    service.createItem({
+      title: 'Created item',
+      type: 'scientific',
+      tags: [],
+    });
+    const createdCalculation =
+      service.workspaceItems$.value[1].calculations[0];
+
+    expect(createdCalculation.result).toEqual(loadedCalculation.result);
+    expect(createdCalculation.timestamp).toEqual(loadedCalculation.timestamp);
+    expect(createdCalculation.steps[0].result).toBeInstanceOf(Complex);
+    expect(createdCalculation.steps[1].operands[0]).toBeInstanceOf(Complex);
+    expect(createdCalculation.steps).toEqual(loadedCalculation.steps);
   });
 
   it('clears visible demo state and loads backend data when switching to real', () => {

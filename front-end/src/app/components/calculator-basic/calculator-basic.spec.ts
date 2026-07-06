@@ -73,6 +73,43 @@ describe('CalculatorBasicComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('blurs calculatorInput for touch and pen buttons without cancelling their click', () => {
+    for (const pointerType of ['touch', 'pen']) {
+      const input = attachFocusedInput('calculatorInput');
+      const button = buttonForToken('7');
+      const event = new PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        pointerType,
+      });
+
+      button.dispatchEvent(event);
+      button.click();
+
+      expect(document.activeElement).not.toBe(input);
+      expect(event.defaultPrevented).toBeFalse();
+      input.remove();
+    }
+
+    expect(mockCalculator.appendToken).toHaveBeenCalledTimes(2);
+    expect(mockCalculator.appendToken).toHaveBeenCalledWith('7');
+  });
+
+  it('does not force calculatorInput to blur for mouse interaction', () => {
+    const input = attachFocusedInput('calculatorInput');
+    const event = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      pointerType: 'mouse',
+    });
+
+    buttonForToken('7').dispatchEvent(event);
+
+    expect(document.activeElement).toBe(input);
+    expect(event.defaultPrevented).toBeFalse();
+    input.remove();
+  });
+
   it('keeps every keypad token unchanged', () => {
     const handler = spyOn(component, 'handleButtonClick');
     const buttons = Array.from(
@@ -197,12 +234,25 @@ describe('CalculatorBasicComponent', () => {
   });
 
   function clickToken(token: string): void {
+    buttonForToken(token).click();
+  }
+
+  function buttonForToken(token: string): HTMLButtonElement {
     const button = Array.from(
       nativeElement().querySelectorAll<HTMLButtonElement>('[data-token]')
     ).find(candidate => candidate.dataset['token'] === token);
 
     expect(button).withContext(`Missing button for token ${token}`).toBeDefined();
-    button?.click();
+    return button as HTMLButtonElement;
+  }
+
+  function attachFocusedInput(id: string): HTMLInputElement {
+    const input = document.createElement('input');
+    input.id = id;
+    document.body.appendChild(input);
+    input.focus();
+    expect(document.activeElement).toBe(input);
+    return input;
   }
 
   function nativeElement(): HTMLElement {

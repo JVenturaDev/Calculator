@@ -9,7 +9,6 @@ import {
 } from '../../components/work-space/work-space';
 import { AuthSessionService } from '../auth/auth-session';
 import { CalculationMapper } from '../mappers/calculation-mapper';
-import { Step } from '../polish-services/polish-evaluator';
 import { ToastService } from '../toast-services/toast';
 import { WorkspaceApiService } from '../workspaceApiService/workspace-api-service';
 import {
@@ -21,6 +20,16 @@ type WorkspaceContext =
   | { kind: 'demo'; key: 'demo' }
   | { kind: 'real'; key: string }
   | { kind: 'none'; key: 'none' };
+
+type RawWorkspaceCalculation = {
+  id?: unknown;
+  expression?: unknown;
+  result?: unknown;
+  steps?: unknown;
+  timestamp?: unknown;
+  humanSteps?: WorkspaceCalculation['humanSteps'];
+  bookSteps?: WorkspaceCalculation['bookSteps'];
+};
 
 @Injectable({
   providedIn: 'root',
@@ -35,7 +44,7 @@ export class WorkspaceService {
 
   constructor(
     private api: WorkspaceApiService,
-    private zerialicer: CalculationMapper,
+    private calculationMapper: CalculationMapper,
     private authSession: AuthSessionService,
     private demoStorage: DemoWorkspaceStorageService,
     private toast: ToastService
@@ -80,17 +89,9 @@ export class WorkspaceService {
       this.api.getItems().subscribe(items => {
         if (!this.isContextCurrent(context.key)) return;
 
-        const normalized = items.map(item => ({
-          ...item,
-          calculations: (item.calculations ?? []).map(calculation => ({
-            ...calculation,
-            id: calculation.id ?? crypto.randomUUID(),
-            result: this.zerialicer.deserializeMaybe(calculation.result),
-            steps: this.zerialicer.normalizeSteps(calculation.steps),
-          })),
-        }));
-
-        this.workspaceItems$.next(normalized);
+        this.workspaceItems$.next(
+          items.map(item => this.normalizeWorkspaceItem(item))
+        );
       });
     }
   }
@@ -126,12 +127,27 @@ export class WorkspaceService {
       next: savedItem => {
         if (!this.isContextCurrent(context.key)) return;
 
+        const optimisticItem =
+          this.workspaceItems$.value.find(item => item.id === tempItem.id) ??
+          tempItem;
+        const normalizedSavedItem = this.normalizeWorkspaceItem({
+          ...optimisticItem,
+          ...savedItem,
+          currentExpression:
+            savedItem.currentExpression ??
+            optimisticItem.currentExpression ??
+            '',
+          calculations:
+            savedItem.calculations ?? optimisticItem.calculations ?? [],
+          tags: savedItem.tags ?? optimisticItem.tags ?? [],
+        });
+
         this.workspaceItems$.next(
           this.workspaceItems$.value.map(item =>
-            item.id === tempItem.id ? savedItem : item
+            item.id === tempItem.id ? normalizedSavedItem : item
           )
         );
-        this.activeItemId$.next(savedItem.id);
+        this.activeItemId$.next(normalizedSavedItem.id);
       },
       error: () => {},
     });
@@ -173,12 +189,17 @@ export class WorkspaceService {
 
   updateExpression(itemId: string, value: string): void {
     const context = this.prepareCurrentContext();
+    const normalizedValue = value ?? '';
 
     if (context.kind === 'demo') {
       this.workspaceItems$.next(
         this.workspaceItems$.value.map(item =>
           item.id === itemId
-            ? { ...item, currentExpression: value, updatedAt: new Date() }
+            ? {
+                ...item,
+                currentExpression: normalizedValue,
+                updatedAt: new Date(),
+              }
             : item
         )
       );
@@ -188,22 +209,35 @@ export class WorkspaceService {
 
     if (context.kind !== 'real') return;
 
-    this.api.updateExpression(itemId, value).subscribe(updatedItem => {
+    this.api.updateExpression(itemId, normalizedValue).subscribe(updatedItem => {
       if (!this.isContextCurrent(context.key)) return;
 
       this.workspaceItems$.next(
-        this.workspaceItems$.value.map(item =>
-          item.id === itemId ? updatedItem : item
-        )
+        this.workspaceItems$.value.map(item => {
+          if (item.id !== itemId) return item;
+
+          return this.normalizeWorkspaceItem({
+            ...item,
+            ...updatedItem,
+            currentExpression:
+              updatedItem.currentExpression ?? normalizedValue,
+            calculations:
+              updatedItem.calculations ?? item.calculations ?? [],
+            tags: updatedItem.tags ?? item.tags ?? [],
+          });
+        })
       );
     });
   }
 
   updateCurrentExpression(itemId: string, value: string): void {
     const context = this.prepareCurrentContext();
+    const normalizedValue = value ?? '';
     this.workspaceItems$.next(
       this.workspaceItems$.value.map(item =>
-        item.id === itemId ? { ...item, currentExpression: value } : item
+        item.id === itemId
+          ? { ...item, currentExpression: normalizedValue }
+          : item
       )
     );
     if (context.kind === 'demo') this.persistDemoSnapshot();
@@ -238,7 +272,7 @@ export class WorkspaceService {
         item.id === itemId
           ? {
               ...item,
-              currentExpression: item.currentExpression + value,
+              currentExpression: (item.currentExpression ?? '') + value,
               updatedAt: new Date(),
             }
           : item
@@ -255,13 +289,18 @@ export class WorkspaceService {
     const context = this.prepareCurrentContext();
     const activeId = this.activeItemId$.value;
     if (!activeId) return;
+    const normalizedCalculation =
+      this.normalizeWorkspaceCalculation(calc);
 
     this.workspaceItems$.next(
       this.workspaceItems$.value.map(item =>
         item.id === activeId
           ? {
               ...item,
-              calculations: [...item.calculations, calc],
+              calculations: [
+                ...(item.calculations ?? []),
+                normalizedCalculation,
+              ],
               currentExpression: '',
               updatedAt: new Date(),
             }
@@ -276,34 +315,28 @@ export class WorkspaceService {
 
     if (context.kind !== 'real') return;
 
-    const stepsForBackend = calc.steps.map(step => ({
+    const stepsForBackend = normalizedCalculation.steps.map(step => ({
       ...step,
       result:
         step.result instanceof Complex
-          ? this.zerialicer.serializeResult(step.result)
+          ? this.calculationMapper.serializeResult(step.result)
           : step.result,
     }));
 
     const calcToSend: CalculationDTO = {
-      expression: calc.expression,
-      result: this.zerialicer.serializeResult(calc.result),
+      expression: normalizedCalculation.expression,
+      result: this.calculationMapper.serializeResult(normalizedCalculation.result),
       steps: JSON.stringify(stepsForBackend),
     };
 
     this.api.addCalculationDTO(activeId, calcToSend).subscribe(savedCalc => {
       if (!this.isContextCurrent(context.key)) return;
 
-      const parsedResult: number | Complex =
-        this.zerialicer.deserializeResult(savedCalc.result);
-      const parsedSteps: Step[] = (
-        savedCalc.steps as unknown as Step[]
-      ).map(step => ({
-        ...step,
-        result:
-          typeof step.result === 'string'
-            ? this.zerialicer.deserializeResult(step.result)
-            : step.result,
-      }));
+      const normalizedSavedCalculation =
+        this.normalizeWorkspaceCalculation(
+          savedCalc as unknown as RawWorkspaceCalculation,
+          normalizedCalculation
+        );
 
       this.workspaceItems$.next(
         this.workspaceItems$.value.map(item =>
@@ -311,14 +344,68 @@ export class WorkspaceService {
             ? {
                 ...item,
                 calculations: [
-                  ...item.calculations.slice(0, -1),
-                  { ...calc, result: parsedResult, steps: parsedSteps },
+                  ...(item.calculations ?? []).slice(0, -1),
+                  normalizedSavedCalculation,
                 ],
               }
             : item
         )
       );
     });
+  }
+
+  private normalizeWorkspaceItem(item: WorkspaceItem): WorkspaceItem {
+    return {
+      ...item,
+      currentExpression: item.currentExpression ?? '',
+      calculations: (item.calculations ?? []).map(calculation =>
+        this.normalizeWorkspaceCalculation(calculation)
+      ),
+      tags: item.tags ?? [],
+    };
+  }
+
+  private normalizeWorkspaceCalculation(
+    calculation: RawWorkspaceCalculation,
+    fallback?: WorkspaceCalculation
+  ): WorkspaceCalculation {
+    const rawTimestamp = calculation.timestamp ?? fallback?.timestamp;
+    const parsedTimestamp =
+      rawTimestamp instanceof Date
+        ? rawTimestamp
+        : new Date(String(rawTimestamp ?? ''));
+    const timestamp = Number.isNaN(parsedTimestamp.getTime())
+      ? fallback?.timestamp ?? new Date()
+      : parsedTimestamp;
+
+    return {
+      ...fallback,
+      id:
+        typeof calculation.id === 'string'
+          ? calculation.id
+          : fallback?.id ?? crypto.randomUUID(),
+      expression:
+        typeof calculation.expression === 'string'
+          ? calculation.expression
+          : fallback?.expression ?? '',
+      result: this.calculationMapper.deserializeMaybe(
+        calculation.result ?? fallback?.result ?? 0
+      ),
+      steps: this.calculationMapper.normalizeSteps(
+        calculation.steps ?? fallback?.steps ?? []
+      ),
+      timestamp,
+      ...(calculation.humanSteps
+        ? { humanSteps: calculation.humanSteps }
+        : fallback?.humanSteps
+          ? { humanSteps: fallback.humanSteps }
+          : {}),
+      ...(calculation.bookSteps
+        ? { bookSteps: calculation.bookSteps }
+        : fallback?.bookSteps
+          ? { bookSteps: fallback.bookSteps }
+          : {}),
+    };
   }
 
   private prepareCurrentContext(): WorkspaceContext {

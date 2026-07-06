@@ -5,12 +5,20 @@
   flex: 1;
 }
 
-.workspace-area {
+.workspace-area,
+.workspace-list,
+.workspace-item,
+.active-workspace,
+.calculation-stream,
+.empty-state {
   display: flex;
+  flex-direction: column;
+}
+
+.workspace-area {
   min-width: 0;
   min-height: 0;
   flex: 1;
-  flex-direction: column;
   gap: 12px;
   color: #e5e2ec;
 }
@@ -29,7 +37,6 @@
 .workspace-header h2,
 .new-item h3,
 .item-heading {
-  margin: 0;
   color: #f0edf6;
 }
 
@@ -49,7 +56,6 @@
 
 button {
   min-height: 44px;
-  cursor: pointer;
 }
 
 button:focus-visible,
@@ -109,20 +115,16 @@ input:focus-visible {
 }
 
 .workspace-list {
-  display: flex;
   min-height: 0;
   padding-right: 3px;
   flex: 1;
-  flex-direction: column;
   gap: 10px;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior-x: contain;
 }
 
 .workspace-item {
-  display: flex;
   padding: 11px;
-  flex-direction: column;
   gap: 10px;
   transition: border-color 140ms ease, background-color 140ms ease;
 }
@@ -132,22 +134,23 @@ input:focus-visible {
   background: #232630;
 }
 
-.item-title {
-  min-width: 0;
-}
-
 .item-activation {
+  min-width: 0;
   flex: 1;
   text-align: left;
 }
 
-.item-heading {
-  display: block;
+.item-heading,
+.calculation-id {
   overflow: hidden;
-  font-size: 0.9rem;
-  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.item-heading {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .item-type {
@@ -162,9 +165,7 @@ input:focus-visible {
 }
 
 .active-workspace {
-  display: flex;
   min-width: 0;
-  flex-direction: column;
   gap: 12px;
 }
 
@@ -205,9 +206,7 @@ input:focus-visible {
 }
 
 .calculation-stream {
-  display: flex;
   padding-left: 12px;
-  flex-direction: column;
   gap: 10px;
   border-left: 1px solid rgba(120, 169, 255, 0.28);
 }
@@ -225,11 +224,8 @@ input:focus-visible {
 }
 
 .calculation-id {
-  overflow: hidden;
   color: #91b9ff;
   font-family: "JetBrains Mono", Consolas, monospace;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .calculation-body,
@@ -264,16 +260,13 @@ input:focus-visible {
 }
 
 .renderer-content {
-  max-width: 100%;
   color: #d6d4dd;
-  overscroll-behavior: contain;
+  overscroll-behavior-x: contain;
 }
 
 .empty-state {
-  display: flex;
   padding: 20px 12px;
   align-items: center;
-  flex-direction: column;
   gap: 5px;
   color: #9499a8;
   border: 1px dashed #4c515e;
@@ -287,6 +280,24 @@ input:focus-visible {
 
 .workspace-empty {
   margin-block: auto;
+}
+
+@media (max-width: 760px) {
+  :host,
+  .workspace-area,
+  .workspace-list {
+    flex: 0 0 auto;
+  }
+
+  :host,
+  .workspace-list {
+    overflow-y: visible;
+  }
+
+  .calculation-expression,
+  .calculation-result {
+    overscroll-behavior-x: contain;
+  }
 }
 
 @media (max-width: 520px) {

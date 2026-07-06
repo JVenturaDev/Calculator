@@ -44,7 +44,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
     private process: PreprocessModule,
     private inputService: InputService,
     private wsService: WorkspaceService,
-    private evalutorPolish: evaluator,
+    private polishEvaluator: evaluator,
     private toast: ToastService
   ) { }
 
@@ -62,6 +62,26 @@ export class GraphicComponent implements OnInit, OnDestroy {
     input?.focus();
   }
 
+  onCalculatorPointerDown(event: PointerEvent): void {
+    if (
+      event.pointerType === 'mouse' ||
+      this.inputService.target.type !== 'calculator'
+    ) {
+      return;
+    }
+
+    const target = event.target;
+    if (!(target instanceof Element) || !target.closest('button')) return;
+
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLInputElement &&
+      activeElement.id === 'calculatorInput'
+    ) {
+      activeElement.blur();
+    }
+  }
+
   toggleHistory() {
     this.toggleService.GHtoggle();
   }
@@ -70,7 +90,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
     // motor polaco
     const tokens = this.tokenizer.tokenize(expr);
     const postfix = this.parserService.toPostFix(tokens);
-    const evaluation = this.evalutorPolish.evaluatePostFix(postfix, variables, true);
+    const evaluation = this.polishEvaluator.evaluatePostFix(postfix, variables, true);
     // para que el motor polaco muestre pasos
     if (typeof evaluation === 'object' && 'result' in evaluation && 'steps' in evaluation) {
       return evaluation.result;
@@ -207,7 +227,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
 
     const tokens = this.tokenizer.tokenize(item.currentExpression);
     const postfix = this.parserService.toPostFix(tokens);
-    const evaluation = this.evalutorPolish.evaluatePostFix(postfix, {}, true);
+    const evaluation = this.polishEvaluator.evaluatePostFix(postfix, {}, true);
 
     if (typeof evaluation !== 'object' || !('steps' in evaluation)) return;
 
