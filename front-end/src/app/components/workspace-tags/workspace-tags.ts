@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
+import { WorkspaceService } from '../../services/workspace-services/workspace-service';
 
 
 @Component({

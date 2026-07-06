@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { WorkspaceApiService } from '../../../services/workspaceApiService/workspace-api-service';
+import { WorkspaceApiService } from '../../../services/workspace-api-service/workspace-api-service';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs/operators';
 import { AuthSessionService } from '../../../services/auth/auth-session';

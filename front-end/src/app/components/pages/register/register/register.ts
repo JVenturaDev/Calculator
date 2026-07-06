@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { WorkspaceApiService } from '../../../../services/workspaceApiService/workspace-api-service';
+import { WorkspaceApiService } from '../../../../services/workspace-api-service/workspace-api-service';
 import { Router } from '@angular/router';
 import { ToastService } from '../../../../services/toast-services/toast';
 import { AuthSessionService } from '../../../../services/auth/auth-session';

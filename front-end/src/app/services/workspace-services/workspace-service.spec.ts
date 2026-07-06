@@ -11,12 +11,12 @@ import { AuthSessionService } from '../auth/auth-session';
 import { CalculationParserService } from '../calculation/calculation-parser';
 import { CalculationMapper } from '../mappers/calculation-mapper';
 import { ToastService } from '../toast-services/toast';
-import { WorkspaceApiService } from '../workspaceApiService/workspace-api-service';
+import { WorkspaceApiService } from '../workspace-api-service/workspace-api-service';
 import {
   DemoWorkspaceSnapshot,
   DemoWorkspaceStorageService,
 } from './demo-workspace-storage';
-import { WorkspaceService } from './worsk-space-service';
+import { WorkspaceService } from './workspace-service';
 
 describe('WorkspaceService', () => {
   let service: WorkspaceService;

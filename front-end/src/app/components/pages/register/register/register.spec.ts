@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
-import { WorkspaceApiService } from '../../../../services/workspaceApiService/workspace-api-service';
+import { WorkspaceApiService } from '../../../../services/workspace-api-service/workspace-api-service';
 import { AuthSessionService } from '../../../../services/auth/auth-session';
 import { DemoEnvironmentService } from '../../../../services/auth/demo-environment';
 import { ToastService } from '../../../../services/toast-services/toast';

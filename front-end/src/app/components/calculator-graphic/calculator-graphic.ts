@@ -13,7 +13,7 @@ import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
 import { evaluator } from '../../services/polish-services/polish-evaluator';
 import { PreprocessModule } from '../../services/polish-services/preprocess-module';
 import { InputService } from '../../services/input-services/input-services';
-import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
+import { WorkspaceService } from '../../services/workspace-services/workspace-service';
 import {
   CALCULATION_ENGINE,
   CalculationEngine,

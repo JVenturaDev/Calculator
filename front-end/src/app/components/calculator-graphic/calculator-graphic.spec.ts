@@ -21,7 +21,7 @@ import { parser } from '../../services/polish-services/polish-notation-parser-se
 import { PreprocessModule } from '../../services/polish-services/preprocess-module';
 import { Tokenizer } from '../../services/polish-services/tokenizer';
 import { ToggleService } from '../../services/toggle-services/toggle';
-import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
+import { WorkspaceService } from '../../services/workspace-services/workspace-service';
 import { ToastService } from '../../services/toast-services/toast';
 
 describe('GraphicComponent', () => {

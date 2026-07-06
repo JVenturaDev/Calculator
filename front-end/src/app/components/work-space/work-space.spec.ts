@@ -6,7 +6,7 @@ import {
   type WorkspaceCalculation,
   type WorkspaceItem,
 } from './work-space';
-import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
+import { WorkspaceService } from '../../services/workspace-services/workspace-service';
 import { InputService, type InputTarget } from '../../services/input-services/input-services';
 import { Tokenizer } from '../../services/polish-services/tokenizer';
 import { parser } from '../../services/polish-services/polish-notation-parser-service';

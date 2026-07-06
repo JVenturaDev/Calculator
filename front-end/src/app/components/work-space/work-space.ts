@@ -16,7 +16,7 @@ import { parser } from '../../services/polish-services/polish-notation-parser-se
 import { evaluator, Step } from '../../services/polish-services/polish-evaluator';
 import { WorkspaceTagsComponent } from '../workspace-tags/workspace-tags';
 import Complex from 'complex.js';
-import { WorkspaceService } from '../../services/workSpace-services/worsk-space-service';
+import { WorkspaceService } from '../../services/workspace-services/workspace-service';
 import { HumanStep } from '../../services/calculation-renderers/human-render/human-renderer';
 import { BookRenderLineComponent } from '../calculation-renderers-component/book-render/book-render-line/book-render-line';
 import { CalculationParserService } from '../../services/calculation/calculation-parser';

@@ -10,7 +10,7 @@ import {
 import { AuthSessionService } from '../auth/auth-session';
 import { CalculationMapper } from '../mappers/calculation-mapper';
 import { ToastService } from '../toast-services/toast';
-import { WorkspaceApiService } from '../workspaceApiService/workspace-api-service';
+import { WorkspaceApiService } from '../workspace-api-service/workspace-api-service';
 import {
   DemoWorkspaceLoadIssue,
   DemoWorkspaceStorageService,
