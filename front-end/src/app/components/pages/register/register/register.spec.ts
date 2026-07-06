@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { WorkspaceApiService } from '../../../../services/workspaceApiService/workspace-api-service';
+import { AuthSessionService } from '../../../../services/auth/auth-session';
+import { DemoEnvironmentService } from '../../../../services/auth/demo-environment';
 import { ToastService } from '../../../../services/toast-services/toast';
 import { Register } from './register';
 
@@ -12,11 +14,23 @@ describe('Register', () => {
   let api: jasmine.SpyObj<WorkspaceApiService>;
   let router: jasmine.SpyObj<Router>;
   let toast: jasmine.SpyObj<ToastService>;
+  let authSession: jasmine.SpyObj<AuthSessionService>;
+  let demoEnvironment: jasmine.SpyObj<DemoEnvironmentService>;
 
   beforeEach(async () => {
     api = jasmine.createSpyObj<WorkspaceApiService>('WorkspaceApiService', ['register', 'guest']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     toast = jasmine.createSpyObj<ToastService>('ToastService', ['success']);
+    authSession = jasmine.createSpyObj<AuthSessionService>(
+      'AuthSessionService',
+      ['clearDemoGuest', 'startDemoGuest']
+    );
+    demoEnvironment = jasmine.createSpyObj<DemoEnvironmentService>(
+      'DemoEnvironmentService',
+      ['isDemoAllowed']
+    );
+    demoEnvironment.isDemoAllowed.and.returnValue(false);
+    authSession.startDemoGuest.and.returnValue(true);
 
     await TestBed.configureTestingModule({
       imports: [Register],
@@ -24,6 +38,8 @@ describe('Register', () => {
         { provide: WorkspaceApiService, useValue: api },
         { provide: Router, useValue: router },
         { provide: ToastService, useValue: toast },
+        { provide: AuthSessionService, useValue: authSession },
+        { provide: DemoEnvironmentService, useValue: demoEnvironment },
       ],
     }).compileComponents();
 
@@ -62,6 +78,7 @@ describe('Register', () => {
     form.dispatchEvent(new Event('submit'));
 
     expect(api.register).toHaveBeenCalledOnceWith('jon', 'secret');
+    expect(authSession.clearDemoGuest).toHaveBeenCalledTimes(1);
     expect(toast.success).toHaveBeenCalledOnceWith(
       'Registro completado. Ya puedes iniciar sesión.'
     );
@@ -78,6 +95,17 @@ describe('Register', () => {
     guestButton.click();
 
     expect(api.guest).toHaveBeenCalledTimes(1);
+    expect(authSession.clearDemoGuest).toHaveBeenCalledTimes(1);
+    expect(router.navigate).toHaveBeenCalledOnceWith(['/main']);
+  });
+
+  it('starts an offline guest on GitHub Pages without calling the backend', () => {
+    demoEnvironment.isDemoAllowed.and.returnValue(true);
+
+    component.continueAsGuest();
+
+    expect(authSession.startDemoGuest).toHaveBeenCalledTimes(1);
+    expect(api.guest).not.toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledOnceWith(['/main']);
   });
 

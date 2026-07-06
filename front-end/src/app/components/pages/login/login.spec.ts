@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 
 import { WorkspaceApiService } from '../../../services/workspaceApiService/workspace-api-service';
+import { AuthSessionService } from '../../../services/auth/auth-session';
+import { DemoEnvironmentService } from '../../../services/auth/demo-environment';
 import { Login } from './login';
 
 describe('Login', () => {
@@ -10,16 +12,30 @@ describe('Login', () => {
   let fixture: ComponentFixture<Login>;
   let api: jasmine.SpyObj<WorkspaceApiService>;
   let router: jasmine.SpyObj<Router>;
+  let authSession: jasmine.SpyObj<AuthSessionService>;
+  let demoEnvironment: jasmine.SpyObj<DemoEnvironmentService>;
 
   beforeEach(async () => {
     api = jasmine.createSpyObj<WorkspaceApiService>('WorkspaceApiService', ['login', 'guest']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
+    authSession = jasmine.createSpyObj<AuthSessionService>(
+      'AuthSessionService',
+      ['clearDemoGuest', 'startDemoGuest']
+    );
+    demoEnvironment = jasmine.createSpyObj<DemoEnvironmentService>(
+      'DemoEnvironmentService',
+      ['isDemoAllowed']
+    );
+    demoEnvironment.isDemoAllowed.and.returnValue(false);
+    authSession.startDemoGuest.and.returnValue(true);
 
     await TestBed.configureTestingModule({
       imports: [Login],
       providers: [
         { provide: WorkspaceApiService, useValue: api },
         { provide: Router, useValue: router },
+        { provide: AuthSessionService, useValue: authSession },
+        { provide: DemoEnvironmentService, useValue: demoEnvironment },
       ],
     }).compileComponents();
 
@@ -49,6 +65,7 @@ describe('Login', () => {
     component.login();
 
     expect(api.login).toHaveBeenCalledOnceWith('jon', 'secret');
+    expect(authSession.clearDemoGuest).toHaveBeenCalledTimes(1);
     expect(router.navigate).toHaveBeenCalledOnceWith(['/main']);
     expect(component.loadingAction).toBeNull();
   });
@@ -82,7 +99,19 @@ describe('Login', () => {
     component.continueAsGuest();
 
     expect(api.guest).toHaveBeenCalledTimes(1);
+    expect(authSession.clearDemoGuest).toHaveBeenCalledTimes(1);
     expect(router.navigate).toHaveBeenCalledOnceWith(['/main']);
+  });
+
+  it('starts an offline guest on GitHub Pages without calling the backend', () => {
+    demoEnvironment.isDemoAllowed.and.returnValue(true);
+
+    component.continueAsGuest();
+
+    expect(authSession.startDemoGuest).toHaveBeenCalledTimes(1);
+    expect(api.guest).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledOnceWith(['/main']);
+    expect(component.loadingAction).toBeNull();
   });
 
   it('navigates to registration', () => {

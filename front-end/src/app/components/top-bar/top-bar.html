@@ -30,12 +30,12 @@
   <div class="topbar-spacer" aria-hidden="true"></div>
 
   <div class="auth-actions">
-    <ng-container *ngIf="ws.isLoggedIn(); else signedOut">
+    <ng-container *ngIf="isAuthenticated(); else signedOut">
       <button
         class="auth-action logout-action"
         type="button"
         aria-label="Cerrar sesión"
-        (click)="ws.logout()"
+        (click)="logout()"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24">
           <path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4M14 8l4 4-4 4M18 12H9" />

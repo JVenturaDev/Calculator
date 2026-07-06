@@ -27,6 +27,16 @@ jobs:
       - name: Build Angular project
         run: npx ng build --configuration production --base-href "/Calculator/"
 
+      - name: Add SPA fallback
+        run: cp dist/angular-calculator/index.html dist/angular-calculator/404.html
+
+      - name: Verify Pages artifact
+        run: |
+          test -f dist/angular-calculator/index.html
+          test -f dist/angular-calculator/404.html
+          test -f dist/angular-calculator/favicon.ico
+          grep -q '<base href="/Calculator/">' dist/angular-calculator/index.html
+
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.7.0
         with:

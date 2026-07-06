@@ -29,6 +29,7 @@ describe('WorkSpace', () => {
   let workspaceService: {
     workspaceItems$: BehaviorSubject<WorkspaceItem[]>;
     activeItemId$: BehaviorSubject<string | null>;
+    initializeForCurrentSession: jasmine.Spy;
     setActiveItem: jasmine.Spy;
     deleteItem: jasmine.Spy;
     createItem: jasmine.Spy;
@@ -49,6 +50,7 @@ describe('WorkSpace', () => {
     workspaceService = {
       workspaceItems$: items$,
       activeItemId$,
+      initializeForCurrentSession: jasmine.createSpy('initializeForCurrentSession'),
       setActiveItem: jasmine.createSpy('setActiveItem'),
       deleteItem: jasmine.createSpy('deleteItem'),
       createItem: jasmine.createSpy('createItem'),
@@ -117,6 +119,10 @@ describe('WorkSpace', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('initializes WorkspaceService for the current session on init', () => {
+    expect(workspaceService.initializeForCurrentSession).toHaveBeenCalledTimes(1);
   });
 
   it('does not react to workspace streams after destroy', () => {

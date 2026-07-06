@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { WorkspaceApiService } from '../../../../services/workspaceApiService/workspace-api-service';
 import { Router } from '@angular/router';
 import { ToastService } from '../../../../services/toast-services/toast';
+import { AuthSessionService } from '../../../../services/auth/auth-session';
+import { DemoEnvironmentService } from '../../../../services/auth/demo-environment';
 @Component({
   selector: 'app-register',
   imports: [FormsModule, CommonModule],
@@ -17,11 +19,14 @@ export class Register {
   constructor(
     private api: WorkspaceApiService,
     private router: Router,
-    private toast: ToastService
+    private toast: ToastService,
+    private authSession: AuthSessionService,
+    private demoEnvironment: DemoEnvironmentService
   ) { }
   register() {
     this.api.register(this.username, this.password).subscribe({
       next: () => {
+        this.authSession.clearDemoGuest();
         this.toast.success('Registro completado. Ya puedes iniciar sesión.');
         this.router.navigate(['/login']);
       },
@@ -32,8 +37,17 @@ export class Register {
     });
   }
   continueAsGuest() {
+    if (this.demoEnvironment.isDemoAllowed()) {
+      this.authSession.startDemoGuest();
+      this.router.navigate(['/main']);
+      return;
+    }
+
     this.api.guest().subscribe({
-      next: () => this.router.navigate(['/main']),
+      next: () => {
+        this.authSession.clearDemoGuest();
+        this.router.navigate(['/main']);
+      },
       error: () => { "Error de capa 8" }
     });
   }

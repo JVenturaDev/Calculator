@@ -38,7 +38,7 @@ export interface WorkspaceItem {
   createdAt: Date;
   updatedAt: Date;
 }
-// porque opcional(?), me da pereza meterlos a la db 
+
 export interface WorkspaceCalculation {
   expression: string;
   result: number | Complex;
@@ -79,9 +79,6 @@ export class WorkSpace implements OnInit {
     this.viewMode = mode;
   }
   @ViewChildren('workspaceInput') workspaceInputs!: QueryList<ElementRef<HTMLInputElement>>;
-  get activeItem(): WorkspaceItem | undefined {
-    return this.workspaceItems.find(i => i.id === this.activeItemId);
-  }
 
   constructor(
     private cd: ChangeDetectorRef,
@@ -98,6 +95,8 @@ export class WorkSpace implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.wsService.initializeForCurrentSession();
+
     // Suscripción a workspaceItems$
     this.wsService.workspaceItems$
       .pipe(takeUntilDestroyed(this.destroyRef))

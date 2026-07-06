@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { WorkspaceApiService } from '../../../services/workspaceApiService/workspace-api-service';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs/operators';
+import { AuthSessionService } from '../../../services/auth/auth-session';
+import { DemoEnvironmentService } from '../../../services/auth/demo-environment';
 
 type LoginAction = 'login' | 'guest';
 
@@ -23,7 +25,9 @@ export class Login {
 
   constructor(
     private api: WorkspaceApiService,
-    private router: Router
+    private router: Router,
+    private authSession: AuthSessionService,
+    private demoEnvironment: DemoEnvironmentService
   ) { }
 
   login() {
@@ -36,6 +40,7 @@ export class Login {
       .pipe(finalize(() => this.loadingAction = null))
       .subscribe({
         next: () => {
+          this.authSession.clearDemoGuest();
           this.router.navigate(['/main']);
         },
         error: () => {
@@ -50,10 +55,20 @@ export class Login {
     this.error = '';
     this.loadingAction = 'guest';
 
+    if (this.demoEnvironment.isDemoAllowed()) {
+      this.authSession.startDemoGuest();
+      this.loadingAction = null;
+      this.router.navigate(['/main']);
+      return;
+    }
+
     this.api.guest()
       .pipe(finalize(() => this.loadingAction = null))
       .subscribe({
-        next: () => this.router.navigate(['/main']),
+        next: () => {
+          this.authSession.clearDemoGuest();
+          this.router.navigate(['/main']);
+        },
         error: () => {
           this.error = 'No fue posible iniciar la sesión de invitado.';
         }

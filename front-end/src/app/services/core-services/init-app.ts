@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { DisplayStateService } from '../display-services/display';
+import { CalculatorFacade } from '../calculator-state/calculator-facade';
 import { MemoryService } from '../memory-services/memory';
-import { StateService } from './state-object';
 import { ToastService } from '../toast-services/toast';
 
 @Injectable({ providedIn: 'root' })
@@ -9,9 +8,8 @@ export class AppInitService {
   private initialized = false;
 
   constructor(
-    private display: DisplayStateService,
+    private calculator: CalculatorFacade,
     private memory: MemoryService,
-    private state: StateService,
     private toast: ToastService
   ) {}
 
@@ -19,8 +17,11 @@ export class AppInitService {
     if (this.initialized) return;
     this.initialized = true;
 
-    this.display.clear();
-    this.state.update({ expression: '', result: 0, equalPressed: 0 });
+    this.calculator.clear();
+    this.calculator.updateCalculationContext({
+      lastExpression: '',
+      result: 0,
+    });
 
     try {
       await this.memory.initDB();
