@@ -102,12 +102,18 @@
   min-height: 0;
   flex: 1;
   flex-direction: column;
-  gap: 6px;
+  gap: 18px;
   overflow-y: auto;
   padding: 18px 10px;
 }
 
+.navigation-section {
+  display: grid;
+  gap: 6px;
+}
+
 .navigation-label {
+  margin: 0;
   padding: 0 10px 7px;
   color: #8c909f;
   font-size: 0.68rem;

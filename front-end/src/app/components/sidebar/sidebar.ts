@@ -8,6 +8,7 @@ import {
   ViewChildren,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ToggleService, CalcType } from '../../services/toggle-services/toggle';
 
@@ -19,8 +20,8 @@ import { ToggleService, CalcType } from '../../services/toggle-services/toggle';
   styleUrls: ['./sidebar.css']
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-  @ViewChildren('modeButton')
-  private modeButtons!: QueryList<ElementRef<HTMLButtonElement>>;
+  @ViewChildren('sidebarAction')
+  private sidebarActions!: QueryList<ElementRef<HTMLButtonElement>>;
 
   isVisible = false;
   activeCalc: CalcType = 'graphic';
@@ -29,7 +30,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private focusTimer: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
 
-  constructor(private toggleService: ToggleService) { }
+  constructor(
+    private toggleService: ToggleService,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     this.subscriptions.add(
@@ -63,6 +67,27 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   select(calc: CalcType): void {
     this.toggleService.setActiveCalc(calc);
+    if (this.isGraphWorkspaceActive()) {
+      this.router.navigate(['/main']);
+    }
+  }
+
+  goCalculatorWorkspace(): void {
+    this.router.navigate(['/main']);
+    this.closeSidebar();
+  }
+
+  goGraphWorkspace(): void {
+    this.router.navigate(['/graph-workspace']);
+    this.closeSidebar();
+  }
+
+  isCalculatorWorkspaceActive(): boolean {
+    return this.router.url === '/main';
+  }
+
+  isGraphWorkspaceActive(): boolean {
+    return this.router.url === '/graph-workspace';
   }
 
   closeSidebar(): void {
@@ -72,7 +97,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   onSidebarKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Tab') return;
 
-    const buttons = this.modeButtons.toArray().map(({ nativeElement }) => nativeElement);
+    const buttons = this.sidebarActions.toArray().map(({ nativeElement }) => nativeElement);
     if (!buttons.length) return;
 
     const first = buttons[0];
@@ -96,7 +121,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   private focusActiveMode(): void {
-    const buttons = this.modeButtons?.toArray() ?? [];
+    const buttons = this.sidebarActions?.toArray() ?? [];
     const activeButton = buttons.find(
       ({ nativeElement }) => nativeElement.dataset['mode'] === this.activeCalc
     );

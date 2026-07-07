@@ -1,0 +1,21 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <section
+    class="graph-canvas-container"
+    aria-label="Graph Workspace"
+  >
+    <app-graph-canvas
+      [samples]="vm.samples"
+      [viewport]="vm.viewport"
+      [ariaLabel]="ariaLabel"
+    ></app-graph-canvas>
+
+    <p
+      *ngIf="vm.error"
+      class="graph-canvas-container__error"
+      role="status"
+      aria-live="polite"
+    >
+      {{ vm.error }}
+    </p>
+  </section>
+</ng-container>

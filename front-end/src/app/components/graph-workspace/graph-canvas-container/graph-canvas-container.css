@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+}
+
+.graph-canvas-container {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  min-height: 0;
+}
+
+.graph-canvas-container__error {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 126, 182, 0.28);
+  border-radius: 16px;
+  background: rgba(255, 126, 182, 0.1);
+  color: #ffd6e8;
+  font-size: 0.9rem;
+}
