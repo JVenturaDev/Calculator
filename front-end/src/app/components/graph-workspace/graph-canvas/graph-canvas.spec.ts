@@ -12,10 +12,16 @@ describe('GraphCanvasComponent', () => {
   let react: jasmine.Spy;
   let resize: jasmine.Spy;
   let purge: jasmine.Spy;
+  let on: jasmine.Spy;
+  let removeListener: jasmine.Spy;
   let observe: jasmine.Spy;
   let disconnect: jasmine.Spy;
   let resizeCallback: ResizeObserverCallback;
+  let relayoutHandler: ((event: Record<string, unknown>) => void) | undefined;
+  let clickHandler: ((event: PlotlyClickEvent) => void) | undefined;
   let originalResizeObserver: typeof ResizeObserver | undefined;
+  let originalOn: unknown;
+  let originalRemoveListener: unknown;
 
   const viewport: GraphViewport2D = {
     xMin: -5,
@@ -26,6 +32,23 @@ describe('GraphCanvasComponent', () => {
 
   beforeEach(async () => {
     originalResizeObserver = globalThis.ResizeObserver;
+    const divPrototype = HTMLDivElement.prototype as PlotlyEventPrototype;
+    originalOn = divPrototype.on;
+    originalRemoveListener = divPrototype.removeListener;
+
+    on = jasmine.createSpy('on').and.callFake((
+      eventName: string,
+      handler: (event: Record<string, unknown>) => void
+    ) => {
+      if (eventName === 'plotly_relayout') relayoutHandler = handler;
+      if (eventName === 'plotly_click') {
+        clickHandler = handler as (event: PlotlyClickEvent) => void;
+      }
+    });
+    removeListener = jasmine.createSpy('removeListener');
+    divPrototype.on = on;
+    divPrototype.removeListener = removeListener;
+
     observe = jasmine.createSpy('observe');
     disconnect = jasmine.createSpy('disconnect');
 
@@ -62,6 +85,19 @@ describe('GraphCanvasComponent', () => {
   });
 
   afterEach(() => {
+    const divPrototype = HTMLDivElement.prototype as PlotlyEventPrototype;
+    if (originalOn === undefined) {
+      delete divPrototype.on;
+    } else {
+      divPrototype.on = originalOn as PlotlyEventPrototype['on'];
+    }
+    if (originalRemoveListener === undefined) {
+      delete divPrototype.removeListener;
+    } else {
+      divPrototype.removeListener =
+        originalRemoveListener as PlotlyEventPrototype['removeListener'];
+    }
+
     if (originalResizeObserver) {
       globalThis.ResizeObserver = originalResizeObserver;
     } else {
@@ -171,6 +207,172 @@ describe('GraphCanvasComponent', () => {
     expect(react).toHaveBeenCalledTimes(1);
     expect((react.calls.mostRecent().args[1] as Record<string, unknown>[])[0]['uid'])
       .toBe('contour-1');
+    expect(on).toHaveBeenCalledWith('plotly_relayout', jasmine.any(Function));
+    expect(on).toHaveBeenCalledWith('plotly_click', jasmine.any(Function));
+  });
+
+  it('emits viewportChange from a valid Plotly relayout event', async () => {
+    const emitted: GraphViewport2D[] = [];
+    component.viewportChange.subscribe(viewport => emitted.push(viewport));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    relayoutHandler?.({
+      'xaxis.range[0]': -2,
+      'xaxis.range[1]': 8,
+      'yaxis.range[0]': -4,
+      'yaxis.range[1]': 6,
+    });
+
+    expect(emitted).toEqual([{
+      xMin: -2,
+      xMax: 8,
+      yMin: -4,
+      yMax: 6,
+    }]);
+  });
+
+  it('ignores incomplete relayout events', async () => {
+    const emitted = spyOn(component.viewportChange, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    relayoutHandler?.({
+      'xaxis.range[0]': -2,
+      'xaxis.range[1]': 8,
+    });
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
+  it('ignores autorange relayout events', async () => {
+    const emitted = spyOn(component.viewportChange, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    relayoutHandler?.({
+      'xaxis.autorange': true,
+      'yaxis.autorange': true,
+    });
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
+  it('ignores non-finite relayout values', async () => {
+    const emitted = spyOn(component.viewportChange, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    relayoutHandler?.({
+      'xaxis.range[0]': -2,
+      'xaxis.range[1]': Number.POSITIVE_INFINITY,
+      'yaxis.range[0]': -4,
+      'yaxis.range[1]': 6,
+    });
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
+  it('ignores inverted relayout ranges', async () => {
+    const emitted = spyOn(component.viewportChange, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    relayoutHandler?.({
+      'xaxis.range[0]': 8,
+      'xaxis.range[1]': -2,
+      'yaxis.range[0]': -4,
+      'yaxis.range[1]': 6,
+    });
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
+  it('emits functionSelect from a Plotly click data uid', async () => {
+    const selected: string[] = [];
+    component.functionSelect.subscribe(functionId => selected.push(functionId));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    clickHandler?.({
+      points: [
+        {
+          data: { uid: 'line-1' },
+          fullData: { uid: 'fallback-id' },
+        },
+      ],
+    });
+
+    expect(selected).toEqual(['line-1']);
+  });
+
+  it('emits functionSelect from fullData uid when data uid is missing', async () => {
+    const selected: string[] = [];
+    component.functionSelect.subscribe(functionId => selected.push(functionId));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    clickHandler?.({
+      points: [
+        {
+          fullData: { uid: 'contour-1' },
+        },
+      ],
+    });
+
+    expect(selected).toEqual(['contour-1']);
+  });
+
+  it('ignores Plotly click events without points', async () => {
+    const emitted = spyOn(component.functionSelect, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    clickHandler?.({});
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
+  it('ignores Plotly click events with a non-string uid', async () => {
+    const emitted = spyOn(component.functionSelect, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    clickHandler?.({
+      points: [
+        {
+          data: { uid: 123 },
+        },
+      ],
+    });
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
+  it('ignores Plotly click events with an empty uid', async () => {
+    const emitted = spyOn(component.functionSelect, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    clickHandler?.({
+      points: [
+        {
+          data: { uid: '   ' },
+        },
+      ],
+    });
+
+    expect(emitted).not.toHaveBeenCalled();
   });
 
   it('resizes without rendering again', async () => {
@@ -197,6 +399,14 @@ describe('GraphCanvasComponent', () => {
     fixture.destroy();
 
     expect(disconnect).toHaveBeenCalledTimes(1);
+    expect(removeListener).toHaveBeenCalledWith(
+      'plotly_relayout',
+      jasmine.any(Function)
+    );
+    expect(removeListener).toHaveBeenCalledWith(
+      'plotly_click',
+      jasmine.any(Function)
+    );
     expect(purge).toHaveBeenCalledOnceWith(container);
   });
 
@@ -305,3 +515,21 @@ describe('GraphCanvasComponent', () => {
     return fixture.nativeElement as HTMLElement;
   }
 });
+
+interface PlotlyEventPrototype {
+  on?: (
+    eventName: string,
+    handler: (event: Record<string, unknown>) => void
+  ) => void;
+  removeListener?: (
+    eventName: string,
+    handler: (event: Record<string, unknown>) => void
+  ) => void;
+}
+
+interface PlotlyClickEvent {
+  readonly points?: readonly {
+    readonly data?: { readonly uid?: unknown };
+    readonly fullData?: { readonly uid?: unknown };
+  }[];
+}

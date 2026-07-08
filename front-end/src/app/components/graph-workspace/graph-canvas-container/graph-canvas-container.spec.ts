@@ -1,19 +1,22 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { By } from '@angular/platform-browser';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 
 import { GraphCanvasContainerComponent } from './graph-canvas-container';
-import { GraphFunctionSamplerService } from '../../../services/graph-workspace/graph-function-sampler';
-import {
-  GraphFunctionSample,
-} from '../../../services/graph-workspace/graph-sampling';
 import { GraphWorkspaceFacade } from '../../../services/graph-workspace/graph-workspace-facade';
 import {
-  GraphFunction,
-  GraphViewport2D,
-  GraphWorkspaceState,
+  type GraphFunctionSample,
+} from '../../../services/graph-workspace/graph-sampling';
+import {
+  type GraphViewport2D,
+  type GraphWorkspaceState,
 } from '../../../services/graph-workspace/graph-workspace-state';
+import {
+  GraphWorkspaceSamplingViewModel,
+  GraphWorkspaceSamplingViewModelService,
+} from '../../../services/graph-workspace/graph-workspace-sampling-view-model';
 
 @Component({
   selector: 'app-graph-canvas',
@@ -24,13 +27,14 @@ class GraphCanvasStubComponent {
   @Input() samples: readonly GraphFunctionSample[] = [];
   @Input({ required: true }) viewport!: GraphViewport2D;
   @Input() ariaLabel = 'Graph Workspace canvas';
+  @Output() readonly viewportChange = new EventEmitter<GraphViewport2D>();
+  @Output() readonly functionSelect = new EventEmitter<string>();
 }
 
 describe('GraphCanvasContainerComponent', () => {
   let fixture: ComponentFixture<GraphCanvasContainerComponent>;
-  let stateSubject: BehaviorSubject<GraphWorkspaceState>;
+  let vmSubject: BehaviorSubject<GraphWorkspaceSamplingViewModel>;
   let facade: FakeGraphWorkspaceFacade;
-  let sampler: jasmine.SpyObj<GraphFunctionSamplerService>;
 
   const viewport: GraphViewport2D = {
     xMin: -10,
@@ -40,32 +44,23 @@ describe('GraphCanvasContainerComponent', () => {
   };
 
   beforeEach(async () => {
-    stateSubject = new BehaviorSubject<GraphWorkspaceState>(
-      createState({ functions: [] })
+    vmSubject = new BehaviorSubject<GraphWorkspaceSamplingViewModel>(
+      createViewModel()
     );
     facade = {
-      state$: stateSubject.asObservable(),
-      addFunction: jasmine.createSpy('addFunction'),
-      updateExpression: jasmine.createSpy('updateExpression'),
-      removeFunction: jasmine.createSpy('removeFunction'),
-      toggleFunction: jasmine.createSpy('toggleFunction'),
-      setColor: jasmine.createSpy('setColor'),
-      setPlotKind: jasmine.createSpy('setPlotKind'),
+      resetViewport: jasmine.createSpy('resetViewport'),
       selectFunction: jasmine.createSpy('selectFunction'),
       setViewport: jasmine.createSpy('setViewport'),
-      clear: jasmine.createSpy('clear'),
     };
-    sampler = jasmine.createSpyObj<GraphFunctionSamplerService>(
-      'GraphFunctionSamplerService',
-      ['sampleFunctions']
-    );
-    sampler.sampleFunctions.and.returnValue([readySample('fn-1')]);
 
     await TestBed.configureTestingModule({
       imports: [GraphCanvasContainerComponent],
       providers: [
         { provide: GraphWorkspaceFacade, useValue: facade },
-        { provide: GraphFunctionSamplerService, useValue: sampler },
+        {
+          provide: GraphWorkspaceSamplingViewModelService,
+          useValue: { vm$: vmSubject.asObservable() },
+        },
       ],
     })
       .overrideComponent(GraphCanvasContainerComponent, {
@@ -79,147 +74,145 @@ describe('GraphCanvasContainerComponent', () => {
   });
 
   afterEach(() => {
-    stateSubject.complete();
+    vmSubject.complete();
   });
 
-  it('reads state$ and samples functions after the debounce window', fakeAsync(() => {
-    const state = createState({ functions: [graphFunction('fn-1')] });
-    stateSubject.next(state);
-
-    fixture.detectChanges();
-    expect(sampler.sampleFunctions).not.toHaveBeenCalled();
-
-    tick(100);
-    fixture.detectChanges();
-
-    expect(sampler.sampleFunctions).toHaveBeenCalledOnceWith(
-      state.functions,
-      state.viewport
-    );
-  }));
-
-  it('passes samples, viewport and ariaLabel to GraphCanvasComponent', fakeAsync(() => {
+  it('consumes the shared view model and passes samples and viewport to the canvas', () => {
     const samples = [readySample('fn-1')];
-    const state = createState({ functions: [graphFunction('fn-1')] });
-    sampler.sampleFunctions.and.returnValue(samples);
-    stateSubject.next(state);
-    fixture.componentInstance.ariaLabel = 'Graph canvas preview';
+    vmSubject.next(createViewModel({ samples }));
 
-    fixture.detectChanges();
-    tick(100);
     fixture.detectChanges();
 
     const canvas = getCanvas();
     expect(canvas.samples).toBe(samples);
-    expect(canvas.viewport).toBe(state.viewport);
-    expect(canvas.ariaLabel).toBe('Graph canvas preview');
-  }));
+    expect(canvas.viewport).toBe(viewport);
+  });
 
-  it('consolidates rapid emissions before sampling', fakeAsync(() => {
-    fixture.detectChanges();
-
-    const first = createState({ functions: [graphFunction('fn-1')] });
-    const second = createState({
-      functions: [graphFunction('fn-1'), graphFunction('fn-2')],
-    });
-    stateSubject.next(first);
-    tick(50);
-    stateSubject.next(second);
-    tick(99);
-
-    expect(sampler.sampleFunctions).not.toHaveBeenCalled();
-
-    tick(1);
-    fixture.detectChanges();
-
-    expect(sampler.sampleFunctions).toHaveBeenCalledTimes(1);
-    expect(sampler.sampleFunctions).toHaveBeenCalledWith(
-      second.functions,
-      second.viewport
-    );
-  }));
-
-  it('renders an empty canvas for empty functions', fakeAsync(() => {
-    sampler.sampleFunctions.and.returnValue([]);
-    stateSubject.next(createState({ functions: [] }));
+  it('keeps the ariaLabel input', () => {
+    fixture.componentInstance.ariaLabel = 'Graph canvas preview';
 
     fixture.detectChanges();
-    tick(100);
-    fixture.detectChanges();
 
-    const canvas = getCanvas();
-    expect(canvas.samples).toEqual([]);
-    expect(canvas.viewport).toEqual(viewport);
-  }));
+    expect(getCanvas().ariaLabel).toBe('Graph canvas preview');
+  });
 
-  it('keeps hidden, empty and invalid samples from the sampler', fakeAsync(() => {
-    const samples = [
-      statusSample('hidden', 'fn-1'),
-      statusSample('empty', 'fn-2'),
-      statusSample('invalid', 'fn-3'),
-    ];
-    sampler.sampleFunctions.and.returnValue(samples);
-    stateSubject.next(createState({
-      functions: [
-        graphFunction('fn-1'),
-        graphFunction('fn-2'),
-        graphFunction('fn-3'),
-      ],
+  it('shows an accessible message when the shared view model has an error', () => {
+    vmSubject.next(createViewModel({
+      samples: [],
+      error: 'No se pudo muestrear el Workspace gráfico.',
     }));
 
-    fixture.detectChanges();
-    tick(100);
-    fixture.detectChanges();
-
-    expect(getCanvas().samples).toBe(samples);
-  }));
-
-  it('shows an accessible message and empty samples when sampling fails', fakeAsync(() => {
-    sampler.sampleFunctions.and.throwError(new RangeError('Invalid viewport'));
-    stateSubject.next(createState({ functions: [graphFunction('fn-1')] }));
-
-    fixture.detectChanges();
-    tick(100);
     fixture.detectChanges();
 
     const error = nativeElement().querySelector<HTMLElement>(
       '.graph-canvas-container__error'
     );
-    expect(getCanvas().samples).toEqual([]);
     expect(error?.textContent?.trim())
       .toBe('No se pudo muestrear el Workspace gráfico.');
     expect(error?.getAttribute('role')).toBe('status');
     expect(error?.getAttribute('aria-live')).toBe('polite');
-  }));
+  });
 
-  it('does not mutate the facade from the container', fakeAsync(() => {
-    stateSubject.next(createState({ functions: [graphFunction('fn-1')] }));
+  it('does not require a direct GraphFunctionSamplerService provider', () => {
+    expect(() => fixture.detectChanges()).not.toThrow();
+  });
 
+  it('renders an accessible reset viewport button', () => {
     fixture.detectChanges();
-    tick(100);
+
+    const button = nativeElement().querySelector<HTMLButtonElement>(
+      '.graph-canvas-toolbar__button'
+    );
+
+    expect(button).not.toBeNull();
+    expect(button?.textContent?.trim()).toBe('Reset viewport');
+    expect(button?.getAttribute('type')).toBe('button');
+    expect(button?.getAttribute('aria-label')).toBe('Restablecer viewport');
+  });
+
+  it('resets the viewport from the toolbar button', () => {
     fixture.detectChanges();
 
-    expect(facade.addFunction).not.toHaveBeenCalled();
-    expect(facade.updateExpression).not.toHaveBeenCalled();
-    expect(facade.removeFunction).not.toHaveBeenCalled();
-    expect(facade.toggleFunction).not.toHaveBeenCalled();
-    expect(facade.setColor).not.toHaveBeenCalled();
-    expect(facade.setPlotKind).not.toHaveBeenCalled();
-    expect(facade.selectFunction).not.toHaveBeenCalled();
+    const button = nativeElement().querySelector<HTMLButtonElement>(
+      '.graph-canvas-toolbar__button'
+    )!;
+    button.click();
+
+    expect(facade.resetViewport).toHaveBeenCalledTimes(1);
     expect(facade.setViewport).not.toHaveBeenCalled();
-    expect(facade.clear).not.toHaveBeenCalled();
-  }));
+  });
 
-  it('does not require CalculationEngine, GraphicPlotService or Plotly', fakeAsync(() => {
-    expect(() => {
-      fixture.detectChanges();
-      tick(100);
-      fixture.detectChanges();
-    }).not.toThrow();
-  }));
+  it('persists a changed viewport from the canvas', () => {
+    fixture.detectChanges();
+
+    getCanvas().viewportChange.emit({
+      xMin: -20,
+      xMax: 20,
+      yMin: -10,
+      yMax: 10,
+    });
+
+    expect(facade.setViewport).toHaveBeenCalledOnceWith({
+      xMin: -20,
+      xMax: 20,
+      yMin: -10,
+      yMax: 10,
+    });
+  });
+
+  it('selects a function emitted by the canvas', () => {
+    fixture.detectChanges();
+
+    getCanvas().functionSelect.emit('fn-1');
+
+    expect(facade.selectFunction).toHaveBeenCalledOnceWith('fn-1');
+    expect(facade.setViewport).not.toHaveBeenCalled();
+  });
+
+  it('ignores viewportChange when it matches the current viewport', () => {
+    fixture.detectChanges();
+
+    getCanvas().viewportChange.emit({ ...viewport });
+
+    expect(facade.setViewport).not.toHaveBeenCalled();
+  });
+
+  it('ignores viewportChange differences within tolerance', () => {
+    fixture.detectChanges();
+
+    getCanvas().viewportChange.emit({
+      xMin: viewport.xMin + 5e-10,
+      xMax: viewport.xMax - 5e-10,
+      yMin: viewport.yMin + 5e-10,
+      yMax: viewport.yMax - 5e-10,
+    });
+
+    expect(facade.setViewport).not.toHaveBeenCalled();
+  });
+
+  it('does not sample manually when the viewport changes', () => {
+    fixture.detectChanges();
+
+    getCanvas().viewportChange.emit({
+      xMin: -30,
+      xMax: 30,
+      yMin: -15,
+      yMax: 15,
+    });
+
+    expect(facade.setViewport).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not sample manually when selecting a function', () => {
+    fixture.detectChanges();
+
+    getCanvas().functionSelect.emit('fn-2');
+
+    expect(facade.selectFunction).toHaveBeenCalledOnceWith('fn-2');
+  });
 
   function getCanvas(): GraphCanvasStubComponent {
-    return fixture.debugElement.children[0].children[0]
+    return fixture.debugElement.query(By.directive(GraphCanvasStubComponent))
       .componentInstance as GraphCanvasStubComponent;
   }
 
@@ -227,9 +220,26 @@ describe('GraphCanvasContainerComponent', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  function createState(
-    overrides: Partial<GraphWorkspaceState>
-  ): GraphWorkspaceState {
+  function createViewModel(
+    overrides: Partial<GraphWorkspaceSamplingViewModel> = {}
+  ): GraphWorkspaceSamplingViewModel {
+    const state = createState();
+    return {
+      state,
+      samples: [],
+      selectedFunction: null,
+      selectedSample: null,
+      viewport,
+      hasFunctions: false,
+      visibleFunctions: 0,
+      readyFunctions: 0,
+      invalidFunctions: 0,
+      error: null,
+      ...overrides,
+    };
+  }
+
+  function createState(): GraphWorkspaceState {
     const timestamp = new Date('2026-01-01T00:00:00.000Z');
     return {
       version: 1,
@@ -240,25 +250,6 @@ describe('GraphCanvasContainerComponent', () => {
       viewport,
       createdAt: timestamp,
       updatedAt: timestamp,
-      ...overrides,
-    };
-  }
-
-  function graphFunction(
-    id: string,
-    overrides: Partial<GraphFunction> = {}
-  ): GraphFunction {
-    const timestamp = new Date('2026-01-01T00:00:00.000Z');
-    return {
-      id,
-      expression: 'x',
-      label: id,
-      color: '#78a9ff',
-      visible: true,
-      plotKind: 'line',
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      ...overrides,
     };
   }
 
@@ -279,30 +270,10 @@ describe('GraphCanvasContainerComponent', () => {
       },
     };
   }
-
-  function statusSample(
-    status: 'hidden' | 'empty' | 'invalid',
-    functionId: string
-  ): GraphFunctionSample {
-    return {
-      functionId,
-      status,
-      totalSamples: 0,
-      invalidSamples: 0,
-      trace: null,
-    };
-  }
 });
 
 interface FakeGraphWorkspaceFacade {
-  readonly state$: GraphWorkspaceFacade['state$'];
-  readonly addFunction: jasmine.Spy;
-  readonly updateExpression: jasmine.Spy;
-  readonly removeFunction: jasmine.Spy;
-  readonly toggleFunction: jasmine.Spy;
-  readonly setColor: jasmine.Spy;
-  readonly setPlotKind: jasmine.Spy;
+  readonly resetViewport: jasmine.Spy;
   readonly selectFunction: jasmine.Spy;
   readonly setViewport: jasmine.Spy;
-  readonly clear: jasmine.Spy;
 }

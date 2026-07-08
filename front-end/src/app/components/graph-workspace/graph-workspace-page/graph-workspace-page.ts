@@ -2,7 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 
 import { GraphCanvasContainerComponent } from '../graph-canvas-container/graph-canvas-container';
+import { GraphWorkspaceInspectorComponent } from '../graph-workspace-inspector/graph-workspace-inspector';
 import { GraphWorkspaceFacade } from '../../../services/graph-workspace/graph-workspace-facade';
+import { GraphWorkspaceSamplingViewModelService } from '../../../services/graph-workspace/graph-workspace-sampling-view-model';
 import {
   GraphFunction,
   GraphPlotKind,
@@ -11,14 +13,19 @@ import {
 @Component({
   selector: 'app-graph-workspace-page',
   standalone: true,
-  imports: [CommonModule, GraphCanvasContainerComponent],
+  imports: [
+    CommonModule,
+    GraphCanvasContainerComponent,
+    GraphWorkspaceInspectorComponent,
+  ],
   templateUrl: './graph-workspace-page.html',
   styleUrls: ['./graph-workspace-page.css'],
 })
 export class GraphWorkspacePageComponent {
   private readonly facade = inject(GraphWorkspaceFacade);
+  private readonly viewModel = inject(GraphWorkspaceSamplingViewModelService);
 
-  readonly state$ = this.facade.state$;
+  readonly vm$ = this.viewModel.vm$;
 
   addFunction(): void {
     this.facade.addFunction();

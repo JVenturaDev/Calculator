@@ -3,10 +3,23 @@
     class="graph-canvas-container"
     aria-label="Graph Workspace"
   >
+    <div class="graph-canvas-toolbar" aria-label="Controles del canvas">
+      <button
+        class="graph-canvas-toolbar__button"
+        type="button"
+        aria-label="Restablecer viewport"
+        (click)="resetViewport()"
+      >
+        Reset viewport
+      </button>
+    </div>
+
     <app-graph-canvas
       [samples]="vm.samples"
       [viewport]="vm.viewport"
       [ariaLabel]="ariaLabel"
+      (functionSelect)="selectFunction($event)"
+      (viewportChange)="onViewportChange($event, vm.viewport)"
     ></app-graph-canvas>
 
     <p

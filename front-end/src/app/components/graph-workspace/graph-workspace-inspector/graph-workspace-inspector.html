@@ -1,0 +1,105 @@
+<section
+  class="graph-inspector"
+  aria-labelledby="graph-inspector-title"
+>
+  <header class="graph-inspector__header">
+    <div>
+      <p class="graph-inspector__eyebrow">Inspector</p>
+      <h2 id="graph-inspector-title">Detalles gráficos</h2>
+    </div>
+  </header>
+
+  <p
+    *ngIf="error"
+    class="graph-inspector__error"
+    role="status"
+    aria-live="polite"
+  >
+    {{ error }}
+  </p>
+
+  <ng-container *ngIf="selectedFunction; else viewportSummary">
+    <article class="graph-inspector__card">
+      <div class="graph-inspector__function">
+        <span
+          class="graph-inspector__swatch"
+          [style.background]="selectedFunction.color"
+          aria-hidden="true"
+        ></span>
+        <div>
+          <h3>{{ selectedFunction.label }}</h3>
+          <p>{{ selectedFunction.expression || 'Sin expresión' }}</p>
+        </div>
+      </div>
+
+      <dl class="graph-inspector__grid">
+        <div>
+          <dt>Color</dt>
+          <dd>{{ selectedFunction.color }}</dd>
+        </div>
+        <div>
+          <dt>Visibilidad</dt>
+          <dd>{{ visibleLabel(selectedFunction.visible) }}</dd>
+        </div>
+        <div>
+          <dt>Tipo</dt>
+          <dd>{{ plotKindLabel(selectedFunction.plotKind) }}</dd>
+        </div>
+        <div>
+          <dt>Estado</dt>
+          <dd>{{ statusLabel(selectedSample?.status) }}</dd>
+        </div>
+        <div>
+          <dt>Muestras</dt>
+          <dd>{{ selectedSample?.totalSamples ?? 0 }}</dd>
+        </div>
+        <div>
+          <dt>Inválidas</dt>
+          <dd>{{ selectedSample?.invalidSamples ?? 0 }}</dd>
+        </div>
+      </dl>
+
+      <p
+        *ngIf="selectedSample?.firstError"
+        class="graph-inspector__sample-error"
+      >
+        {{ selectedSample?.firstError }}
+      </p>
+    </article>
+  </ng-container>
+
+  <ng-template #viewportSummary>
+    <article class="graph-inspector__card">
+      <p class="graph-inspector__empty">
+        Selecciona una función para ver detalles.
+      </p>
+
+      <dl class="graph-inspector__grid">
+        <div>
+          <dt>Funciones</dt>
+          <dd>{{ summary.totalFunctions }}</dd>
+        </div>
+        <div>
+          <dt>Visibles</dt>
+          <dd>{{ summary.visibleFunctions }}</dd>
+        </div>
+        <div>
+          <dt>Listas</dt>
+          <dd>{{ summary.readyFunctions }}</dd>
+        </div>
+        <div>
+          <dt>Inválidas</dt>
+          <dd>{{ summary.invalidFunctions }}</dd>
+        </div>
+        <div>
+          <dt>X</dt>
+          <dd>{{ viewport.xMin }} → {{ viewport.xMax }}</dd>
+        </div>
+        <div>
+          <dt>Y</dt>
+          <dd>{{ viewport.yMin }} → {{ viewport.yMax }}</dd>
+        </div>
+      </dl>
+    </article>
+  </ng-template>
+</section>

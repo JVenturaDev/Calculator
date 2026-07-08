@@ -20,7 +20,7 @@
     </button>
   </header>
 
-  <ng-container *ngIf="state$ | async as state">
+  <ng-container *ngIf="vm$ | async as vm">
     <section class="graph-workspace-canvas" aria-label="Canvas gráfico">
       <app-graph-canvas-container
         ariaLabel="Graph Workspace canvas"
@@ -34,25 +34,25 @@
           <h2 id="graph-functions-title">Funciones</h2>
         </div>
         <span class="graph-functions-count">
-          {{ state.functions.length }} / 12
+          {{ vm.state.functions.length }} / 12
         </span>
       </div>
 
       <p
-        *ngIf="state.functions.length === 0"
+        *ngIf="vm.state.functions.length === 0"
         class="graph-functions-empty"
       >
         Aún no hay funciones. Añade una función para comenzar a graficar.
       </p>
 
       <ol
-        *ngIf="state.functions.length > 0"
+        *ngIf="vm.state.functions.length > 0"
         class="graph-functions-list"
       >
         <li
-          *ngFor="let graphFunction of state.functions; trackBy: trackFunction"
+          *ngFor="let graphFunction of vm.state.functions; trackBy: trackFunction"
           class="graph-function-card"
-          [class.graph-function-card--selected]="state.selectedFunctionId === graphFunction.id"
+          [class.graph-function-card--selected]="vm.state.selectedFunctionId === graphFunction.id"
         >
           <span
             class="graph-function-color"
@@ -114,7 +114,7 @@
             <button
               class="graph-function-action graph-function-action--select"
               type="button"
-              [attr.aria-pressed]="state.selectedFunctionId === graphFunction.id"
+              [attr.aria-pressed]="vm.state.selectedFunctionId === graphFunction.id"
               [attr.aria-label]="'Seleccionar ' + graphFunction.label"
               (click)="selectFunction(graphFunction.id)"
             >
@@ -135,6 +135,19 @@
           </div>
         </li>
       </ol>
+
+      <app-graph-workspace-inspector
+        [selectedFunction]="vm.selectedFunction"
+        [selectedSample]="vm.selectedSample"
+        [viewport]="vm.viewport"
+        [summary]="{
+          totalFunctions: vm.state.functions.length,
+          visibleFunctions: vm.visibleFunctions,
+          readyFunctions: vm.readyFunctions,
+          invalidFunctions: vm.invalidFunctions
+        }"
+        [error]="vm.error"
+      ></app-graph-workspace-inspector>
     </section>
   </ng-container>
 </main>

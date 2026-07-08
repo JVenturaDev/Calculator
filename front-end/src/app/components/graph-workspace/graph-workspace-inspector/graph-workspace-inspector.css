@@ -1,0 +1,129 @@
+:host {
+  display: block;
+  min-width: 0;
+  margin-top: 0.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(136, 150, 176, 0.18);
+}
+
+.graph-inspector {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.graph-inspector__header,
+.graph-inspector__function {
+  display: flex;
+  align-items: center;
+}
+
+.graph-inspector__header {
+  justify-content: space-between;
+}
+
+.graph-inspector__eyebrow {
+  margin: 0 0 0.15rem;
+  color: #9ea7bd;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h2,
+h3,
+p,
+dl {
+  margin: 0;
+}
+
+h2 {
+  color: #f7f3ff;
+  font-size: 0.98rem;
+}
+
+.graph-inspector__card {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.72rem;
+  border: 1px solid rgba(136, 150, 176, 0.2);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(120, 169, 255, 0.07), transparent 46%),
+    rgba(8, 11, 18, 0.72);
+}
+
+.graph-inspector__function {
+  gap: 0.62rem;
+  min-width: 0;
+}
+
+.graph-inspector__swatch {
+  flex: 0 0 auto;
+  width: 0.78rem;
+  height: 0.78rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.graph-inspector__function h3 {
+  color: #f7f3ff;
+  font-size: 0.96rem;
+}
+
+.graph-inspector__function p {
+  color: #c9d7ff;
+  font: 0.84rem "JetBrains Mono", Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.graph-inspector__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.48rem;
+}
+
+.graph-inspector__grid div {
+  min-width: 0;
+  padding: 0.52rem 0.58rem;
+  border: 1px solid rgba(136, 150, 176, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+dt {
+  color: #aeb7ca;
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+dd {
+  margin: 0.14rem 0 0;
+  overflow-wrap: anywhere;
+  color: #f0edf6;
+  font-size: 0.82rem;
+}
+
+.graph-inspector__empty {
+  color: #b9becc;
+}
+
+.graph-inspector__error,
+.graph-inspector__sample-error {
+  padding: 0.62rem 0.7rem;
+  border: 1px solid rgba(255, 126, 182, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 126, 182, 0.1);
+  color: #ffd6e8;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 640px) {
+  .graph-inspector__grid {
+    grid-template-columns: 1fr;
+  }
+}

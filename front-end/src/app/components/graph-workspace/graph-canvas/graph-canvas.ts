@@ -2,9 +2,11 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  EventEmitter,
   Input,
   OnChanges,
   OnDestroy,
+  Output,
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
@@ -17,6 +19,22 @@ import { GraphViewport2D } from '../../../services/graph-workspace/graph-workspa
 type PlotlyTrace = Record<string, unknown>;
 type PlotlyLayout = Record<string, unknown>;
 type PlotlyConfig = Record<string, unknown>;
+type PlotlyRelayoutEvent = Record<string, unknown>;
+type PlotlyClickPoint = {
+  readonly data?: { readonly uid?: unknown };
+  readonly fullData?: { readonly uid?: unknown };
+};
+type PlotlyClickEvent = {
+  readonly points?: readonly PlotlyClickPoint[];
+};
+type PlotlyEventTarget = HTMLDivElement & {
+  on?: PlotlyEventRegistrar;
+  removeListener?: PlotlyEventRegistrar;
+};
+type PlotlyEventRegistrar = {
+  (eventName: 'plotly_relayout', handler: (event: PlotlyRelayoutEvent) => void): void;
+  (eventName: 'plotly_click', handler: (event: PlotlyClickEvent) => void): void;
+};
 
 @Component({
   selector: 'app-graph-canvas',
@@ -31,6 +49,8 @@ export class GraphCanvasComponent
   @Input() samples: readonly GraphFunctionSample[] = [];
   @Input({ required: true }) viewport!: GraphViewport2D;
   @Input() ariaLabel = 'Graph Workspace canvas';
+  @Output() readonly viewportChange = new EventEmitter<GraphViewport2D>();
+  @Output() readonly functionSelect = new EventEmitter<string>();
 
   @ViewChild('plotContainer', { static: true })
   private plotContainer!: ElementRef<HTMLDivElement>;
@@ -40,6 +60,18 @@ export class GraphCanvasComponent
   private viewReady = false;
   private destroyed = false;
   private renderRevision = 0;
+  private relayoutListenerAttached = false;
+  private clickListenerAttached = false;
+
+  private readonly relayoutHandler = (event: PlotlyRelayoutEvent): void => {
+    const viewport = this.extractViewport(event);
+    if (viewport) this.viewportChange.emit(viewport);
+  };
+
+  private readonly clickHandler = (event: PlotlyClickEvent): void => {
+    const functionId = this.extractFunctionId(event);
+    if (functionId) this.functionSelect.emit(functionId);
+  };
 
   private readonly plotConfig: PlotlyConfig = {
     responsive: true,
@@ -62,6 +94,8 @@ export class GraphCanvasComponent
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.detachRelayoutListener();
+    this.detachClickListener();
     this.resizeObserver?.disconnect();
     this.plotReady = false;
     Plotly.purge(this.plotContainer.nativeElement);
@@ -83,6 +117,74 @@ export class GraphCanvasComponent
     }
 
     if (this.destroyed || revision !== this.renderRevision) return;
+    this.attachRelayoutListener();
+    this.attachClickListener();
+  }
+
+  private attachRelayoutListener(): void {
+    if (this.relayoutListenerAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    if (typeof element.on !== 'function') return;
+
+    element.on('plotly_relayout', this.relayoutHandler);
+    this.relayoutListenerAttached = true;
+  }
+
+  private detachRelayoutListener(): void {
+    if (!this.relayoutListenerAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    element.removeListener?.('plotly_relayout', this.relayoutHandler);
+    this.relayoutListenerAttached = false;
+  }
+
+  private attachClickListener(): void {
+    if (this.clickListenerAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    if (typeof element.on !== 'function') return;
+
+    element.on('plotly_click', this.clickHandler);
+    this.clickListenerAttached = true;
+  }
+
+  private detachClickListener(): void {
+    if (!this.clickListenerAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    element.removeListener?.('plotly_click', this.clickHandler);
+    this.clickListenerAttached = false;
+  }
+
+  private extractViewport(
+    event: PlotlyRelayoutEvent
+  ): GraphViewport2D | null {
+    const xMin = this.toFiniteNumber(event['xaxis.range[0]']);
+    const xMax = this.toFiniteNumber(event['xaxis.range[1]']);
+    const yMin = this.toFiniteNumber(event['yaxis.range[0]']);
+    const yMax = this.toFiniteNumber(event['yaxis.range[1]']);
+
+    if (xMin === null || xMax === null || yMin === null || yMax === null) {
+      return null;
+    }
+
+    if (xMin >= xMax || yMin >= yMax) return null;
+
+    return { xMin, xMax, yMin, yMax };
+  }
+
+  private toFiniteNumber(value: unknown): number | null {
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  }
+
+  private extractFunctionId(event: PlotlyClickEvent): string | null {
+    const point = event.points?.[0];
+    const uid = point?.data?.uid ?? point?.fullData?.uid;
+    if (typeof uid !== 'string') return null;
+
+    const functionId = uid.trim();
+    return functionId.length > 0 ? functionId : null;
   }
 
   private createTraces(): PlotlyTrace[] {

@@ -149,6 +149,18 @@ export class GraphWorkspaceFacade {
     });
   }
 
+  resetViewport(): void {
+    if (this.sameViewport(this.snapshot.viewport, DEFAULT_GRAPH_VIEWPORT)) {
+      return;
+    }
+
+    this.commit({
+      ...this.snapshot,
+      viewport: { ...DEFAULT_GRAPH_VIEWPORT },
+      updatedAt: this.nextTimestamp(),
+    });
+  }
+
   clear(): void {
     this.commit({
       ...this.snapshot,
@@ -226,6 +238,18 @@ export class GraphWorkspaceFacade {
       Number.isFinite(viewport.yMax) &&
       viewport.xMin < viewport.xMax &&
       viewport.yMin < viewport.yMax
+    );
+  }
+
+  private sameViewport(
+    left: GraphViewport2D,
+    right: GraphViewport2D
+  ): boolean {
+    return (
+      left.xMin === right.xMin &&
+      left.xMax === right.xMax &&
+      left.yMin === right.yMin &&
+      left.yMax === right.yMax
     );
   }
 

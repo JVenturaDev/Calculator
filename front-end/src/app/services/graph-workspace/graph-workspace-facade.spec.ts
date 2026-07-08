@@ -296,6 +296,35 @@ describe('GraphWorkspaceFacade', () => {
     expect(facade.snapshot.viewport).not.toBe(viewport);
   });
 
+  it('resets an altered viewport to the default and persists it once', () => {
+    facade.addFunction('x');
+    const functionBeforeReset = facade.snapshot.functions[0];
+    const selectedFunctionId = facade.snapshot.selectedFunctionId;
+    facade.setViewport({ xMin: -20, xMax: 20, yMin: -8, yMax: 8 });
+    const updatedAtBeforeReset = facade.snapshot.updatedAt;
+    repository.save.calls.reset();
+
+    facade.resetViewport();
+
+    expect(facade.snapshot.viewport).toEqual(DEFAULT_GRAPH_VIEWPORT);
+    expect(facade.snapshot.viewport).not.toBe(DEFAULT_GRAPH_VIEWPORT);
+    expect(facade.snapshot.functions).toEqual([functionBeforeReset]);
+    expect(facade.snapshot.selectedFunctionId).toBe(selectedFunctionId);
+    expect(facade.snapshot.updatedAt.getTime())
+      .toBeGreaterThan(updatedAtBeforeReset.getTime());
+    expect(repository.save).toHaveBeenCalledOnceWith(facade.snapshot);
+  });
+
+  it('does not persist resetViewport when the viewport is already default', () => {
+    const previousState = facade.snapshot;
+    repository.save.calls.reset();
+
+    facade.resetViewport();
+
+    expect(facade.snapshot).toBe(previousState);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
   it('ignores invalid viewports', () => {
     const initialViewport = facade.snapshot.viewport;
 

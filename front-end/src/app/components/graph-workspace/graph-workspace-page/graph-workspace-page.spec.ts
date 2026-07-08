@@ -1,14 +1,26 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs';
 
 import { GraphWorkspacePageComponent } from './graph-workspace-page';
+import {
+  GraphWorkspaceInspectorSummary,
+} from '../graph-workspace-inspector/graph-workspace-inspector';
 import { GraphWorkspaceFacade } from '../../../services/graph-workspace/graph-workspace-facade';
 import {
+  GraphFunctionSample,
+} from '../../../services/graph-workspace/graph-sampling';
+import {
   GraphFunction,
+  GraphViewport2D,
   GraphWorkspaceState,
 } from '../../../services/graph-workspace/graph-workspace-state';
+import {
+  GraphWorkspaceSamplingViewModel,
+  GraphWorkspaceSamplingViewModelService,
+} from '../../../services/graph-workspace/graph-workspace-sampling-view-model';
 
 @Component({
   selector: 'app-graph-canvas-container',
@@ -17,17 +29,29 @@ import {
 })
 class GraphCanvasContainerStubComponent {}
 
+@Component({
+  selector: 'app-graph-workspace-inspector',
+  standalone: true,
+  template: '<div class="inspector-stub"></div>',
+})
+class GraphWorkspaceInspectorStubComponent {
+  @Input() selectedFunction: GraphFunction | null = null;
+  @Input() selectedSample: GraphFunctionSample | null = null;
+  @Input({ required: true }) viewport!: GraphViewport2D;
+  @Input({ required: true }) summary!: GraphWorkspaceInspectorSummary;
+  @Input() error: string | null = null;
+}
+
 describe('GraphWorkspacePageComponent', () => {
   let fixture: ComponentFixture<GraphWorkspacePageComponent>;
-  let stateSubject: BehaviorSubject<GraphWorkspaceState>;
+  let vmSubject: BehaviorSubject<GraphWorkspaceSamplingViewModel>;
   let facade: FakeGraphWorkspaceFacade;
 
   beforeEach(async () => {
-    stateSubject = new BehaviorSubject<GraphWorkspaceState>(
-      createState({ functions: [] })
+    vmSubject = new BehaviorSubject<GraphWorkspaceSamplingViewModel>(
+      createViewModel(createState({ functions: [] }))
     );
     facade = {
-      state$: stateSubject.asObservable(),
       addFunction: jasmine.createSpy('addFunction'),
       updateExpression: jasmine.createSpy('updateExpression'),
       toggleFunction: jasmine.createSpy('toggleFunction'),
@@ -38,11 +62,21 @@ describe('GraphWorkspacePageComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [GraphWorkspacePageComponent],
-      providers: [{ provide: GraphWorkspaceFacade, useValue: facade }],
+      providers: [
+        { provide: GraphWorkspaceFacade, useValue: facade },
+        {
+          provide: GraphWorkspaceSamplingViewModelService,
+          useValue: { vm$: vmSubject.asObservable() },
+        },
+      ],
     })
       .overrideComponent(GraphWorkspacePageComponent, {
         set: {
-          imports: [CommonModule, GraphCanvasContainerStubComponent],
+          imports: [
+            CommonModule,
+            GraphCanvasContainerStubComponent,
+            GraphWorkspaceInspectorStubComponent,
+          ],
         },
       })
       .compileComponents();
@@ -52,7 +86,7 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   afterEach(() => {
-    stateSubject.complete();
+    vmSubject.complete();
   });
 
   it('renders the Graph Workspace title', () => {
@@ -65,9 +99,18 @@ describe('GraphWorkspacePageComponent', () => {
       .not.toBeNull();
   });
 
+  it('renders the graph inspector', () => {
+    expect(nativeElement().querySelector('app-graph-workspace-inspector'))
+      .not.toBeNull();
+  });
+
   it('shows an empty state', () => {
     expect(nativeElement().querySelector('.graph-functions-empty')?.textContent)
       .toContain('Aún no hay funciones');
+  });
+
+  it('does not render common mojibake fragments', () => {
+    expectNoCorruptText(nativeElement().textContent ?? '');
   });
 
   it('adds a function from the toolbar button', () => {
@@ -77,10 +120,9 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('renders existing functions', () => {
-    stateSubject.next(createState({
+    emitState(createState({
       functions: [graphFunction('fn-1'), graphFunction('fn-2')],
     }));
-    fixture.detectChanges();
 
     const cards = nativeElement().querySelectorAll('.graph-function-card');
     expect(cards.length).toBe(2);
@@ -89,10 +131,9 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('updates an expression from the input', () => {
-    stateSubject.next(createState({
+    emitState(createState({
       functions: [graphFunction('fn-1')],
     }));
-    fixture.detectChanges();
 
     const input = nativeElement()
       .querySelector<HTMLInputElement>('#graph-expression-fn-1')!;
@@ -106,10 +147,9 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('toggles function visibility', () => {
-    stateSubject.next(createState({
+    emitState(createState({
       functions: [graphFunction('fn-1')],
     }));
-    fixture.detectChanges();
 
     click('[aria-label="Ocultar f1"]');
 
@@ -117,10 +157,9 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('changes the plot kind', () => {
-    stateSubject.next(createState({
+    emitState(createState({
       functions: [graphFunction('fn-1')],
     }));
-    fixture.detectChanges();
 
     const select = nativeElement()
       .querySelector<HTMLSelectElement>('select[aria-label="Tipo de gráfica para f1"]')!;
@@ -131,10 +170,9 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('removes a function', () => {
-    stateSubject.next(createState({
+    emitState(createState({
       functions: [graphFunction('fn-1')],
     }));
-    fixture.detectChanges();
 
     click('[aria-label="Eliminar f1"]');
 
@@ -142,10 +180,9 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('selects a function from the row action', () => {
-    stateSubject.next(createState({
+    emitState(createState({
       functions: [graphFunction('fn-1')],
     }));
-    fixture.detectChanges();
 
     click('[aria-label="Seleccionar f1"]');
 
@@ -153,10 +190,9 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('renders the color swatch', () => {
-    stateSubject.next(createState({
+    emitState(createState({
       functions: [graphFunction('fn-1', { color: '#ff7eb6' })],
     }));
-    fixture.detectChanges();
 
     const swatch = nativeElement()
       .querySelector<HTMLElement>('.graph-function-color')!;
@@ -164,11 +200,10 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('marks the selected function', () => {
-    stateSubject.next(createState({
+    emitState(createState({
       functions: [graphFunction('fn-1')],
       selectedFunctionId: 'fn-1',
     }));
-    fixture.detectChanges();
 
     expect(nativeElement().querySelector('.graph-function-card')
       ?.classList.contains('graph-function-card--selected')).toBeTrue();
@@ -176,11 +211,41 @@ describe('GraphWorkspacePageComponent', () => {
       ?.getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('passes selected function and sample to the inspector', () => {
+    const selectedFunction = graphFunction('fn-1');
+    const selectedSample = readySample('fn-1');
+    vmSubject.next(createViewModel(
+      createState({
+        functions: [selectedFunction],
+        selectedFunctionId: 'fn-1',
+      }),
+      {
+        samples: [selectedSample],
+        selectedFunction,
+        selectedSample,
+        readyFunctions: 1,
+      }
+    ));
+
+    fixture.detectChanges();
+
+    const inspector = fixture.debugElement.query(
+      By.directive(GraphWorkspaceInspectorStubComponent)
+    ).componentInstance as GraphWorkspaceInspectorStubComponent;
+    expect(inspector.selectedFunction).toBe(selectedFunction);
+    expect(inspector.selectedSample).toBe(selectedSample);
+    expect(inspector.summary).toEqual({
+      totalFunctions: 1,
+      visibleFunctions: 1,
+      readyFunctions: 1,
+      invalidFunctions: 0,
+    });
+  });
+
   it('uses accessible labels and button types', () => {
-    stateSubject.next(createState({
+    emitState(createState({
       functions: [graphFunction('fn-1')],
     }));
-    fixture.detectChanges();
 
     const input = nativeElement()
       .querySelector<HTMLInputElement>('#graph-expression-fn-1')!;
@@ -207,6 +272,45 @@ describe('GraphWorkspacePageComponent', () => {
 
   function nativeElement(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
+  }
+
+  function expectNoCorruptText(text: string): void {
+    const corruptFragments = [
+      `A${'\u00c3'}`,
+      `funci${'\u00c3'}`,
+      `gr${'\u00c3'}`,
+      `Expresi${'\u00c3'}`,
+    ];
+
+    for (const fragment of corruptFragments) {
+      expect(text).not.toContain(fragment);
+    }
+  }
+
+  function emitState(state: GraphWorkspaceState): void {
+    vmSubject.next(createViewModel(state));
+    fixture.detectChanges();
+  }
+
+  function createViewModel(
+    state: GraphWorkspaceState,
+    overrides: Partial<GraphWorkspaceSamplingViewModel> = {}
+  ): GraphWorkspaceSamplingViewModel {
+    return {
+      state,
+      samples: [],
+      selectedFunction: null,
+      selectedSample: null,
+      viewport: state.viewport,
+      hasFunctions: state.functions.length > 0,
+      visibleFunctions: state.functions.filter(graphFunction =>
+        graphFunction.visible
+      ).length,
+      readyFunctions: 0,
+      invalidFunctions: 0,
+      error: null,
+      ...overrides,
+    };
   }
 
   function createState(
@@ -248,10 +352,27 @@ describe('GraphWorkspacePageComponent', () => {
       ...overrides,
     };
   }
+
+  function readySample(functionId: string): GraphFunctionSample {
+    return {
+      functionId,
+      status: 'ready',
+      totalSamples: 2,
+      invalidSamples: 0,
+      trace: {
+        kind: 'line',
+        functionId,
+        label: functionId,
+        expression: 'x',
+        color: '#78a9ff',
+        x: [0, 1],
+        y: [0, 1],
+      },
+    };
+  }
 });
 
 interface FakeGraphWorkspaceFacade {
-  readonly state$: GraphWorkspaceFacade['state$'];
   readonly addFunction: jasmine.Spy;
   readonly updateExpression: jasmine.Spy;
   readonly toggleFunction: jasmine.Spy;
