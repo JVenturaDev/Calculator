@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 
+import { type GraphCanvasHover } from '../graph-canvas/graph-canvas';
 import {
   type GraphFunctionSample,
   type GraphFunctionSampleStatus,
@@ -30,6 +31,7 @@ export class GraphWorkspaceInspectorComponent {
   @Input({ required: true }) viewport!: GraphViewport2D;
   @Input({ required: true }) summary!: GraphWorkspaceInspectorSummary;
   @Input() error: string | null = null;
+  @Input() hoveredPoint: GraphCanvasHover | null = null;
 
   statusLabel(status: GraphFunctionSampleStatus | null | undefined): string {
     switch (status) {

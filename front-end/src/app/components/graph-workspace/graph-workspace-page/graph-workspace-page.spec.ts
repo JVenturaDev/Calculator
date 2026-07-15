@@ -5,6 +5,7 @@ import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs';
 
 import { GraphWorkspacePageComponent } from './graph-workspace-page';
+import { type GraphCanvasHover } from '../graph-canvas/graph-canvas';
 import {
   GraphWorkspaceInspectorSummary,
 } from '../graph-workspace-inspector/graph-workspace-inspector';
@@ -27,7 +28,9 @@ import {
   standalone: true,
   template: '<div class="canvas-stub"></div>',
 })
-class GraphCanvasContainerStubComponent {}
+class GraphCanvasContainerStubComponent {
+  hoveredPoint: GraphCanvasHover | null = null;
+}
 
 @Component({
   selector: 'app-graph-workspace-inspector',
@@ -40,6 +43,7 @@ class GraphWorkspaceInspectorStubComponent {
   @Input({ required: true }) viewport!: GraphViewport2D;
   @Input({ required: true }) summary!: GraphWorkspaceInspectorSummary;
   @Input() error: string | null = null;
+  @Input() hoveredPoint: GraphCanvasHover | null = null;
 }
 
 describe('GraphWorkspacePageComponent', () => {
@@ -240,6 +244,25 @@ describe('GraphWorkspacePageComponent', () => {
       readyFunctions: 1,
       invalidFunctions: 0,
     });
+  });
+
+  it('passes the transient hovered point from the canvas container to the inspector', () => {
+    const hoveredPoint: GraphCanvasHover = {
+      functionId: 'fn-1',
+      x: 1,
+      y: 2,
+    };
+    const canvas = fixture.debugElement.query(
+      By.directive(GraphCanvasContainerStubComponent)
+    ).componentInstance as GraphCanvasContainerStubComponent;
+    canvas.hoveredPoint = hoveredPoint;
+
+    fixture.detectChanges();
+
+    const inspector = fixture.debugElement.query(
+      By.directive(GraphWorkspaceInspectorStubComponent)
+    ).componentInstance as GraphWorkspaceInspectorStubComponent;
+    expect(inspector.hoveredPoint).toBe(hoveredPoint);
   });
 
   it('uses accessible labels and button types', () => {

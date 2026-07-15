@@ -79,6 +79,20 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+.graph-inspector__hover {
+  border-color: rgba(120, 169, 255, 0.28);
+  background:
+    linear-gradient(135deg, rgba(120, 169, 255, 0.12), transparent 52%),
+    rgba(8, 11, 18, 0.78);
+}
+
+.graph-inspector__hover h3 {
+  color: #dce8ff;
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .graph-inspector__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

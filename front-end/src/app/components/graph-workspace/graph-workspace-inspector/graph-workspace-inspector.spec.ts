@@ -4,6 +4,7 @@ import {
   GraphWorkspaceInspectorComponent,
   GraphWorkspaceInspectorSummary,
 } from './graph-workspace-inspector';
+import { type GraphCanvasHover } from '../graph-canvas/graph-canvas';
 import {
   GraphFunctionSample,
 } from '../../../services/graph-workspace/graph-sampling';
@@ -110,6 +111,69 @@ describe('GraphWorkspaceInspectorComponent', () => {
     expect(error.getAttribute('aria-live')).toBe('polite');
   });
 
+  it('hides the hovered point block when there is no hovered point', () => {
+    fixture.componentInstance.hoveredPoint = null;
+
+    fixture.detectChanges();
+
+    expect(nativeElement().textContent).not.toContain('Hovered point');
+    expect(nativeElement()
+      .querySelector('.graph-inspector__hover')).toBeNull();
+  });
+
+  it('shows hovered point data when it exists', () => {
+    fixture.componentInstance.hoveredPoint = hoveredPoint();
+
+    fixture.detectChanges();
+
+    const hover = nativeElement()
+      .querySelector<HTMLElement>('.graph-inspector__hover')!;
+    const text = hover.textContent ?? '';
+    expect(text).toContain('Hovered point');
+    expect(text).toContain('Function');
+    expect(text).toContain('fn-1');
+    expect(text).toContain('X');
+    expect(text).toContain('1.25');
+    expect(text).toContain('Y');
+    expect(text).toContain('-2.5');
+    expect(text).toContain('Z');
+    expect(text).toContain('3.75');
+    expect(text).toContain('Point index');
+    expect(text).toContain('9');
+    expect(hover.getAttribute('aria-labelledby'))
+      .toBe('graph-inspector-hover-title');
+  });
+
+  it('shows z only when it exists', () => {
+    fixture.componentInstance.hoveredPoint = {
+      functionId: 'fn-1',
+      x: 1,
+      y: 2,
+    };
+
+    fixture.detectChanges();
+
+    const text = nativeElement()
+      .querySelector<HTMLElement>('.graph-inspector__hover')!
+      .textContent ?? '';
+    expect(text).not.toContain('Z');
+  });
+
+  it('shows pointIndex only when it exists', () => {
+    fixture.componentInstance.hoveredPoint = {
+      functionId: 'fn-1',
+      x: 1,
+      y: 2,
+    };
+
+    fixture.detectChanges();
+
+    const text = nativeElement()
+      .querySelector<HTMLElement>('.graph-inspector__hover')!
+      .textContent ?? '';
+    expect(text).not.toContain('Point index');
+  });
+
   it('does not show unsupported analysis features', () => {
     const text = nativeElement().textContent ?? '';
 
@@ -188,6 +252,16 @@ describe('GraphWorkspaceInspectorComponent', () => {
         x: [0, 1],
         y: [0, 1],
       },
+    };
+  }
+
+  function hoveredPoint(): GraphCanvasHover {
+    return {
+      functionId: 'fn-1',
+      x: 1.25,
+      y: -2.5,
+      z: 3.75,
+      pointIndex: 9,
     };
   }
 });

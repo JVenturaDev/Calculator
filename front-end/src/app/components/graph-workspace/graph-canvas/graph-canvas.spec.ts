@@ -19,6 +19,11 @@ describe('GraphCanvasComponent', () => {
   let resizeCallback: ResizeObserverCallback;
   let relayoutHandler: ((event: Record<string, unknown>) => void) | undefined;
   let clickHandler: ((event: PlotlyClickEvent) => void) | undefined;
+  let legendClickHandler:
+    | ((event: PlotlyLegendClickEvent) => void)
+    | undefined;
+  let hoverHandler: ((event: PlotlyClickEvent) => void) | undefined;
+  let unhoverHandler: (() => void) | undefined;
   let originalResizeObserver: typeof ResizeObserver | undefined;
   let originalOn: unknown;
   let originalRemoveListener: unknown;
@@ -43,6 +48,16 @@ describe('GraphCanvasComponent', () => {
       if (eventName === 'plotly_relayout') relayoutHandler = handler;
       if (eventName === 'plotly_click') {
         clickHandler = handler as (event: PlotlyClickEvent) => void;
+      }
+      if (eventName === 'plotly_legendclick') {
+        legendClickHandler =
+          handler as (event: PlotlyLegendClickEvent) => void;
+      }
+      if (eventName === 'plotly_hover') {
+        hoverHandler = handler as (event: PlotlyClickEvent) => void;
+      }
+      if (eventName === 'plotly_unhover') {
+        unhoverHandler = handler as () => void;
       }
     });
     removeListener = jasmine.createSpy('removeListener');
@@ -155,6 +170,73 @@ describe('GraphCanvasComponent', () => {
     expect(traces.map(trace => trace['uid'])).toEqual(['contour-1', 'line-1']);
   });
 
+  it('keeps the existing visual style when no function is selected', async () => {
+    component.samples = [lineSample()];
+    component.selectedFunctionId = null;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const trace = latestNewPlotTrace();
+    expect(trace['opacity']).toBeUndefined();
+    expect(trace['line']).toEqual({ color: '#78a9ff', width: 2.5 });
+  });
+
+  it('emphasizes the selected line and dims the other traces', async () => {
+    component.samples = [lineSample(), contourSample()];
+    component.selectedFunctionId = 'line-1';
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const traces = latestNewPlotData();
+    const selectedLine = findTrace('line-1');
+    const otherContour = findTrace('contour-1');
+    expect(traces.map(trace => trace['uid'])).toEqual(['contour-1', 'line-1']);
+    expect(selectedLine['line']).toEqual({ color: '#78a9ff', width: 4 });
+    expect(selectedLine['opacity']).toBe(1);
+    expect(otherContour['opacity']).toBe(0.42);
+  });
+
+  it('keeps contour data intact when the contour is selected', async () => {
+    component.samples = [lineSample(), contourSample()];
+    component.selectedFunctionId = 'contour-1';
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const selectedContour = findTrace('contour-1');
+    expect(selectedContour['x']).toEqual([-1, 1]);
+    expect(selectedContour['y']).toEqual([-2, 2]);
+    expect(selectedContour['z']).toEqual([[0, 1], [2, 3]]);
+    expect(selectedContour['opacity']).toBe(1);
+  });
+
+  it('dims a non-selected contour without changing identifiers', async () => {
+    component.samples = [lineSample(), contourSample()];
+    component.selectedFunctionId = 'line-1';
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const contour = findTrace('contour-1');
+    expect(contour['opacity']).toBe(0.42);
+    expect(contour['uid']).toBe('contour-1');
+    expect(contour['legendgroup']).toBe('contour-1');
+  });
+
+  it('preserves selected line identifiers', async () => {
+    component.samples = [lineSample(), contourSample()];
+    component.selectedFunctionId = 'line-1';
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const line = findTrace('line-1');
+    expect(line['uid']).toBe('line-1');
+    expect(line['legendgroup']).toBe('line-1');
+  });
+
   it('omits hidden, empty and invalid samples', async () => {
     component.samples = [
       lineSample('hidden'),
@@ -209,6 +291,12 @@ describe('GraphCanvasComponent', () => {
       .toBe('contour-1');
     expect(on).toHaveBeenCalledWith('plotly_relayout', jasmine.any(Function));
     expect(on).toHaveBeenCalledWith('plotly_click', jasmine.any(Function));
+    expect(on).toHaveBeenCalledWith(
+      'plotly_legendclick',
+      jasmine.any(Function)
+    );
+    expect(on).toHaveBeenCalledWith('plotly_hover', jasmine.any(Function));
+    expect(on).toHaveBeenCalledWith('plotly_unhover', jasmine.any(Function));
   });
 
   it('emits viewportChange from a valid Plotly relayout event', async () => {
@@ -330,6 +418,96 @@ describe('GraphCanvasComponent', () => {
     expect(selected).toEqual(['contour-1']);
   });
 
+  it('emits functionSelect from a Plotly legend click data uid', async () => {
+    const selected: string[] = [];
+    component.functionSelect.subscribe(functionId => selected.push(functionId));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    legendClickHandler?.({
+      curveNumber: 0,
+      data: [
+        {
+          uid: 'line-1',
+        },
+      ],
+      fullData: {
+        uid: 'fallback-id',
+      },
+    });
+
+    expect(selected).toEqual(['line-1']);
+  });
+
+  it('emits functionSelect from fullData uid when legend data uid is missing', async () => {
+    const selected: string[] = [];
+    component.functionSelect.subscribe(functionId => selected.push(functionId));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    legendClickHandler?.({
+      curveNumber: 0,
+      data: [
+        {},
+      ],
+      fullData: {
+        uid: 'contour-1',
+      },
+    });
+
+    expect(selected).toEqual(['contour-1']);
+  });
+
+  it('ignores Plotly legend click events with an invalid curveNumber', async () => {
+    const emitted = spyOn(component.functionSelect, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    legendClickHandler?.({
+      curveNumber: -1,
+      data: [{ uid: 'line-1' }],
+    });
+    legendClickHandler?.({
+      curveNumber: Number.NaN,
+      data: [{ uid: 'line-1' }],
+    });
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
+  it('ignores Plotly legend click events with an empty uid', async () => {
+    const emitted = spyOn(component.functionSelect, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    legendClickHandler?.({
+      curveNumber: 0,
+      data: [{ uid: '   ' }],
+      fullData: { uid: '   ' },
+    });
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
+  it('ignores Plotly legend click events without a uid', async () => {
+    const emitted = spyOn(component.functionSelect, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    legendClickHandler?.({
+      curveNumber: 0,
+      data: [{}],
+      fullData: {},
+    });
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
   it('ignores Plotly click events without points', async () => {
     const emitted = spyOn(component.functionSelect, 'emit');
 
@@ -375,6 +553,88 @@ describe('GraphCanvasComponent', () => {
     expect(emitted).not.toHaveBeenCalled();
   });
 
+  it('emits hoverChange from a valid Plotly hover event using data uid', async () => {
+    const emitted: unknown[] = [];
+    component.hoverChange.subscribe(point => emitted.push(point));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    hoverHandler?.({
+      points: [
+        {
+          data: { uid: 'line-1' },
+          fullData: { uid: 'fallback-id' },
+          x: 1.5,
+          y: -2.25,
+          z: 4,
+          pointIndex: 12,
+        },
+      ],
+    });
+
+    expect(emitted).toEqual([{
+      functionId: 'line-1',
+      x: 1.5,
+      y: -2.25,
+      z: 4,
+      pointIndex: 12,
+    }]);
+  });
+
+  it('emits hoverChange using fullData uid when data uid is missing', async () => {
+    const emitted: unknown[] = [];
+    component.hoverChange.subscribe(point => emitted.push(point));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    hoverHandler?.({
+      points: [
+        {
+          fullData: { uid: 'contour-1' },
+          x: 2,
+          y: 3,
+          pointNumber: 7,
+        },
+      ],
+    });
+
+    expect(emitted).toEqual([{
+      functionId: 'contour-1',
+      x: 2,
+      y: 3,
+      pointIndex: 7,
+    }]);
+  });
+
+  it('ignores invalid Plotly hover events', async () => {
+    const emitted = spyOn(component.hoverChange, 'emit');
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    hoverHandler?.({});
+    hoverHandler?.({ points: [{ data: { uid: '' }, x: 1, y: 2 }] });
+    hoverHandler?.({ points: [{ data: { uid: 123 }, x: 1, y: 2 }] });
+    hoverHandler?.({ points: [{ data: { uid: 'line-1' }, x: Number.NaN, y: 2 }] });
+    hoverHandler?.({ points: [{ data: { uid: 'line-1' }, x: 1, y: Number.POSITIVE_INFINITY }] });
+
+    expect(emitted).not.toHaveBeenCalled();
+  });
+
+  it('emits null on Plotly unhover', async () => {
+    const emitted: unknown[] = [];
+    component.hoverChange.subscribe(point => emitted.push(point));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    unhoverHandler?.();
+
+    expect(emitted).toEqual([null]);
+  });
+
   it('resizes without rendering again', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
@@ -405,6 +665,18 @@ describe('GraphCanvasComponent', () => {
     );
     expect(removeListener).toHaveBeenCalledWith(
       'plotly_click',
+      jasmine.any(Function)
+    );
+    expect(removeListener).toHaveBeenCalledWith(
+      'plotly_legendclick',
+      jasmine.any(Function)
+    );
+    expect(removeListener).toHaveBeenCalledWith(
+      'plotly_hover',
+      jasmine.any(Function)
+    );
+    expect(removeListener).toHaveBeenCalledWith(
+      'plotly_unhover',
       jasmine.any(Function)
     );
     expect(purge).toHaveBeenCalledOnceWith(container);
@@ -507,6 +779,12 @@ describe('GraphCanvasComponent', () => {
     return latestNewPlotData()[0];
   }
 
+  function findTrace(uid: string): Record<string, unknown> {
+    const trace = latestNewPlotData().find(trace => trace['uid'] === uid);
+    if (!trace) fail(`Expected trace ${uid}`);
+    return trace!;
+  }
+
   function latestNewPlotLayout(): Record<string, unknown> {
     return newPlot.calls.mostRecent().args[2] as Record<string, unknown>;
   }
@@ -531,5 +809,20 @@ interface PlotlyClickEvent {
   readonly points?: readonly {
     readonly data?: { readonly uid?: unknown };
     readonly fullData?: { readonly uid?: unknown };
+    readonly x?: unknown;
+    readonly y?: unknown;
+    readonly z?: unknown;
+    readonly pointIndex?: unknown;
+    readonly pointNumber?: unknown;
   }[];
+}
+
+interface PlotlyLegendClickEvent {
+  readonly curveNumber?: unknown;
+  readonly data?: readonly {
+    readonly uid?: unknown;
+  }[];
+  readonly fullData?: {
+    readonly uid?: unknown;
+  };
 }

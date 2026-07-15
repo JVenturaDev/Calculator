@@ -18,6 +18,37 @@
     {{ error }}
   </p>
 
+  <article
+    *ngIf="hoveredPoint"
+    class="graph-inspector__card graph-inspector__hover"
+    aria-labelledby="graph-inspector-hover-title"
+  >
+    <h3 id="graph-inspector-hover-title">Hovered point</h3>
+
+    <dl class="graph-inspector__grid">
+      <div>
+        <dt>Function</dt>
+        <dd>{{ hoveredPoint.functionId }}</dd>
+      </div>
+      <div>
+        <dt>X</dt>
+        <dd>{{ hoveredPoint.x }}</dd>
+      </div>
+      <div>
+        <dt>Y</dt>
+        <dd>{{ hoveredPoint.y }}</dd>
+      </div>
+      <div *ngIf="hoveredPoint.z !== undefined">
+        <dt>Z</dt>
+        <dd>{{ hoveredPoint.z }}</dd>
+      </div>
+      <div *ngIf="hoveredPoint.pointIndex !== undefined">
+        <dt>Point index</dt>
+        <dd>{{ hoveredPoint.pointIndex }}</dd>
+      </div>
+    </dl>
+  </article>
+
   <ng-container *ngIf="selectedFunction; else viewportSummary">
     <article class="graph-inspector__card">
       <div class="graph-inspector__function">

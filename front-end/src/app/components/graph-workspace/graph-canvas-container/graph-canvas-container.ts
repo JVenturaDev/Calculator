@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, Input } from '@angular/core';
 
-import { GraphCanvasComponent } from '../graph-canvas/graph-canvas';
+import {
+  GraphCanvasComponent,
+  type GraphCanvasHover,
+} from '../graph-canvas/graph-canvas';
 import { GraphWorkspaceFacade } from '../../../services/graph-workspace/graph-workspace-facade';
 import { GraphWorkspaceSamplingViewModelService } from '../../../services/graph-workspace/graph-workspace-sampling-view-model';
 import {
@@ -22,6 +25,7 @@ export class GraphCanvasContainerComponent {
   @Input() ariaLabel = 'Graph Workspace canvas';
 
   readonly vm$ = this.viewModel.vm$;
+  hoveredPoint: GraphCanvasHover | null = null;
 
   resetViewport(): void {
     this.facade.resetViewport();
@@ -29,6 +33,10 @@ export class GraphCanvasContainerComponent {
 
   selectFunction(functionId: string): void {
     this.facade.selectFunction(functionId);
+  }
+
+  onHoverChange(point: GraphCanvasHover | null): void {
+    this.hoveredPoint = point;
   }
 
   onViewportChange(

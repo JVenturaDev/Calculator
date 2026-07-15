@@ -17,8 +17,10 @@
     <app-graph-canvas
       [samples]="vm.samples"
       [viewport]="vm.viewport"
+      [selectedFunctionId]="vm.state.selectedFunctionId"
       [ariaLabel]="ariaLabel"
       (functionSelect)="selectFunction($event)"
+      (hoverChange)="onHoverChange($event)"
       (viewportChange)="onViewportChange($event, vm.viewport)"
     ></app-graph-canvas>
 

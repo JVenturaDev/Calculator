@@ -5,6 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 
 import { GraphCanvasContainerComponent } from './graph-canvas-container';
+import { type GraphCanvasHover } from '../graph-canvas/graph-canvas';
 import { GraphWorkspaceFacade } from '../../../services/graph-workspace/graph-workspace-facade';
 import {
   type GraphFunctionSample,
@@ -26,9 +27,11 @@ import {
 class GraphCanvasStubComponent {
   @Input() samples: readonly GraphFunctionSample[] = [];
   @Input({ required: true }) viewport!: GraphViewport2D;
+  @Input() selectedFunctionId: string | null = null;
   @Input() ariaLabel = 'Graph Workspace canvas';
   @Output() readonly viewportChange = new EventEmitter<GraphViewport2D>();
   @Output() readonly functionSelect = new EventEmitter<string>();
+  @Output() readonly hoverChange = new EventEmitter<GraphCanvasHover | null>();
 }
 
 describe('GraphCanvasContainerComponent', () => {
@@ -79,13 +82,17 @@ describe('GraphCanvasContainerComponent', () => {
 
   it('consumes the shared view model and passes samples and viewport to the canvas', () => {
     const samples = [readySample('fn-1')];
-    vmSubject.next(createViewModel({ samples }));
+    vmSubject.next(createViewModel({
+      samples,
+      state: createState({ selectedFunctionId: 'fn-1' }),
+    }));
 
     fixture.detectChanges();
 
     const canvas = getCanvas();
     expect(canvas.samples).toBe(samples);
     expect(canvas.viewport).toBe(viewport);
+    expect(canvas.selectedFunctionId).toBe('fn-1');
   });
 
   it('keeps the ariaLabel input', () => {
@@ -169,6 +176,37 @@ describe('GraphCanvasContainerComponent', () => {
     expect(facade.setViewport).not.toHaveBeenCalled();
   });
 
+  it('stores hoveredPoint emitted by the canvas without calling the facade', () => {
+    fixture.detectChanges();
+
+    const hoveredPoint: GraphCanvasHover = {
+      functionId: 'fn-1',
+      x: 1,
+      y: 2,
+      z: 3,
+      pointIndex: 4,
+    };
+    getCanvas().hoverChange.emit(hoveredPoint);
+
+    expect(fixture.componentInstance.hoveredPoint).toBe(hoveredPoint);
+    expect(facade.selectFunction).not.toHaveBeenCalled();
+    expect(facade.setViewport).not.toHaveBeenCalled();
+    expect(facade.resetViewport).not.toHaveBeenCalled();
+  });
+
+  it('clears hoveredPoint when the canvas emits null', () => {
+    fixture.componentInstance.hoveredPoint = {
+      functionId: 'fn-1',
+      x: 1,
+      y: 2,
+    };
+    fixture.detectChanges();
+
+    getCanvas().hoverChange.emit(null);
+
+    expect(fixture.componentInstance.hoveredPoint).toBeNull();
+  });
+
   it('ignores viewportChange when it matches the current viewport', () => {
     fixture.detectChanges();
 
@@ -239,7 +277,9 @@ describe('GraphCanvasContainerComponent', () => {
     };
   }
 
-  function createState(): GraphWorkspaceState {
+  function createState(
+    overrides: Partial<GraphWorkspaceState> = {}
+  ): GraphWorkspaceState {
     const timestamp = new Date('2026-01-01T00:00:00.000Z');
     return {
       version: 1,
@@ -250,6 +290,7 @@ describe('GraphCanvasContainerComponent', () => {
       viewport,
       createdAt: timestamp,
       updatedAt: timestamp,
+      ...overrides,
     };
   }
 

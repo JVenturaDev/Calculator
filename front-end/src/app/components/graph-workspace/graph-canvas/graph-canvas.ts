@@ -23,9 +23,22 @@ type PlotlyRelayoutEvent = Record<string, unknown>;
 type PlotlyClickPoint = {
   readonly data?: { readonly uid?: unknown };
   readonly fullData?: { readonly uid?: unknown };
+  readonly x?: unknown;
+  readonly y?: unknown;
+  readonly z?: unknown;
+  readonly pointIndex?: unknown;
+  readonly pointNumber?: unknown;
 };
 type PlotlyClickEvent = {
   readonly points?: readonly PlotlyClickPoint[];
+};
+type PlotlyLegendClickTrace = {
+  readonly uid?: unknown;
+};
+type PlotlyLegendClickEvent = {
+  readonly curveNumber?: unknown;
+  readonly data?: readonly PlotlyLegendClickTrace[];
+  readonly fullData?: PlotlyLegendClickTrace;
 };
 type PlotlyEventTarget = HTMLDivElement & {
   on?: PlotlyEventRegistrar;
@@ -34,7 +47,18 @@ type PlotlyEventTarget = HTMLDivElement & {
 type PlotlyEventRegistrar = {
   (eventName: 'plotly_relayout', handler: (event: PlotlyRelayoutEvent) => void): void;
   (eventName: 'plotly_click', handler: (event: PlotlyClickEvent) => void): void;
+  (eventName: 'plotly_legendclick', handler: (event: PlotlyLegendClickEvent) => void): void;
+  (eventName: 'plotly_hover', handler: (event: PlotlyClickEvent) => void): void;
+  (eventName: 'plotly_unhover', handler: () => void): void;
 };
+
+export interface GraphCanvasHover {
+  readonly functionId: string;
+  readonly x: number;
+  readonly y: number;
+  readonly z?: number;
+  readonly pointIndex?: number;
+}
 
 @Component({
   selector: 'app-graph-canvas',
@@ -48,9 +72,11 @@ export class GraphCanvasComponent
 {
   @Input() samples: readonly GraphFunctionSample[] = [];
   @Input({ required: true }) viewport!: GraphViewport2D;
+  @Input() selectedFunctionId: string | null = null;
   @Input() ariaLabel = 'Graph Workspace canvas';
   @Output() readonly viewportChange = new EventEmitter<GraphViewport2D>();
   @Output() readonly functionSelect = new EventEmitter<string>();
+  @Output() readonly hoverChange = new EventEmitter<GraphCanvasHover | null>();
 
   @ViewChild('plotContainer', { static: true })
   private plotContainer!: ElementRef<HTMLDivElement>;
@@ -62,6 +88,8 @@ export class GraphCanvasComponent
   private renderRevision = 0;
   private relayoutListenerAttached = false;
   private clickListenerAttached = false;
+  private legendClickListenerAttached = false;
+  private hoverListenersAttached = false;
 
   private readonly relayoutHandler = (event: PlotlyRelayoutEvent): void => {
     const viewport = this.extractViewport(event);
@@ -71,6 +99,20 @@ export class GraphCanvasComponent
   private readonly clickHandler = (event: PlotlyClickEvent): void => {
     const functionId = this.extractFunctionId(event);
     if (functionId) this.functionSelect.emit(functionId);
+  };
+
+  private readonly legendClickHandler = (event: PlotlyLegendClickEvent): void => {
+    const functionId = this.extractLegendFunctionId(event);
+    if (functionId) this.functionSelect.emit(functionId);
+  };
+
+  private readonly hoverHandler = (event: PlotlyClickEvent): void => {
+    const hover = this.extractHover(event);
+    if (hover) this.hoverChange.emit(hover);
+  };
+
+  private readonly unhoverHandler = (): void => {
+    this.hoverChange.emit(null);
   };
 
   private readonly plotConfig: PlotlyConfig = {
@@ -87,7 +129,12 @@ export class GraphCanvasComponent
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.viewReady) return;
-    if (changes['samples'] || changes['viewport'] || changes['ariaLabel']) {
+    if (
+      changes['samples'] ||
+      changes['viewport'] ||
+      changes['selectedFunctionId'] ||
+      changes['ariaLabel']
+    ) {
       void this.renderPlot();
     }
   }
@@ -96,6 +143,8 @@ export class GraphCanvasComponent
     this.destroyed = true;
     this.detachRelayoutListener();
     this.detachClickListener();
+    this.detachLegendClickListener();
+    this.detachHoverListeners();
     this.resizeObserver?.disconnect();
     this.plotReady = false;
     Plotly.purge(this.plotContainer.nativeElement);
@@ -119,6 +168,8 @@ export class GraphCanvasComponent
     if (this.destroyed || revision !== this.renderRevision) return;
     this.attachRelayoutListener();
     this.attachClickListener();
+    this.attachLegendClickListener();
+    this.attachHoverListeners();
   }
 
   private attachRelayoutListener(): void {
@@ -157,6 +208,44 @@ export class GraphCanvasComponent
     this.clickListenerAttached = false;
   }
 
+  private attachLegendClickListener(): void {
+    if (this.legendClickListenerAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    if (typeof element.on !== 'function') return;
+
+    element.on('plotly_legendclick', this.legendClickHandler);
+    this.legendClickListenerAttached = true;
+  }
+
+  private detachLegendClickListener(): void {
+    if (!this.legendClickListenerAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    element.removeListener?.('plotly_legendclick', this.legendClickHandler);
+    this.legendClickListenerAttached = false;
+  }
+
+  private attachHoverListeners(): void {
+    if (this.hoverListenersAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    if (typeof element.on !== 'function') return;
+
+    element.on('plotly_hover', this.hoverHandler);
+    element.on('plotly_unhover', this.unhoverHandler);
+    this.hoverListenersAttached = true;
+  }
+
+  private detachHoverListeners(): void {
+    if (!this.hoverListenersAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    element.removeListener?.('plotly_hover', this.hoverHandler);
+    element.removeListener?.('plotly_unhover', this.unhoverHandler);
+    this.hoverListenersAttached = false;
+  }
+
   private extractViewport(
     event: PlotlyRelayoutEvent
   ): GraphViewport2D | null {
@@ -187,11 +276,58 @@ export class GraphCanvasComponent
     return functionId.length > 0 ? functionId : null;
   }
 
+  private extractLegendFunctionId(
+    event: PlotlyLegendClickEvent
+  ): string | null {
+    const curveNumber = this.toCurveIndex(event.curveNumber);
+    if (curveNumber === null) return null;
+
+    const dataUid = event.data?.[curveNumber]?.uid;
+    const fullDataUid = event.fullData?.uid;
+    const uid = dataUid ?? fullDataUid;
+    if (typeof uid !== 'string') return null;
+
+    const functionId = uid.trim();
+    return functionId.length > 0 ? functionId : null;
+  }
+
+  private toCurveIndex(value: unknown): number | null {
+    return typeof value === 'number' && Number.isInteger(value) && value >= 0
+      ? value
+      : null;
+  }
+
+  private extractHover(event: PlotlyClickEvent): GraphCanvasHover | null {
+    const point = event.points?.[0];
+    const functionId = this.extractFunctionId(event);
+    if (!point || !functionId) return null;
+
+    const x = this.toFiniteNumber(point.x);
+    const y = this.toFiniteNumber(point.y);
+    if (x === null || y === null) return null;
+
+    const z = this.toFiniteNumber(point.z);
+    const pointIndex = this.toFiniteNumber(
+      point.pointIndex ?? point.pointNumber
+    );
+
+    return {
+      functionId,
+      x,
+      y,
+      ...(z !== null ? { z } : {}),
+      ...(pointIndex !== null ? { pointIndex } : {}),
+    };
+  }
+
   private createTraces(): PlotlyTrace[] {
-    return this.samples.reduce<PlotlyTrace[]>((traces, sample) => {
+    const traces = this.samples.reduce<PlotlyTrace[]>((traces, sample) => {
       if (sample.status !== 'ready' || !sample.trace) return traces;
 
         const trace = sample.trace;
+        const isSelected = trace.functionId === this.selectedFunctionId;
+        const hasSelection = this.selectedFunctionId !== null;
+        const opacity = isSelected ? 1 : 0.42;
 
         if (trace.kind === 'line') {
           traces.push({
@@ -202,9 +338,10 @@ export class GraphCanvasComponent
             name: trace.label,
             uid: trace.functionId,
             legendgroup: trace.functionId,
+            ...(hasSelection ? { opacity } : {}),
             line: {
               color: trace.color,
-              width: 2.5,
+              width: isSelected ? 4 : 2.5,
             },
             connectgaps: false,
           });
@@ -219,6 +356,7 @@ export class GraphCanvasComponent
           name: trace.label,
           uid: trace.functionId,
           legendgroup: trace.functionId,
+          ...(hasSelection ? { opacity } : {}),
           colorscale: [
             [0, trace.color],
             [1, trace.color],
@@ -230,6 +368,23 @@ export class GraphCanvasComponent
         });
         return traces;
       }, []);
+
+    return this.selectedFunctionId === null
+      ? traces
+      : this.moveSelectedTraceToEnd(traces);
+  }
+
+  private moveSelectedTraceToEnd(traces: PlotlyTrace[]): PlotlyTrace[] {
+    const selectedIndex = traces.findIndex(
+      trace => trace['uid'] === this.selectedFunctionId
+    );
+    if (selectedIndex < 0) return traces;
+
+    return [
+      ...traces.slice(0, selectedIndex),
+      ...traces.slice(selectedIndex + 1),
+      traces[selectedIndex],
+    ];
   }
 
   private createLayout(): PlotlyLayout {

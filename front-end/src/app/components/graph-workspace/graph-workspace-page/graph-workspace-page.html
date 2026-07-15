@@ -23,6 +23,7 @@
   <ng-container *ngIf="vm$ | async as vm">
     <section class="graph-workspace-canvas" aria-label="Canvas gráfico">
       <app-graph-canvas-container
+        #graphCanvasContainer
         ariaLabel="Graph Workspace canvas"
       ></app-graph-canvas-container>
     </section>
@@ -147,6 +148,7 @@
           invalidFunctions: vm.invalidFunctions
         }"
         [error]="vm.error"
+        [hoveredPoint]="graphCanvasContainer.hoveredPoint"
       ></app-graph-workspace-inspector>
     </section>
   </ng-container>
