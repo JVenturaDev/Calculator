@@ -69,6 +69,19 @@ describe('GraphFunctionSamplerService', () => {
     }
   });
 
+  it('marks line functions that use y as unsupported without sampling', () => {
+    const sample = service.sampleFunction(
+      createFunction({ expression: 'x + y' }),
+      viewport
+    );
+
+    expect(sample.status).toBe('unsupported');
+    expect(sample.trace).toBeNull();
+    expect(sample.totalSamples).toBe(0);
+    expect(sample.invalidSamples).toBe(0);
+    expect(engine.evaluate).not.toHaveBeenCalled();
+  });
+
   it('samples a contour on a sixty-four by sixty-four grid', () => {
     const sample = service.sampleFunction(
       createFunction({ plotKind: 'contour' }),

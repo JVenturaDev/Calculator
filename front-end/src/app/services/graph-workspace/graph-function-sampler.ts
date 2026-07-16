@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@angular/core';
+import { inject, Inject, Injectable } from '@angular/core';
 import Complex from 'complex.js';
 
 import {
   CALCULATION_ENGINE,
   type CalculationEngine,
 } from '../engine-services/calculation-engine.contract';
+import { GraphVariableDetectorService } from '../polish-services/graph-variable-detector';
 import type {
   GraphFunction,
   GraphViewport2D,
@@ -24,6 +25,8 @@ interface SampledValue {
 
 @Injectable({ providedIn: 'root' })
 export class GraphFunctionSamplerService {
+  private readonly variableDetector = inject(GraphVariableDetectorService);
+
   constructor(
     @Inject(CALCULATION_ENGINE)
     private readonly engine: CalculationEngine
@@ -56,6 +59,12 @@ export class GraphFunctionSamplerService {
     }
     if (!graphFunction.expression.trim()) {
       return this.withoutTrace(graphFunction.id, 'empty');
+    }
+    if (
+      graphFunction.plotKind === 'line' &&
+      this.variableDetector.detect(graphFunction.expression).hasY
+    ) {
+      return this.withoutTrace(graphFunction.id, 'unsupported');
     }
 
     switch (graphFunction.plotKind) {
@@ -201,7 +210,7 @@ export class GraphFunctionSamplerService {
 
   private withoutTrace(
     functionId: string,
-    status: 'hidden' | 'empty'
+    status: 'hidden' | 'empty' | 'unsupported'
   ): GraphFunctionSample {
     return {
       functionId,

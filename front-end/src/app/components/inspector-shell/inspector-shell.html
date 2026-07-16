@@ -110,7 +110,9 @@
       aria-labelledby="inspector-tab-graph"
       [hidden]="activeView !== 'graph'"
     >
-      <app-graphic-plot *ngIf="activeView === 'graph'"></app-graphic-plot>
+      <app-graphic-quick-plot-shell
+        *ngIf="activeView === 'graph'"
+      ></app-graphic-quick-plot-shell>
     </section>
   </div>
 </aside>

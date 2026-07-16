@@ -357,6 +357,7 @@ describe('GraphWorkspacePageComponent', () => {
       visibleFunctions: 1,
       readyFunctions: 1,
       invalidFunctions: 0,
+      unsupportedFunctions: 0,
     });
   });
 
@@ -477,6 +478,7 @@ describe('GraphWorkspacePageComponent', () => {
       ).length,
       readyFunctions: 0,
       invalidFunctions: 0,
+      unsupportedFunctions: 0,
       error: null,
       ...overrides,
     };

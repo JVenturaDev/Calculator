@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
 import { ToggleService } from '../../services/toggle-services/toggle';
-import { GraphicComponentPlot } from '../graphic-plot/graphic-plot';
+import { GraphicQuickPlotShellComponent } from '../graphic-quick-plot-shell/graphic-quick-plot-shell';
 import { HistoryComponent } from '../history/history';
 import { MemoryComponent } from '../memory/memory';
 import { InspectorShellComponent } from './inspector-shell';
@@ -26,11 +26,11 @@ class HistoryStubComponent {}
 class MemoryStubComponent {}
 
 @Component({
-  selector: 'app-graphic-plot',
+  selector: 'app-graphic-quick-plot-shell',
   standalone: true,
   template: '<p data-testid="graph-content">Graph content</p>',
 })
-class GraphicPlotStubComponent {}
+class GraphicQuickPlotShellStubComponent {}
 
 describe('InspectorShellComponent', () => {
   let component: InspectorShellComponent;
@@ -78,9 +78,19 @@ describe('InspectorShellComponent', () => {
       ],
     })
       .overrideComponent(InspectorShellComponent, {
-        remove: { imports: [HistoryComponent, MemoryComponent, GraphicComponentPlot] },
+        remove: {
+          imports: [
+            HistoryComponent,
+            MemoryComponent,
+            GraphicQuickPlotShellComponent,
+          ],
+        },
         add: {
-          imports: [HistoryStubComponent, MemoryStubComponent, GraphicPlotStubComponent],
+          imports: [
+            HistoryStubComponent,
+            MemoryStubComponent,
+            GraphicQuickPlotShellStubComponent,
+          ],
         },
       })
       .compileComponents();

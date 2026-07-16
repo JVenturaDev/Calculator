@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
 
 import { MemoryToggleService } from '../../services/memory-services/memory-toggle';
 import { ToggleService } from '../../services/toggle-services/toggle';
-import { GraphicComponentPlot } from '../graphic-plot/graphic-plot';
+import { GraphicQuickPlotShellComponent } from '../graphic-quick-plot-shell/graphic-quick-plot-shell';
 import { HistoryComponent } from '../history/history';
 import { MemoryComponent } from '../memory/memory';
 
@@ -21,7 +21,12 @@ type PersistentInspectorView = Exclude<InspectorView, 'memory'>;
 @Component({
   selector: 'app-inspector-shell',
   standalone: true,
-  imports: [CommonModule, HistoryComponent, MemoryComponent, GraphicComponentPlot],
+  imports: [
+    CommonModule,
+    HistoryComponent,
+    MemoryComponent,
+    GraphicQuickPlotShellComponent,
+  ],
   templateUrl: './inspector-shell.html',
   styleUrls: ['./inspector-shell.css'],
 })

@@ -22,6 +22,7 @@ export interface GraphWorkspaceSamplingViewModel {
   readonly visibleFunctions: number;
   readonly readyFunctions: number;
   readonly invalidFunctions: number;
+  readonly unsupportedFunctions: number;
   readonly error: string | null;
 }
 
@@ -81,6 +82,9 @@ export class GraphWorkspaceSamplingViewModelService {
         .length,
       invalidFunctions: samples.filter(sample => sample.status === 'invalid')
         .length,
+      unsupportedFunctions: samples.filter(
+        sample => sample.status === 'unsupported'
+      ).length,
       error,
     };
   }

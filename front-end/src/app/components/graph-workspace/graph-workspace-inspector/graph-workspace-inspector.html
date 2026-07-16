@@ -88,7 +88,21 @@
           <dt>Inválidas</dt>
           <dd>{{ selectedSample?.invalidSamples ?? 0 }}</dd>
         </div>
+        <div *ngIf="summary.unsupportedFunctions > 0">
+          <dt>Incompatibles</dt>
+          <dd>{{ summary.unsupportedFunctions }}</dd>
+        </div>
       </dl>
+
+      <p
+        *ngIf="selectedSample?.status === 'unsupported'"
+        class="graph-inspector__sample-error graph-inspector__compatibility"
+        role="status"
+        aria-live="polite"
+      >
+        Las funciones Line solo pueden usar x. Cambia el tipo a Contour para
+        usar x e y.
+      </p>
 
       <p
         *ngIf="selectedSample?.firstError"
@@ -121,6 +135,10 @@
         <div>
           <dt>Inválidas</dt>
           <dd>{{ summary.invalidFunctions }}</dd>
+        </div>
+        <div>
+          <dt>Incompatibles</dt>
+          <dd>{{ summary.unsupportedFunctions }}</dd>
         </div>
         <div>
           <dt>X</dt>

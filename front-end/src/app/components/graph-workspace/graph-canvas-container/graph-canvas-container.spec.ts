@@ -272,6 +272,7 @@ describe('GraphCanvasContainerComponent', () => {
       visibleFunctions: 0,
       readyFunctions: 0,
       invalidFunctions: 0,
+      unsupportedFunctions: 0,
       error: null,
       ...overrides,
     };

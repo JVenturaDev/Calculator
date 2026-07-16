@@ -168,12 +168,17 @@ describe('GraphWorkspaceSamplingViewModelService', () => {
       readySample('fn-1'),
       statusSample('invalid', 'fn-2'),
       statusSample('hidden', 'fn-3'),
+      statusSample('unsupported', 'fn-4'),
     ]);
     stateSubject.next(createState({
       functions: [
         graphFunction('fn-1'),
         graphFunction('fn-2'),
         graphFunction('fn-3', { visible: false }),
+        graphFunction('fn-4', {
+          plotKind: 'line',
+          expression: 'x + y',
+        }),
       ],
     }));
     let counts:
@@ -181,6 +186,7 @@ describe('GraphWorkspaceSamplingViewModelService', () => {
           visibleFunctions: number;
           readyFunctions: number;
           invalidFunctions: number;
+          unsupportedFunctions: number;
         }
       | undefined;
 
@@ -189,14 +195,16 @@ describe('GraphWorkspaceSamplingViewModelService', () => {
         visibleFunctions: vm.visibleFunctions,
         readyFunctions: vm.readyFunctions,
         invalidFunctions: vm.invalidFunctions,
+        unsupportedFunctions: vm.unsupportedFunctions,
       };
     });
     tick(100);
 
     expect(counts).toEqual({
-      visibleFunctions: 2,
+      visibleFunctions: 3,
       readyFunctions: 1,
       invalidFunctions: 1,
+      unsupportedFunctions: 1,
     });
   }));
 
@@ -270,7 +278,7 @@ describe('GraphWorkspaceSamplingViewModelService', () => {
   }
 
   function statusSample(
-    status: 'hidden' | 'empty' | 'invalid',
+    status: 'hidden' | 'empty' | 'invalid' | 'unsupported',
     functionId: string
   ): GraphFunctionSample {
     return {

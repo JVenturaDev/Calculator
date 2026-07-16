@@ -16,6 +16,7 @@ export interface GraphWorkspaceInspectorSummary {
   readonly visibleFunctions: number;
   readonly readyFunctions: number;
   readonly invalidFunctions: number;
+  readonly unsupportedFunctions: number;
 }
 
 @Component({
@@ -43,6 +44,8 @@ export class GraphWorkspaceInspectorComponent {
         return 'Vacía';
       case 'invalid':
         return 'Inválida';
+      case 'unsupported':
+        return 'Incompatible';
       default:
         return 'Sin muestra';
     }

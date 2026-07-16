@@ -27,6 +27,7 @@ describe('GraphWorkspaceInspectorComponent', () => {
     visibleFunctions: 2,
     readyFunctions: 1,
     invalidFunctions: 1,
+    unsupportedFunctions: 1,
   };
 
   beforeEach(async () => {
@@ -191,6 +192,27 @@ describe('GraphWorkspaceInspectorComponent', () => {
     expect(text).not.toContain('export');
     expect(text).not.toContain('filter');
     expect(text).not.toContain('variables');
+  });
+
+  it('shows the 2D compatibility warning for line functions that use y', () => {
+    fixture.componentInstance.selectedFunction = graphFunction({
+      plotKind: 'line',
+      expression: 'x + y',
+    });
+    fixture.componentInstance.selectedSample = {
+      ...readySample(),
+      status: 'unsupported',
+      trace: null,
+    };
+
+    fixture.detectChanges();
+
+    const compatibility = nativeElement()
+      .querySelector<HTMLElement>('.graph-inspector__compatibility');
+
+    expect(compatibility?.textContent)
+      .toContain('Line solo pueden usar x');
+    expect(nativeElement().textContent).toContain('Incompatibles');
   });
 
   it('uses headings for the inspector structure', () => {

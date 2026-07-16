@@ -5,7 +5,8 @@ export type GraphFunctionSampleStatus =
   | 'ready'
   | 'hidden'
   | 'empty'
-  | 'invalid';
+  | 'invalid'
+  | 'unsupported';
 
 interface GraphTraceBase {
   readonly functionId: string;
