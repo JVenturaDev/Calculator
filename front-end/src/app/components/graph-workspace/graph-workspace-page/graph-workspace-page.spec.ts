@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 import { GraphWorkspacePageComponent } from './graph-workspace-page';
 import { type GraphCanvasHover } from '../graph-canvas/graph-canvas';
@@ -33,6 +33,15 @@ class GraphCanvasContainerStubComponent {
 }
 
 @Component({
+  selector: 'app-graph-canvas-container-3d',
+  standalone: true,
+  template: '<div class="canvas-3d-stub"></div>',
+})
+class GraphCanvasContainer3DStubComponent {
+  @Input() ariaLabel = '';
+}
+
+@Component({
   selector: 'app-graph-workspace-inspector',
   standalone: true,
   template: '<div class="inspector-stub"></div>',
@@ -48,14 +57,19 @@ class GraphWorkspaceInspectorStubComponent {
 
 describe('GraphWorkspacePageComponent', () => {
   let fixture: ComponentFixture<GraphWorkspacePageComponent>;
+  let stateSubject: BehaviorSubject<GraphWorkspaceState>;
   let vmSubject: BehaviorSubject<GraphWorkspaceSamplingViewModel>;
   let facade: FakeGraphWorkspaceFacade;
 
   beforeEach(async () => {
+    stateSubject = new BehaviorSubject<GraphWorkspaceState>(
+      createState({ functions: [] })
+    );
     vmSubject = new BehaviorSubject<GraphWorkspaceSamplingViewModel>(
       createViewModel(createState({ functions: [] }))
     );
     facade = {
+      state$: stateSubject.asObservable(),
       addFunction: jasmine.createSpy('addFunction'),
       updateExpression: jasmine.createSpy('updateExpression'),
       updateLabel: jasmine.createSpy('updateLabel'),
@@ -64,6 +78,8 @@ describe('GraphWorkspacePageComponent', () => {
       setPlotKind: jasmine.createSpy('setPlotKind'),
       removeFunction: jasmine.createSpy('removeFunction'),
       selectFunction: jasmine.createSpy('selectFunction'),
+      setViewMode: jasmine.createSpy('setViewMode'),
+      clear: jasmine.createSpy('clear'),
     };
 
     await TestBed.configureTestingModule({
@@ -81,6 +97,7 @@ describe('GraphWorkspacePageComponent', () => {
           imports: [
             CommonModule,
             GraphCanvasContainerStubComponent,
+            GraphCanvasContainer3DStubComponent,
             GraphWorkspaceInspectorStubComponent,
           ],
         },
@@ -93,6 +110,7 @@ describe('GraphWorkspacePageComponent', () => {
 
   afterEach(() => {
     vmSubject.complete();
+    stateSubject.complete();
   });
 
   it('renders the Graph Workspace title', () => {
@@ -102,6 +120,64 @@ describe('GraphWorkspacePageComponent', () => {
 
   it('renders GraphCanvasContainerComponent', () => {
     expect(nativeElement().querySelector('app-graph-canvas-container'))
+      .not.toBeNull();
+  });
+
+  it('renders the 2D/3D mode toolbar', () => {
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('.gw-mode-switch__button')
+    );
+
+    expect(buttons.length).toBe(2);
+    expect(buttons[0].textContent?.trim()).toBe('2D');
+    expect(buttons[1].textContent?.trim()).toBe('3D');
+  });
+
+  it('marks the active visual mode', () => {
+    emitState(createState({ functions: [], viewMode: '3d' }));
+
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('.gw-mode-switch__button')
+    );
+
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('false');
+    expect(buttons[1].getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('switches to 2D from the toolbar', () => {
+    click('.gw-mode-switch__button:first-of-type');
+
+    expect(facade.setViewMode).toHaveBeenCalledOnceWith('2d');
+  });
+
+  it('switches to 3D from the toolbar', () => {
+    click('.gw-mode-switch__button:last-of-type');
+
+    expect(facade.setViewMode).toHaveBeenCalledOnceWith('3d');
+  });
+
+  it('does not clear the workspace when changing the mode', () => {
+    click('.gw-mode-switch__button:last-of-type');
+    click('.gw-mode-switch__button:first-of-type');
+
+    expect(facade.clear).not.toHaveBeenCalled();
+  });
+
+  it('renders only the 2D canvas when 2D is active', () => {
+    emitState(createState({ functions: [], viewMode: '2d' }));
+
+    expect(nativeElement().querySelector('app-graph-canvas-container'))
+      .not.toBeNull();
+    expect(nativeElement().querySelector('app-graph-canvas-container-3d'))
+      .toBeNull();
+  });
+
+  it('renders only the 3D canvas when 3D is active', () => {
+    emitState(createState({ functions: [], viewMode: '3d' }));
+
+    expect(nativeElement().querySelector('app-graph-canvas-container'))
+      .toBeNull();
+    expect(nativeElement().querySelector('app-graph-canvas-container-3d'))
       .not.toBeNull();
   });
 
@@ -329,6 +405,32 @@ describe('GraphWorkspacePageComponent', () => {
     expect(() => fixture.detectChanges()).not.toThrow();
   });
 
+  it('shows 3D compatibility hints when 3D is active and line functions exist', () => {
+    emitState(createState({
+      viewMode: '3d',
+      functions: [
+        graphFunction('fn-1', { plotKind: 'line' }),
+        graphFunction('fn-2', { plotKind: 'contour' }),
+      ],
+    }));
+
+    const text = nativeElement().textContent ?? '';
+
+    expect(text).toContain('Vista 3D activa');
+    expect(text).toContain('Line no está disponible en la vista 3D');
+    expect(text).toContain('superficies z = f(x, y)');
+  });
+
+  it('does not show the 3D line warning when no line functions exist', () => {
+    emitState(createState({
+      viewMode: '3d',
+      functions: [graphFunction('fn-1', { plotKind: 'contour' })],
+    }));
+
+    expect(nativeElement().textContent ?? '')
+      .not.toContain('Line no está disponible en la vista 3D');
+  });
+
   function click(selector: string): void {
     const element = nativeElement().querySelector<HTMLElement>(selector);
     expect(element).withContext(selector).not.toBeNull();
@@ -354,6 +456,7 @@ describe('GraphWorkspacePageComponent', () => {
   }
 
   function emitState(state: GraphWorkspaceState): void {
+    stateSubject.next(state);
     vmSubject.next(createViewModel(state));
     fixture.detectChanges();
   }
@@ -455,6 +558,7 @@ describe('GraphWorkspacePageComponent', () => {
 });
 
 interface FakeGraphWorkspaceFacade {
+  readonly state$: Observable<GraphWorkspaceState>;
   readonly addFunction: jasmine.Spy;
   readonly updateExpression: jasmine.Spy;
   readonly updateLabel: jasmine.Spy;
@@ -463,4 +567,6 @@ interface FakeGraphWorkspaceFacade {
   readonly setPlotKind: jasmine.Spy;
   readonly removeFunction: jasmine.Spy;
   readonly selectFunction: jasmine.Spy;
+  readonly setViewMode: jasmine.Spy;
+  readonly clear: jasmine.Spy;
 }

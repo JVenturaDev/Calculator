@@ -30,7 +30,8 @@
               "src/styles.css"
             ],
             "allowedCommonJsDependencies": [
-              "plotly.js-cartesian-dist-min"
+              "plotly.js-cartesian-dist-min",
+              "plotly.js-gl3d-dist-min"
             ]
           },
           "configurations": {

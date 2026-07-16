@@ -1,0 +1,99 @@
+:host {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+}
+
+.graph-canvas-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(320px, 58vh, 760px);
+  height: 100%;
+  border: 1px solid rgba(136, 150, 176, 0.2);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(112, 88, 255, 0.18), transparent 34%),
+    linear-gradient(145deg, rgba(24, 27, 39, 0.96), rgba(12, 14, 21, 0.98));
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+  overflow: hidden;
+}
+
+.graph-canvas-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.graph-canvas-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent 86%);
+}
+
+.graph-canvas-plot {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  min-height: clamp(320px, 58vh, 760px);
+}
+
+.graph-canvas-status {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  text-align: center;
+  color: #e7e9f2;
+  pointer-events: none;
+}
+
+.graph-canvas-status span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 28rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(136, 150, 176, 0.2);
+  border-radius: 14px;
+  background: rgba(10, 12, 18, 0.84);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+}
+
+.graph-canvas-status--loading span::before {
+  content: '';
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 2px solid rgba(199, 202, 212, 0.34);
+  border-top-color: #c7cad4;
+  border-radius: 999px;
+  animation: graph-canvas-spin 0.85s linear infinite;
+}
+
+.graph-canvas-status--error span {
+  color: #ffd7db;
+  border-color: rgba(255, 105, 128, 0.24);
+  background: rgba(52, 12, 21, 0.9);
+}
+
+@keyframes graph-canvas-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (min-width: 1180px) {
+  .graph-canvas-shell,
+  .graph-canvas-plot {
+    min-height: clamp(520px, 68vh, 900px);
+  }
+}

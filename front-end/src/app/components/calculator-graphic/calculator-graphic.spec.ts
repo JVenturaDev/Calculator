@@ -94,9 +94,9 @@ describe('GraphicComponent', () => {
       target: { type: 'calculator' },
     };
     plot = { setExpression: jasmine.createSpy('setExpression') };
-    tokenizer = {
-      tokenize: jasmine.createSpy('tokenize').and.returnValue([]),
-    };
+    const realTokenizer = new Tokenizer();
+    spyOn(realTokenizer, 'tokenize').and.callThrough();
+    tokenizer = realTokenizer as unknown as { tokenize: jasmine.Spy };
     polishParser = {
       toPostFix: jasmine.createSpy('toPostFix').and.returnValue([]),
     };
@@ -185,7 +185,7 @@ describe('GraphicComponent', () => {
       'acoth(', 'acsch(', 'asech(', 'asin(', 'acos(', 'atan(', 'asec(', 'acsc(',
       'acot(', 'asinh(', 'acosh(', 'atanh(', 'coth(', 'csch(', 'sech(', 'sinh(',
       'cosh(', 'tanh(', 'sec(', 'cot(', 'csc(', 'sin(', 'cos(', 'tan(',
-      'e^(', 'xylog(', '2^', 'yroot(', '∛', '³', 'ln(', 'log(',
+      'e^(', 'xylog(', '2^x', 'yroot(', '∛', '³', 'ln(', 'log(',
       '10^', 'pow(', '²√', '²', '|x|(', '⌊x⌋(', '⌈x⌉(', ',',
       'π', '1/', '(', 'e', '|x|(', ')', 'AC', 'x', '⩵', 'DEL', 'y',
       '7', '8', '9', '4', '5', '6', '1', '2', '3', '-', '0', '.',
@@ -323,10 +323,38 @@ describe('GraphicComponent', () => {
     component.handleButtonClick('=');
 
     expect(engine.evaluate).toHaveBeenCalledOnceWith('x^2', {
-      variables: { x: 0, y: 0 },
+      variables: { x: 0 },
     });
     expect(calculator.restoreCalculation).toHaveBeenCalledOnceWith('x^2', '0');
     expect(plot.setExpression).toHaveBeenCalledOnceWith('x^2');
+  });
+
+  it('keeps graphical evaluation for y-only expressions', () => {
+    calculatorState.expression = 'y';
+    preprocess.preprocessExpression.and.returnValue('y');
+    engine.evaluate.and.returnValue(0);
+
+    component.handleButtonClick('=');
+
+    expect(engine.evaluate).toHaveBeenCalledOnceWith('y', {
+      variables: { y: 0 },
+    });
+    expect(calculator.restoreCalculation).toHaveBeenCalledOnceWith('y', '0');
+    expect(plot.setExpression).toHaveBeenCalledOnceWith('y');
+  });
+
+  it('uses both x and y variables when they are actually present', () => {
+    calculatorState.expression = 'x+y';
+    preprocess.preprocessExpression.and.returnValue('x+y');
+    engine.evaluate.and.returnValue(0);
+
+    component.handleButtonClick('=');
+
+    expect(engine.evaluate).toHaveBeenCalledOnceWith('x+y', {
+      variables: { x: 0, y: 0 },
+    });
+    expect(calculator.restoreCalculation).toHaveBeenCalledOnceWith('x+y', '0');
+    expect(plot.setExpression).toHaveBeenCalledOnceWith('x+y');
   });
 
   it('converts graphical evaluation errors to NaN and still plots', () => {
@@ -372,6 +400,46 @@ describe('GraphicComponent', () => {
     expect(calculator.appendToken).not.toHaveBeenCalled();
     expect(calculator.clear).not.toHaveBeenCalled();
     expect(calculator.restoreCalculation).not.toHaveBeenCalled();
+  });
+
+  it('sends x, y and 2^x tokens exactly from the graphic keypad', () => {
+    component.handleButtonClick('x');
+    component.handleButtonClick('y');
+    component.handleButtonClick('2^x');
+
+    expect(calculator.appendToken).toHaveBeenCalledWith('x');
+    expect(calculator.appendToken).toHaveBeenCalledWith('y');
+    expect(calculator.appendToken).toHaveBeenCalledWith('2^x');
+  });
+
+  it('evaluates workspace x, y and x+y expressions with the needed variables', () => {
+    inputService.target = { type: 'workspace-item', itemId: 'item-1' };
+    workspace.activeItemId$.next('item-1');
+
+    workspace.workspaceItems$.next([
+      { id: 'item-1', currentExpression: 'x' },
+    ]);
+    component.handleButtonClick('=');
+    expect(polishEvaluator.evaluatePostFix).toHaveBeenCalledWith([], { x: 0 }, true);
+    expect(workspace.addCalculationToActiveItem).toHaveBeenCalledTimes(1);
+
+    polishEvaluator.evaluatePostFix.calls.reset();
+    workspace.addCalculationToActiveItem.calls.reset();
+    workspace.workspaceItems$.next([
+      { id: 'item-1', currentExpression: 'y' },
+    ]);
+    component.handleButtonClick('=');
+    expect(polishEvaluator.evaluatePostFix).toHaveBeenCalledWith([], { y: 0 }, true);
+    expect(workspace.addCalculationToActiveItem).toHaveBeenCalledTimes(1);
+
+    polishEvaluator.evaluatePostFix.calls.reset();
+    workspace.addCalculationToActiveItem.calls.reset();
+    workspace.workspaceItems$.next([
+      { id: 'item-1', currentExpression: 'x+y' },
+    ]);
+    component.handleButtonClick('=');
+    expect(polishEvaluator.evaluatePostFix).toHaveBeenCalledWith([], { x: 0, y: 0 }, true);
+    expect(workspace.addCalculationToActiveItem).toHaveBeenCalledTimes(1);
   });
 
   it('reports workspace evaluation errors through a finite toast only', () => {

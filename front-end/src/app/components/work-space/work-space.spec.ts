@@ -73,6 +73,15 @@ describe('WorkSpace', () => {
     confirmation.confirm.and.resolveTo(false);
 
     workspaceService.setActiveItem.and.callFake((id: string) => activeItemId$.next(id));
+    workspaceService.updateCurrentExpression.and.callFake((id: string, value: string) => {
+      items$.next(
+        items$.value.map(item =>
+          item.id === id
+            ? { ...item, currentExpression: value }
+            : item
+        )
+      );
+    });
     inputService.setWorkspaceItemTarget.and.callFake((itemId: string) => {
       const target: InputTarget = { type: 'workspace-item', itemId };
       inputService.target = target;
@@ -173,6 +182,31 @@ describe('WorkSpace', () => {
     expect(calculation.expression).toBe('2+2');
     expect(calculation.result).toBe(4);
     expect(calculation.steps).toEqual([]);
+  });
+
+  it('keeps x from the DOM input when evaluating the active workspace item', async () => {
+    showActiveItem();
+    tokenizer.tokenize.and.returnValue([
+      { type: 'variable', value: 'x' } as never,
+    ]);
+    polishParser.toPostFix.and.returnValue([]);
+    polishEvaluator.evaluatePostFix.and.returnValue({ result: 4, steps: [] });
+
+    const input = nativeElement().querySelector<HTMLInputElement>('.expression-editor input');
+    input!.value = 'x';
+    input!.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    nativeElement()
+      .querySelector<HTMLButtonElement>('.evaluate-button')
+      ?.click();
+
+    expect(workspaceService.updateCurrentExpression)
+      .toHaveBeenCalledOnceWith('item-1', 'x');
+    expect(tokenizer.tokenize).toHaveBeenCalledOnceWith('x');
+    expect(polishEvaluator.evaluatePostFix).toHaveBeenCalledWith([], { x: 0 }, true);
+    expect(workspaceService.addCalculationToActiveItem).toHaveBeenCalledTimes(1);
   });
 
   it('does not steal the active item after evaluating when the user changes it', fakeAsync(() => {

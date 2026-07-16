@@ -14,6 +14,7 @@ import { evaluator } from '../../services/polish-services/polish-evaluator';
 import { PreprocessModule } from '../../services/polish-services/preprocess-module';
 import { InputService } from '../../services/input-services/input-services';
 import { WorkspaceService } from '../../services/workspace-services/workspace-service';
+import { detectGraphVariables } from '../../services/polish-services/graph-variable-detector';
 import {
   CALCULATION_ENGINE,
   CalculationEngine,
@@ -184,12 +185,13 @@ export class GraphicComponent implements OnInit, OnDestroy {
         case '=':
           const expr = this.calculator.snapshot.expression;
           const preprocessed = this.process.preprocessExpression(expr);
+          const graphVariables = detectGraphVariables(expr, this.tokenizer);
 
-          if (/[xy]/i.test(preprocessed)) {
+          if (graphVariables.hasX || graphVariables.hasY) {
             let result: number | Complex;
             try {
-              result = this.engine.evaluate(preprocessed, {
-                variables: { x: 0, y: 0 },
+              result = this.engine.evaluate(expr, {
+                variables: graphVariables.variables,
               });
             } catch {
               result = NaN;
@@ -197,7 +199,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
             const displayResult = result instanceof Complex ? result.toString() : String(result);
             this.calculator.restoreCalculation(expr, displayResult);
             this.history.agregarId(expr, displayResult);
-            this.graphicService.setExpression(preprocessed);
+            this.graphicService.setExpression(expr);
             return;
           }
 
@@ -227,7 +229,12 @@ export class GraphicComponent implements OnInit, OnDestroy {
 
     const tokens = this.tokenizer.tokenize(item.currentExpression);
     const postfix = this.parserService.toPostFix(tokens);
-    const evaluation = this.polishEvaluator.evaluatePostFix(postfix, {}, true);
+    const graphVariables = detectGraphVariables(tokens);
+    const evaluation = this.polishEvaluator.evaluatePostFix(
+      postfix,
+      graphVariables.variables,
+      true
+    );
 
     if (typeof evaluation !== 'object' || !('steps' in evaluation)) return;
 

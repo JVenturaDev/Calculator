@@ -6,6 +6,8 @@ import {
   type CalculationEngine,
   type CalculationOptions,
 } from '../engine-services/calculation-engine.contract';
+import { Tokenizer } from '../polish-services/tokenizer';
+import { detectGraphVariables } from '../polish-services/graph-variable-detector';
 import { createInitialCalculatorState } from './calculator-state';
 import type {
   CalculatorAngleMode,
@@ -21,6 +23,7 @@ export type CalculationContextUpdate = Partial<
 @Injectable({ providedIn: 'root' })
 export class CalculatorFacade {
   private readonly engine = inject<CalculationEngine>(CALCULATION_ENGINE);
+  private readonly tokenizer = inject(Tokenizer);
   private readonly stateSubject = new BehaviorSubject<CalculatorState>(
     createInitialCalculatorState()
   );
@@ -115,10 +118,24 @@ export class CalculatorFacade {
 
   evaluate(options?: CalculationOptions): number | string {
     const expression = this.snapshot.expression;
+    const graphVariables =
+      this.snapshot.mode === 'graphic'
+        ? detectGraphVariables(expression, this.tokenizer)
+        : { hasX: false, hasY: false, variables: {} };
+    const mergedOptions =
+      graphVariables.hasX || graphVariables.hasY
+        ? {
+            ...options,
+            variables: {
+              ...graphVariables.variables,
+              ...(options?.variables ?? {}),
+            },
+          }
+        : options;
     this.update({ status: 'evaluating', error: null });
 
     try {
-      const rawResult = this.engine.evaluate(expression, options);
+      const rawResult = this.engine.evaluate(expression, mergedOptions);
       const result: number | string = rawResult instanceof Complex
         ? rawResult.toString().replace('=', '')
         : rawResult;

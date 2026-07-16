@@ -3,6 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 
 import { DisplayComponent } from './display';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
+import { CALCULATION_ENGINE } from '../../services/engine-services/calculation-engine.contract';
 import {
   createInitialCalculatorState,
   type CalculatorState,
@@ -136,6 +137,35 @@ describe('DisplayComponent', () => {
     expect(event.defaultPrevented).toBeTrue();
   });
 
+  it('keeps the current typed x expression when Enter is pressed in graphic mode', async () => {
+    emitState({
+      mode: 'graphic',
+      expression: 'x',
+      phase: 'editing',
+      status: 'idle',
+      error: null,
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const input = getInput();
+    input.value = 'x';
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+
+    const event = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      cancelable: true,
+    });
+
+    input.dispatchEvent(event);
+    fixture.detectChanges();
+
+    expect(calculator.evaluate).toHaveBeenCalledOnceWith({ angleMode: 'RAD' });
+    expect(history.agregarId).toHaveBeenCalledWith('x', 1);
+    expect(event.defaultPrevented).toBeTrue();
+  });
+
   it('keeps calculatorInput and reports focus through InputService', () => {
     const input = fixture.nativeElement.querySelector(
       '#calculatorInput'
@@ -158,4 +188,57 @@ describe('DisplayComponent', () => {
       '#calculatorInput'
     ) as HTMLInputElement;
   }
+});
+
+describe('DisplayComponent with real CalculatorFacade', () => {
+  let fixture: ComponentFixture<DisplayComponent>;
+  let engine: jasmine.SpyObj<{ evaluate: (expression: string, options?: unknown) => number }>;
+  let history: { agregarId: jasmine.Spy };
+  let inputService: { setCalculatorTarget: jasmine.Spy };
+
+  beforeEach(async () => {
+    engine = jasmine.createSpyObj('CalculationEngine', ['evaluate']);
+    engine.evaluate.and.returnValue(1);
+    history = {
+      agregarId: jasmine.createSpy('agregarId'),
+    };
+    inputService = {
+      setCalculatorTarget: jasmine.createSpy('setCalculatorTarget'),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [DisplayComponent],
+      providers: [
+        { provide: CALCULATION_ENGINE, useValue: engine },
+        { provide: HistoryService, useValue: history },
+        { provide: InputService, useValue: inputService },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(DisplayComponent);
+    fixture.detectChanges();
+  });
+
+  it('evaluates a typed x expression through the real facade when Enter is pressed', async () => {
+    const calculator = TestBed.inject(CalculatorFacade);
+    const input = fixture.nativeElement.querySelector(
+      '#calculatorInput'
+    ) as HTMLInputElement;
+
+    calculator.setMode('graphic');
+    input.value = 'x';
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true })
+    );
+    fixture.detectChanges();
+
+    expect(engine.evaluate).toHaveBeenCalledOnceWith(
+      'x',
+      jasmine.objectContaining({ variables: { x: 0 } })
+    );
+    expect(history.agregarId).toHaveBeenCalledOnceWith('x', 1);
+  });
 });

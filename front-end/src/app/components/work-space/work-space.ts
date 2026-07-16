@@ -14,6 +14,7 @@ import { InputService } from '../../services/input-services/input-services';
 import { Tokenizer } from '../../services/polish-services/tokenizer';
 import { parser } from '../../services/polish-services/polish-notation-parser-service';
 import { evaluator, Step } from '../../services/polish-services/polish-evaluator';
+import { detectGraphVariables } from '../../services/polish-services/graph-variable-detector';
 import { WorkspaceTagsComponent } from '../workspace-tags/workspace-tags';
 import Complex from 'complex.js';
 import { WorkspaceService } from '../../services/workspace-services/workspace-service';
@@ -217,7 +218,12 @@ export class WorkSpace implements OnInit {
 
     const tokens = this.tokenizer.tokenize(item.currentExpression);
     const postfix = this.parserService.toPostFix(tokens);
-    const evaluation = this.evaluatorPolish.evaluatePostFix(postfix, {}, true);
+    const graphVariables = detectGraphVariables(tokens);
+    const evaluation = this.evaluatorPolish.evaluatePostFix(
+      postfix,
+      graphVariables.variables,
+      true
+    );
 
     if (typeof evaluation !== 'object' || !('steps' in evaluation)) return;
 

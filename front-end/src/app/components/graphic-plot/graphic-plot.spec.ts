@@ -110,6 +110,15 @@ describe('GraphicPlot', () => {
     expect(engine.evaluate).toHaveBeenCalledTimes(10000);
   });
 
+  it('does not treat a function name containing y as a contour variable', () => {
+    expression$.next('yroot(8)');
+
+    const trace = latestTrace();
+    expect(trace['type']).toBe('scatter');
+    expect((trace['x'] as number[]).length).toBe(400);
+    expect((trace['y'] as number[]).length).toBe(400);
+  });
+
   it('converts sampling errors to NaN', () => {
     engine.evaluate.and.throwError('sampling error');
 

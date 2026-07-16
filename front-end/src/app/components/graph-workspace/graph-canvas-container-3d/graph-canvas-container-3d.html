@@ -1,0 +1,20 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <section class="graph-canvas-container-3d" [attr.aria-label]="ariaLabel">
+    <p
+      *ngIf="vm.error"
+      class="graph-canvas-container-3d__error"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {{ vm.error }}
+    </p>
+
+    <app-graph-canvas-3d
+      [samples]="vm.samples"
+      [scene]="vm.scene"
+      [selectedFunctionId]="vm.selectedFunctionId"
+      [ariaLabel]="ariaLabel"
+    ></app-graph-canvas-3d>
+  </section>
+</ng-container>

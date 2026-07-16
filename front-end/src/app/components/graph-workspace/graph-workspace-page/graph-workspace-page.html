@@ -14,12 +14,57 @@
     </button>
   </header>
 
-  <ng-container *ngIf="vm$ | async as vm">
+  <ng-container *ngIf="state$ | async as state">
+    <section
+      class="gw-mode-switch"
+      role="group"
+      aria-label="Modo de visualización"
+    >
+      <button
+        class="gw-mode-switch__button"
+        type="button"
+        [attr.aria-pressed]="state.viewMode === '2d'"
+        (click)="setViewMode('2d')"
+      >
+        2D
+      </button>
+
+      <button
+        class="gw-mode-switch__button"
+        type="button"
+        [attr.aria-pressed]="state.viewMode === '3d'"
+        (click)="setViewMode('3d')"
+      >
+        3D
+      </button>
+    </section>
+
+    <section
+      *ngIf="state.viewMode === '3d'"
+      class="gw-empty gw-mode-note"
+      role="status"
+      aria-live="polite"
+    >
+      <p>Vista 3D activa.</p>
+      <p *ngIf="lineFunctionCount(state.functions) > 0">
+        {{ lineFunctionCount(state.functions) }} función{{
+          lineFunctionCount(state.functions) === 1 ? '' : 'es'
+        }} Line no está disponible en la vista 3D.
+      </p>
+      <p>Las funciones Contour se muestran como superficies z = f(x, y) en 3D.</p>
+    </section>
+
     <section class="gw-canvas" aria-label="Canvas gráfico">
-      <app-graph-canvas-container
-        #graphCanvasContainer
-        ariaLabel="Graph Workspace canvas"
-      ></app-graph-canvas-container>
+      @if (state.viewMode === '2d') {
+        <app-graph-canvas-container
+          #graphCanvasContainer2d
+          ariaLabel="Graph Workspace canvas"
+        ></app-graph-canvas-container>
+      } @else {
+        <app-graph-canvas-container-3d
+          ariaLabel="Graph Workspace 3D canvas"
+        ></app-graph-canvas-container-3d>
+      }
     </section>
 
     <section class="gw-panel" aria-labelledby="graph-functions-title">
@@ -28,18 +73,18 @@
           <p class="gw-eyebrow">Functions</p>
           <h2 id="graph-functions-title">Funciones</h2>
         </div>
-        <span class="gw-count">{{ vm.state.functions.length }} / 12</span>
+        <span class="gw-count">{{ state.functions.length }} / 12</span>
       </div>
 
-      <p *ngIf="vm.state.functions.length === 0" class="gw-empty">
+      <p *ngIf="state.functions.length === 0" class="gw-empty">
         Aún no hay funciones. Añade una función para comenzar a graficar.
       </p>
 
-      <ol *ngIf="vm.state.functions.length > 0" class="gw-list">
+      <ol *ngIf="state.functions.length > 0" class="gw-list">
         <li
-          *ngFor="let graphFunction of vm.state.functions; trackBy: trackFunction"
+          *ngFor="let graphFunction of state.functions; trackBy: trackFunction"
           class="gf-card"
-          [class.gf-card--selected]="vm.state.selectedFunctionId === graphFunction.id"
+          [class.gf-card--selected]="state.selectedFunctionId === graphFunction.id"
         >
           <span
             class="gf-color"
@@ -65,7 +110,11 @@
               type="button"
               [class.gf-act--active]="graphFunction.visible"
               [attr.aria-pressed]="graphFunction.visible"
-              [attr.aria-label]="graphFunction.visible ? 'Ocultar ' + graphFunction.label : 'Mostrar ' + graphFunction.label"
+              [attr.aria-label]="
+                graphFunction.visible
+                  ? 'Ocultar ' + graphFunction.label
+                  : 'Mostrar ' + graphFunction.label
+              "
               (click)="toggleFunction(graphFunction.id)"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
@@ -85,7 +134,9 @@
               spellcheck="false"
               [attr.aria-label]="'Expresión de ' + graphFunction.label"
               [value]="graphFunction.expression"
-              [attr.placeholder]="graphFunction.plotKind === 'line' ? 'sin(x)' : 'x^2 + y^2'"
+              [attr.placeholder]="
+                graphFunction.plotKind === 'line' ? 'sin(x)' : 'x^2 + y^2'
+              "
               (input)="updateExpression(graphFunction.id, $event)"
             />
           </div>
@@ -107,7 +158,7 @@
               <button
                 class="gf-act gf-act--select"
                 type="button"
-                [attr.aria-pressed]="vm.state.selectedFunctionId === graphFunction.id"
+                [attr.aria-pressed]="state.selectedFunctionId === graphFunction.id"
                 [attr.aria-label]="'Seleccionar ' + graphFunction.label"
                 (click)="selectFunction(graphFunction.id)"
               >
@@ -142,19 +193,37 @@
         </li>
       </ol>
 
-      <app-graph-workspace-inspector
-        [selectedFunction]="vm.selectedFunction"
-        [selectedSample]="vm.selectedSample"
-        [viewport]="vm.viewport"
-        [summary]="{
-          totalFunctions: vm.state.functions.length,
-          visibleFunctions: vm.visibleFunctions,
-          readyFunctions: vm.readyFunctions,
-          invalidFunctions: vm.invalidFunctions
-        }"
-        [error]="vm.error"
-        [hoveredPoint]="graphCanvasContainer.hoveredPoint"
-      ></app-graph-workspace-inspector>
+      @if (state.viewMode === '2d') {
+        <ng-container *ngIf="vm$ | async as vm">
+          <app-graph-workspace-inspector
+            [selectedFunction]="vm.selectedFunction"
+            [selectedSample]="vm.selectedSample"
+            [viewport]="vm.viewport"
+            [summary]="{
+              totalFunctions: vm.state.functions.length,
+              visibleFunctions: vm.visibleFunctions,
+              readyFunctions: vm.readyFunctions,
+              invalidFunctions: vm.invalidFunctions
+            }"
+            [error]="vm.error"
+            [hoveredPoint]="graphCanvasContainer2d?.hoveredPoint ?? null"
+          ></app-graph-workspace-inspector>
+        </ng-container>
+      } @else {
+        <section
+          class="gw-empty gw-3d-context"
+          aria-labelledby="graph-3d-context-title"
+        >
+          <p class="gw-eyebrow">Vista 3D</p>
+          <h2 id="graph-3d-context-title">Contexto real</h2>
+          <p>Selecciona una función para seguir editando etiqueta, color y visibilidad.</p>
+          <p>Las funciones Contour se muestran como superficies z = f(x, y) en 3D.</p>
+          <p>Funciones: {{ state.functions.length }}</p>
+          <p>Visibles: {{ visibleFunctionCount(state.functions) }}</p>
+          <p>Contour: {{ contourFunctionCount(state.functions) }}</p>
+          <p>Line: {{ lineFunctionCount(state.functions) }}</p>
+        </section>
+      }
     </section>
   </ng-container>
 </main>

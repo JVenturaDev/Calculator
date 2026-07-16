@@ -2,6 +2,8 @@ import { Component, Inject, OnInit, OnDestroy, ElementRef, ViewChild } from '@an
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
+import { detectGraphVariables } from '../../services/polish-services/graph-variable-detector';
+import { Tokenizer } from '../../services/polish-services/tokenizer';
 import Plotly from 'plotly.js-cartesian-dist-min';
 import {
   CALCULATION_ENGINE,
@@ -30,7 +32,8 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
 
   constructor(
     @Inject(CALCULATION_ENGINE) private engine: CalculationEngine,
-    private graphicService: GraphicPlotService
+    private graphicService: GraphicPlotService,
+    private tokenizer: Tokenizer
   ) { }
 
   ngOnInit(): void {
@@ -55,7 +58,8 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
 
     try {
       this.plotDescription = `Gráfica de ${expr}`;
-      if (expr.includes('y')) this.plot2D(expr);
+      const graphVariables = detectGraphVariables(expr, this.tokenizer);
+      if (graphVariables.hasY) this.plot2D(expr);
       else this.plot1D(expr);
     } catch (err) {
       console.error('Error al graficar la expresión:', err);

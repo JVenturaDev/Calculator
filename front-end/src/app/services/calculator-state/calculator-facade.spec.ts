@@ -147,6 +147,32 @@ describe('CalculatorFacade', () => {
     expect(facade.snapshot.phase).toBe('result');
   });
 
+  it('evaluates graphic x expressions with an x variable context', () => {
+    engine.evaluate.and.returnValue(4);
+    facade.setMode('graphic');
+    facade.setExpression('x');
+
+    const result = facade.evaluate();
+
+    expect(engine.evaluate).toHaveBeenCalledOnceWith('x', {
+      variables: { x: 0 },
+    });
+    expect(result).toBe(4);
+  });
+
+  it('evaluates graphic x+y expressions with x and y variables', () => {
+    engine.evaluate.and.returnValue(7);
+    facade.setMode('graphic');
+    facade.setExpression('x+y');
+
+    const result = facade.evaluate();
+
+    expect(engine.evaluate).toHaveBeenCalledOnceWith('x+y', {
+      variables: { x: 0, y: 0 },
+    });
+    expect(result).toBe(7);
+  });
+
   it('normalizes a complex result for display', () => {
     engine.evaluate.and.returnValue(new Complex(2, 3));
     facade.setExpression('sqrt(-5)');
