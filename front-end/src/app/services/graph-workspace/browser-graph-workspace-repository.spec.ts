@@ -55,7 +55,7 @@ describe('BrowserGraphWorkspaceRepository', () => {
   it('reports an unsupported version separately', () => {
     storage.setItem(
       DEFAULT_GRAPH_WORKSPACE_STORAGE_KEY,
-      JSON.stringify({ version: 2 })
+      JSON.stringify({ version: 3 })
     );
 
     expect(repository.load()).toEqual({
@@ -109,10 +109,12 @@ describe('BrowserGraphWorkspaceRepository', () => {
 
   function createState(): GraphWorkspaceState {
     const timestamp = new Date('2026-04-05T06:07:08.000Z');
+    const viewport2D = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
     return {
-      version: 1,
+      version: 2,
       id: 'graph-workspace-1',
       name: 'Graph Workspace',
+      viewMode: '2d',
       functions: [
         {
           id: 'function-1',
@@ -126,7 +128,21 @@ describe('BrowserGraphWorkspaceRepository', () => {
         },
       ],
       selectedFunctionId: 'function-1',
-      viewport: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+      viewport2D,
+      viewport: viewport2D,
+      scene3D: {
+        xMin: -10,
+        xMax: 10,
+        yMin: -10,
+        yMax: 10,
+        zMin: -10,
+        zMax: 10,
+        camera: {
+          eye: { x: 1.25, y: 1.25, z: 1.25 },
+          up: { x: 0, y: 0, z: 1 },
+          center: { x: 0, y: 0, z: 0 },
+        },
+      },
       createdAt: timestamp,
       updatedAt: timestamp,
     };

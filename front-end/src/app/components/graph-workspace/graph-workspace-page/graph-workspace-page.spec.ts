@@ -58,6 +58,8 @@ describe('GraphWorkspacePageComponent', () => {
     facade = {
       addFunction: jasmine.createSpy('addFunction'),
       updateExpression: jasmine.createSpy('updateExpression'),
+      updateLabel: jasmine.createSpy('updateLabel'),
+      duplicateFunction: jasmine.createSpy('duplicateFunction'),
       toggleFunction: jasmine.createSpy('toggleFunction'),
       setPlotKind: jasmine.createSpy('setPlotKind'),
       removeFunction: jasmine.createSpy('removeFunction'),
@@ -109,7 +111,7 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('shows an empty state', () => {
-    expect(nativeElement().querySelector('.graph-functions-empty')?.textContent)
+    expect(nativeElement().querySelector('.gw-empty')?.textContent)
       .toContain('Aún no hay funciones');
   });
 
@@ -118,7 +120,7 @@ describe('GraphWorkspacePageComponent', () => {
   });
 
   it('adds a function from the toolbar button', () => {
-    click('.graph-workspace-add');
+    click('.gw-add');
 
     expect(facade.addFunction).toHaveBeenCalledTimes(1);
   });
@@ -128,10 +130,23 @@ describe('GraphWorkspacePageComponent', () => {
       functions: [graphFunction('fn-1'), graphFunction('fn-2')],
     }));
 
-    const cards = nativeElement().querySelectorAll('.graph-function-card');
+    const cards = nativeElement().querySelectorAll('.gf-card');
+    const labelInputs = nativeElement().querySelectorAll<HTMLInputElement>(
+      '.gf-name'
+    );
+    const expressionInputs = nativeElement().querySelectorAll<HTMLInputElement>(
+      '.gf-expr input[type="text"]'
+    );
+
     expect(cards.length).toBe(2);
-    expect(cards[0].textContent).toContain('f1');
-    expect(cards[1].textContent).toContain('f2');
+    expect(labelInputs.length).toBe(2);
+    expect(expressionInputs.length).toBe(2);
+    expect(labelInputs[0].value).toBe('f1');
+    expect(labelInputs[1].value).toBe('f2');
+    expect(expressionInputs[0].getAttribute('aria-label'))
+      .toBe('Expresión de f1');
+    expect(expressionInputs[1].getAttribute('aria-label'))
+      .toBe('Expresión de f2');
   });
 
   it('updates an expression from the input', () => {
@@ -148,6 +163,19 @@ describe('GraphWorkspacePageComponent', () => {
       'fn-1',
       'sin(x)'
     );
+  });
+
+  it('updates a label from the label input', () => {
+    emitState(createState({
+      functions: [graphFunction('fn-1')],
+    }));
+
+    const input = nativeElement()
+      .querySelector<HTMLInputElement>('#graph-label-fn-1')!;
+    input.value = '  g1  ';
+    input.dispatchEvent(new Event('input'));
+
+    expect(facade.updateLabel).toHaveBeenCalledOnceWith('fn-1', '  g1  ');
   });
 
   it('toggles function visibility', () => {
@@ -171,6 +199,16 @@ describe('GraphWorkspacePageComponent', () => {
     select.dispatchEvent(new Event('change'));
 
     expect(facade.setPlotKind).toHaveBeenCalledOnceWith('fn-1', 'contour');
+  });
+
+  it('duplicates a function from the row action', () => {
+    emitState(createState({
+      functions: [graphFunction('fn-1')],
+    }));
+
+    click('[aria-label="Duplicar f1"]');
+
+    expect(facade.duplicateFunction).toHaveBeenCalledOnceWith('fn-1');
   });
 
   it('removes a function', () => {
@@ -199,7 +237,7 @@ describe('GraphWorkspacePageComponent', () => {
     }));
 
     const swatch = nativeElement()
-      .querySelector<HTMLElement>('.graph-function-color')!;
+      .querySelector<HTMLElement>('.gf-color')!;
     expect(swatch.style.background).toBe('rgb(255, 126, 182)');
   });
 
@@ -209,8 +247,8 @@ describe('GraphWorkspacePageComponent', () => {
       selectedFunctionId: 'fn-1',
     }));
 
-    expect(nativeElement().querySelector('.graph-function-card')
-      ?.classList.contains('graph-function-card--selected')).toBeTrue();
+    expect(nativeElement().querySelector('.gf-card')
+      ?.classList.contains('gf-card--selected')).toBeTrue();
     expect(nativeElement().querySelector('[aria-label="Seleccionar f1"]')
       ?.getAttribute('aria-pressed')).toBe('true');
   });
@@ -270,16 +308,21 @@ describe('GraphWorkspacePageComponent', () => {
       functions: [graphFunction('fn-1')],
     }));
 
-    const input = nativeElement()
+    const expressionInput = nativeElement()
       .querySelector<HTMLInputElement>('#graph-expression-fn-1')!;
-    const label = nativeElement()
-      .querySelector<HTMLLabelElement>('label[for="graph-expression-fn-1"]')!;
+    const labelInput = nativeElement()
+      .querySelector<HTMLInputElement>('#graph-label-fn-1')!;
     const buttons = Array.from(nativeElement().querySelectorAll('button'));
 
-    expect(label.textContent).toContain('Expresión de f1');
-    expect(input).not.toBeNull();
+    expect(expressionInput.getAttribute('aria-label'))
+      .toBe('Expresión de f1');
+    expect(labelInput.getAttribute('aria-label')).toBe('Etiqueta de f1');
+    expect(expressionInput).not.toBeNull();
+    expect(labelInput).not.toBeNull();
     expect(buttons.every(button => button.getAttribute('type') === 'button'))
       .toBeTrue();
+    expect(nativeElement().querySelector('[aria-label="Duplicar f1"]'))
+      .not.toBeNull();
   });
 
   it('does not require CalculationEngine, GraphicPlotService or Plotly', () => {
@@ -340,17 +383,33 @@ describe('GraphWorkspacePageComponent', () => {
     overrides: Partial<GraphWorkspaceState>
   ): GraphWorkspaceState {
     const timestamp = new Date('2026-01-01T00:00:00.000Z');
+    const viewport2D = {
+      xMin: -10,
+      xMax: 10,
+      yMin: -10,
+      yMax: 10,
+    };
     return {
-      version: 1,
+      version: 2,
       id: 'graph-workspace-id',
       name: 'Graph Workspace',
+      viewMode: '2d',
       functions: [],
       selectedFunctionId: null,
-      viewport: {
+      viewport2D,
+      viewport: viewport2D,
+      scene3D: {
         xMin: -10,
         xMax: 10,
         yMin: -10,
         yMax: 10,
+        zMin: -10,
+        zMax: 10,
+        camera: {
+          eye: { x: 1.25, y: 1.25, z: 1.25 },
+          up: { x: 0, y: 0, z: 1 },
+          center: { x: 0, y: 0, z: 0 },
+        },
       },
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -398,6 +457,8 @@ describe('GraphWorkspacePageComponent', () => {
 interface FakeGraphWorkspaceFacade {
   readonly addFunction: jasmine.Spy;
   readonly updateExpression: jasmine.Spy;
+  readonly updateLabel: jasmine.Spy;
+  readonly duplicateFunction: jasmine.Spy;
   readonly toggleFunction: jasmine.Spy;
   readonly setPlotKind: jasmine.Spy;
   readonly removeFunction: jasmine.Spy;

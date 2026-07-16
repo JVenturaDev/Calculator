@@ -58,7 +58,8 @@ export class BrowserGraphWorkspaceRepository {
     if (
       this.isRecord(parsed) &&
       'version' in parsed &&
-      parsed['version'] !== 1
+      parsed['version'] !== 1 &&
+      parsed['version'] !== 2
     ) {
       return { state: null, issue: 'unsupported-version' };
     }

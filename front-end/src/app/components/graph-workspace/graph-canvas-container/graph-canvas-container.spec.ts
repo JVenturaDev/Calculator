@@ -281,13 +281,29 @@ describe('GraphCanvasContainerComponent', () => {
     overrides: Partial<GraphWorkspaceState> = {}
   ): GraphWorkspaceState {
     const timestamp = new Date('2026-01-01T00:00:00.000Z');
+    const viewport2D = viewport;
     return {
-      version: 1,
+      version: 2,
       id: 'graph-workspace-id',
       name: 'Graph Workspace',
+      viewMode: '2d',
       functions: [],
       selectedFunctionId: null,
-      viewport,
+      viewport2D,
+      viewport: viewport2D,
+      scene3D: {
+        xMin: -10,
+        xMax: 10,
+        yMin: -10,
+        yMax: 10,
+        zMin: -10,
+        zMax: 10,
+        camera: {
+          eye: { x: 1.25, y: 1.25, z: 1.25 },
+          up: { x: 0, y: 0, z: 1 },
+          center: { x: 0, y: 0, z: 0 },
+        },
+      },
       createdAt: timestamp,
       updatedAt: timestamp,
       ...overrides,

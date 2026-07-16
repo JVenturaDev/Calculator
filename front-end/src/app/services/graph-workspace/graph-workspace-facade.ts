@@ -4,9 +4,12 @@ import { BehaviorSubject } from 'rxjs';
 import { BrowserGraphWorkspaceRepository } from './browser-graph-workspace-repository';
 import {
   createInitialGraphWorkspaceState,
-  DEFAULT_GRAPH_VIEWPORT,
+  DEFAULT_GRAPH_SCENE_3D,
+  DEFAULT_GRAPH_VIEWPORT_2D,
   type GraphFunction,
   type GraphPlotKind,
+  type GraphScene3D,
+  type GraphViewMode,
   type GraphViewport2D,
   type GraphWorkspaceState,
 } from './graph-workspace-state';
@@ -70,6 +73,7 @@ export class GraphWorkspaceFacade {
 
     this.commit({
       ...this.snapshot,
+      viewport: this.snapshot.viewport2D,
       functions: [...this.snapshot.functions, graphFunction],
       selectedFunctionId: graphFunction.id,
       updatedAt: timestamp,
@@ -83,12 +87,72 @@ export class GraphWorkspaceFacade {
     }));
   }
 
+  updateLabel(id: string, label: string): void {
+    const current = this.snapshot.functions.find(
+      graphFunction => graphFunction.id === id
+    );
+    if (!current) return;
+
+    const nextLabel = label.trim().slice(0, 32);
+    if (nextLabel.length === 0 || nextLabel === current.label) return;
+
+    const timestamp = this.nextTimestamp();
+    const updatedFunction: GraphFunction = {
+      ...current,
+      label: nextLabel,
+      updatedAt: timestamp,
+    };
+
+    this.commit({
+      ...this.snapshot,
+      viewport: this.snapshot.viewport2D,
+      functions: this.snapshot.functions.map(graphFunction =>
+        graphFunction.id === id ? updatedFunction : graphFunction
+      ),
+      updatedAt: timestamp,
+    });
+  }
+
+  duplicateFunction(id: string): void {
+    const index = this.snapshot.functions.findIndex(
+      graphFunction => graphFunction.id === id
+    );
+    if (index < 0) return;
+    if (this.snapshot.functions.length >= MAX_GRAPH_FUNCTIONS) return;
+
+    const source = this.snapshot.functions[index];
+    const timestamp = this.nextTimestamp();
+    const duplicatedFunction: GraphFunction = {
+      id: this.generateId(),
+      expression: source.expression,
+      label: this.nextFunctionLabel(),
+      color: this.nextPaletteColor(source.color),
+      visible: source.visible,
+      plotKind: source.plotKind,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+
+    this.commit({
+      ...this.snapshot,
+      viewport: this.snapshot.viewport2D,
+      functions: [
+        ...this.snapshot.functions.slice(0, index + 1),
+        duplicatedFunction,
+        ...this.snapshot.functions.slice(index + 1),
+      ],
+      selectedFunctionId: duplicatedFunction.id,
+      updatedAt: timestamp,
+    });
+  }
+
   removeFunction(id: string): void {
     if (!this.hasFunction(id)) return;
 
     const timestamp = this.nextTimestamp();
     this.commit({
       ...this.snapshot,
+      viewport: this.snapshot.viewport2D,
       functions: this.snapshot.functions.filter(
         graphFunction => graphFunction.id !== id
       ),
@@ -128,6 +192,19 @@ export class GraphWorkspaceFacade {
     }));
   }
 
+  setViewMode(mode: GraphViewMode): void {
+    if (mode !== '2d' && mode !== '3d') return;
+    if (this.snapshot.viewMode === mode) return;
+
+    const timestamp = this.nextTimestamp();
+    this.commit({
+      ...this.snapshot,
+      viewMode: mode,
+      viewport: this.snapshot.viewport2D,
+      updatedAt: timestamp,
+    });
+  }
+
   selectFunction(id: string | null): void {
     if (id !== null && !this.hasFunction(id)) return;
     if (this.snapshot.selectedFunctionId === id) return;
@@ -144,29 +221,37 @@ export class GraphWorkspaceFacade {
 
     this.commit({
       ...this.snapshot,
+      viewport2D: { ...viewport },
       viewport: { ...viewport },
       updatedAt: this.nextTimestamp(),
     });
   }
 
   resetViewport(): void {
-    if (this.sameViewport(this.snapshot.viewport, DEFAULT_GRAPH_VIEWPORT)) {
+    if (
+      this.sameViewport(this.snapshot.viewport2D, DEFAULT_GRAPH_VIEWPORT_2D)
+    ) {
       return;
     }
 
     this.commit({
       ...this.snapshot,
-      viewport: { ...DEFAULT_GRAPH_VIEWPORT },
+      viewport2D: { ...DEFAULT_GRAPH_VIEWPORT_2D },
+      viewport: { ...DEFAULT_GRAPH_VIEWPORT_2D },
       updatedAt: this.nextTimestamp(),
     });
   }
 
   clear(): void {
+    const viewport2D = { ...DEFAULT_GRAPH_VIEWPORT_2D };
     this.commit({
       ...this.snapshot,
+      viewMode: '2d',
       functions: [],
       selectedFunctionId: null,
-      viewport: { ...DEFAULT_GRAPH_VIEWPORT },
+      viewport2D,
+      viewport: viewport2D,
+      scene3D: cloneScene3D(DEFAULT_GRAPH_SCENE_3D),
       updatedAt: this.nextTimestamp(),
     });
   }
@@ -191,6 +276,7 @@ export class GraphWorkspaceFacade {
 
     this.commit({
       ...this.snapshot,
+      viewport: this.snapshot.viewport2D,
       functions: this.snapshot.functions.map(graphFunction =>
         graphFunction.id === id ? updatedFunction : graphFunction
       ),
@@ -209,6 +295,21 @@ export class GraphWorkspaceFacade {
       const match = /^f(\d+)$/.exec(graphFunction.label);
       return match ? Math.max(maximum, Number(match[1])) : maximum;
     }, 0) + 1;
+  }
+
+  private nextFunctionLabel(): string {
+    return `f${this.nextFunctionSequence()}`;
+  }
+
+  private nextPaletteColor(color: string): string {
+    const currentIndex = GRAPH_FUNCTION_COLORS.findIndex(
+      candidate => candidate.toLowerCase() === color.toLowerCase()
+    );
+    if (currentIndex < 0) return GRAPH_FUNCTION_COLORS[0];
+
+    return GRAPH_FUNCTION_COLORS[
+      (currentIndex + 1) % GRAPH_FUNCTION_COLORS.length
+    ];
   }
 
   private nextTimestamp(): Date {
@@ -255,7 +356,7 @@ export class GraphWorkspaceFacade {
 
   private loadInitialState(): GraphWorkspaceState {
     const result = this.repository.load();
-    if (result.state) return result.state;
+    if (result.state) return this.cloneState(result.state);
 
     if (result.error !== undefined) {
       console.error(
@@ -276,6 +377,44 @@ export class GraphWorkspaceFacade {
       console.error('Error saving Graph Workspace:', error);
     }
   }
+
+  private cloneState(state: GraphWorkspaceState): GraphWorkspaceState {
+    if (typeof globalThis.structuredClone === 'function') {
+      return globalThis.structuredClone(state) as GraphWorkspaceState;
+    }
+
+    const viewport2D = { ...state.viewport2D };
+    const scene3D = cloneScene3D(state.scene3D);
+    return {
+      ...state,
+      functions: state.functions.map(graphFunction => ({
+        ...graphFunction,
+        createdAt: new Date(graphFunction.createdAt),
+        updatedAt: new Date(graphFunction.updatedAt),
+      })),
+      viewport2D,
+      viewport: viewport2D,
+      scene3D,
+      createdAt: new Date(state.createdAt),
+      updatedAt: new Date(state.updatedAt),
+    };
+  }
+}
+
+function cloneScene3D(scene: GraphScene3D): GraphScene3D {
+  return {
+    xMin: scene.xMin,
+    xMax: scene.xMax,
+    yMin: scene.yMin,
+    yMax: scene.yMax,
+    zMin: scene.zMin,
+    zMax: scene.zMax,
+    camera: {
+      eye: { ...scene.camera.eye },
+      up: { ...scene.camera.up },
+      center: { ...scene.camera.center },
+    },
+  };
 }
 
 function createId(): string {

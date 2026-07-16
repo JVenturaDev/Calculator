@@ -44,7 +44,7 @@ export class GraphWorkspaceSamplingViewModelService {
     try {
       const samples = this.sampler.sampleFunctions(
         state.functions,
-        state.viewport
+        state.viewport2D
       );
 
       return this.toViewModel(state, samples, selectedFunction, null);
@@ -72,7 +72,7 @@ export class GraphWorkspaceSamplingViewModelService {
         ? samples.find(sample => sample.functionId === selectedFunction.id) ??
           null
         : null,
-      viewport: state.viewport,
+      viewport: state.viewport2D,
       hasFunctions: state.functions.length > 0,
       visibleFunctions: state.functions.filter(graphFunction =>
         graphFunction.visible

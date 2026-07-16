@@ -36,6 +36,11 @@ export class GraphWorkspacePageComponent {
     this.facade.updateExpression(id, input?.value ?? '');
   }
 
+  updateLabel(id: string, event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    this.facade.updateLabel(id, input?.value ?? '');
+  }
+
   toggleFunction(id: string): void {
     this.facade.toggleFunction(id);
   }
@@ -50,6 +55,10 @@ export class GraphWorkspacePageComponent {
 
   removeFunction(id: string): void {
     this.facade.removeFunction(id);
+  }
+
+  duplicateFunction(id: string): void {
+    this.facade.duplicateFunction(id);
   }
 
   selectFunction(id: string): void {

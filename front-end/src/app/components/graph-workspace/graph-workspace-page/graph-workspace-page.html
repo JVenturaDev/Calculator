@@ -1,19 +1,13 @@
-<main class="graph-workspace-page">
-  <header class="graph-workspace-header">
+<main class="gw-page">
+  <header class="gw-head">
     <div>
-      <p class="graph-workspace-eyebrow">Graph Workspace</p>
+      <p class="gw-eyebrow">Graph Workspace</p>
       <h1>Graph Workspace</h1>
-      <p class="graph-workspace-subtitle">
-        Crea y compara varias funciones sobre un mismo canvas.
-      </p>
+      <p class="gw-subtitle">Crea y compara varias funciones sobre un mismo canvas.</p>
     </div>
 
-    <button
-      class="graph-workspace-add"
-      type="button"
-      (click)="addFunction()"
-    >
-      <svg aria-hidden="true" viewBox="0 0 24 24">
+    <button class="gw-add" type="button" (click)="addFunction()">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
         <path d="M12 5v14M5 12h14" />
       </svg>
       <span>Añadir función</span>
@@ -21,118 +15,129 @@
   </header>
 
   <ng-container *ngIf="vm$ | async as vm">
-    <section class="graph-workspace-canvas" aria-label="Canvas gráfico">
+    <section class="gw-canvas" aria-label="Canvas gráfico">
       <app-graph-canvas-container
         #graphCanvasContainer
         ariaLabel="Graph Workspace canvas"
       ></app-graph-canvas-container>
     </section>
 
-    <section class="graph-functions-panel" aria-labelledby="graph-functions-title">
-      <div class="graph-functions-header">
+    <section class="gw-panel" aria-labelledby="graph-functions-title">
+      <div class="gw-panel__head">
         <div>
-          <p class="graph-workspace-eyebrow">Functions</p>
+          <p class="gw-eyebrow">Functions</p>
           <h2 id="graph-functions-title">Funciones</h2>
         </div>
-        <span class="graph-functions-count">
-          {{ vm.state.functions.length }} / 12
-        </span>
+        <span class="gw-count">{{ vm.state.functions.length }} / 12</span>
       </div>
 
-      <p
-        *ngIf="vm.state.functions.length === 0"
-        class="graph-functions-empty"
-      >
+      <p *ngIf="vm.state.functions.length === 0" class="gw-empty">
         Aún no hay funciones. Añade una función para comenzar a graficar.
       </p>
 
-      <ol
-        *ngIf="vm.state.functions.length > 0"
-        class="graph-functions-list"
-      >
+      <ol *ngIf="vm.state.functions.length > 0" class="gw-list">
         <li
           *ngFor="let graphFunction of vm.state.functions; trackBy: trackFunction"
-          class="graph-function-card"
-          [class.graph-function-card--selected]="vm.state.selectedFunctionId === graphFunction.id"
+          class="gf-card"
+          [class.gf-card--selected]="vm.state.selectedFunctionId === graphFunction.id"
         >
           <span
-            class="graph-function-color"
+            class="gf-color"
             [style.background]="graphFunction.color"
             aria-hidden="true"
           ></span>
 
-          <div class="graph-function-expression">
-            <label
-              class="graph-function-label"
-              [for]="'graph-expression-' + graphFunction.id"
-            >
-              Expresión de {{ graphFunction.label }}
-            </label>
-            <div class="graph-function-equation">
-              <span class="graph-function-prefix" aria-hidden="true">
-                {{ graphFunction.label }}(x)=
-              </span>
-              <input
-                [id]="'graph-expression-' + graphFunction.id"
-                type="text"
-                autocomplete="off"
-                spellcheck="false"
-                [value]="graphFunction.expression"
-                [attr.placeholder]="graphFunction.plotKind === 'line' ? 'sin(x)' : 'x^2 + y^2'"
-                (input)="updateExpression(graphFunction.id, $event)"
-              />
-            </div>
-          </div>
+          <div class="gf-head">
+            <input
+              [id]="'graph-label-' + graphFunction.id"
+              class="gf-name"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="32"
+              [value]="graphFunction.label"
+              [attr.aria-label]="'Etiqueta de ' + graphFunction.label"
+              (input)="updateLabel(graphFunction.id, $event)"
+            />
 
-          <label class="graph-function-kind">
-            <span>Tipo</span>
-            <select
-              [value]="graphFunction.plotKind"
-              [attr.aria-label]="'Tipo de gráfica para ' + graphFunction.label"
-              (change)="setPlotKind(graphFunction.id, $event)"
-            >
-              <option value="line">Line</option>
-              <option value="contour">Contour</option>
-            </select>
-          </label>
-
-          <div class="graph-function-actions" aria-label="Acciones de función">
             <button
-              class="graph-function-action"
+              class="gf-act gf-act--toggle"
               type="button"
-              [class.graph-function-action--active]="graphFunction.visible"
+              [class.gf-act--active]="graphFunction.visible"
               [attr.aria-pressed]="graphFunction.visible"
               [attr.aria-label]="graphFunction.visible ? 'Ocultar ' + graphFunction.label : 'Mostrar ' + graphFunction.label"
               (click)="toggleFunction(graphFunction.id)"
             >
-              <svg aria-hidden="true" viewBox="0 0 24 24">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
                 <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
               <span>{{ graphFunction.visible ? 'Visible' : 'Oculta' }}</span>
             </button>
+          </div>
 
-            <button
-              class="graph-function-action graph-function-action--select"
-              type="button"
-              [attr.aria-pressed]="vm.state.selectedFunctionId === graphFunction.id"
-              [attr.aria-label]="'Seleccionar ' + graphFunction.label"
-              (click)="selectFunction(graphFunction.id)"
-            >
-              <span>Seleccionar</span>
-            </button>
+          <div class="gf-expr">
+            <span class="gf-prefix" aria-hidden="true">(x)=</span>
+            <input
+              [id]="'graph-expression-' + graphFunction.id"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              [attr.aria-label]="'Expresión de ' + graphFunction.label"
+              [value]="graphFunction.expression"
+              [attr.placeholder]="graphFunction.plotKind === 'line' ? 'sin(x)' : 'x^2 + y^2'"
+              (input)="updateExpression(graphFunction.id, $event)"
+            />
+          </div>
 
-            <button
-              class="graph-function-action graph-function-action--danger"
-              type="button"
-              [attr.aria-label]="'Eliminar ' + graphFunction.label"
-              (click)="removeFunction(graphFunction.id)"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" />
-              </svg>
-              <span>Eliminar</span>
-            </button>
+          <div class="gf-foot">
+            <label class="gf-kind">
+              <span>Tipo</span>
+              <select
+                [value]="graphFunction.plotKind"
+                [attr.aria-label]="'Tipo de gráfica para ' + graphFunction.label"
+                (change)="setPlotKind(graphFunction.id, $event)"
+              >
+                <option value="line">Line</option>
+                <option value="contour">Contour</option>
+              </select>
+            </label>
+
+            <div class="gf-actions" aria-label="Acciones de función">
+              <button
+                class="gf-act gf-act--select"
+                type="button"
+                [attr.aria-pressed]="vm.state.selectedFunctionId === graphFunction.id"
+                [attr.aria-label]="'Seleccionar ' + graphFunction.label"
+                (click)="selectFunction(graphFunction.id)"
+              >
+                <span>Seleccionar</span>
+              </button>
+
+              <button
+                class="gf-act gf-act--dup"
+                type="button"
+                [attr.aria-label]="'Duplicar ' + graphFunction.label"
+                (click)="duplicateFunction(graphFunction.id)"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                  <path d="M9 3h10v10M7 7h10v10H7z" />
+                </svg>
+                <span>Duplicar</span>
+              </button>
+
+              <button
+                class="gf-act gf-act--danger"
+                type="button"
+                [attr.aria-label]="'Eliminar ' + graphFunction.label"
+                (click)="removeFunction(graphFunction.id)"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                  <path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" />
+                </svg>
+                <span>Eliminar</span>
+              </button>
+            </div>
           </div>
         </li>
       </ol>

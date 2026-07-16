@@ -11,7 +11,8 @@ import {
   MAX_GRAPH_FUNCTIONS,
 } from './graph-workspace-facade';
 import {
-  DEFAULT_GRAPH_VIEWPORT,
+  DEFAULT_GRAPH_VIEWPORT_2D,
+  DEFAULT_GRAPH_SCENE_3D,
   type GraphWorkspaceState,
 } from './graph-workspace-state';
 
@@ -47,12 +48,15 @@ describe('GraphWorkspaceFacade', () => {
   });
 
   it('creates the versioned initial workspace state', () => {
-    expect(facade.snapshot.version).toBe(1);
+    expect(facade.snapshot.version).toBe(2);
     expect(facade.snapshot.id).toBe('graph-id-0');
     expect(facade.snapshot.name).toBe('Graph Workspace');
+    expect(facade.snapshot.viewMode).toBe('2d');
     expect(facade.snapshot.functions).toEqual([]);
     expect(facade.snapshot.selectedFunctionId).toBeNull();
-    expect(facade.snapshot.viewport).toEqual(DEFAULT_GRAPH_VIEWPORT);
+    expect(facade.snapshot.viewport2D).toEqual(DEFAULT_GRAPH_VIEWPORT_2D);
+    expect(facade.snapshot.viewport).toBe(facade.snapshot.viewport2D);
+    expect(facade.snapshot.scene3D).toEqual(DEFAULT_GRAPH_SCENE_3D);
     expect(facade.snapshot.createdAt).toEqual(jasmine.any(Date));
     expect(facade.snapshot.updatedAt).toEqual(jasmine.any(Date));
     expect(repository.load).toHaveBeenCalledTimes(1);
@@ -76,8 +80,14 @@ describe('GraphWorkspaceFacade', () => {
     expect(repository.load).toHaveBeenCalledTimes(1);
     expect(repository.save).not.toHaveBeenCalled();
     expect(idGenerator).not.toHaveBeenCalled();
-    expect(hydratedFacade.snapshot).toBe(hydratedState);
-    expect(firstState).toBe(hydratedState);
+    expect(hydratedFacade.snapshot).not.toBe(hydratedState);
+    expect(hydratedFacade.snapshot).toEqual(hydratedState);
+    expect(firstState).not.toBe(hydratedState);
+    expect(firstState).toEqual(hydratedState);
+    (hydratedState.functions[0] as { label: string }).label = 'mutated';
+    (hydratedState.viewport2D as { xMin: number }).xMin = -99;
+    expect(hydratedFacade.snapshot.functions[0].label).toBe('f1');
+    expect(hydratedFacade.snapshot.viewport2D.xMin).toBe(-4);
     subscription.unsubscribe();
   });
 
@@ -149,6 +159,89 @@ describe('GraphWorkspaceFacade', () => {
 
     expect(facade.snapshot.functions[0].expression).toBe('sin(x)');
     expect(facade.snapshot.functions[1]).toBe(second);
+  });
+
+  it('updates a label with trimming and persists it once', () => {
+    facade.addFunction('x');
+    const id = facade.snapshot.functions[0].id;
+    repository.save.calls.reset();
+
+    facade.updateLabel(id, '  custom label  ');
+
+    expect(facade.snapshot.functions[0].label).toBe('custom label');
+    expect(repository.save).toHaveBeenCalledOnceWith(facade.snapshot);
+  });
+
+  it('truncates labels to 32 characters', () => {
+    facade.addFunction('x');
+    const id = facade.snapshot.functions[0].id;
+    repository.save.calls.reset();
+
+    facade.updateLabel(id, 'abcdefghijklmnopqrstuvwxyz1234567890');
+
+    expect(facade.snapshot.functions[0].label).toBe(
+      'abcdefghijklmnopqrstuvwxyz123456'
+    );
+    expect(facade.snapshot.functions[0].label.length).toBe(32);
+    expect(repository.save).toHaveBeenCalledOnceWith(facade.snapshot);
+  });
+
+  it('ignores empty, identical and unknown labels', () => {
+    facade.addFunction('x');
+    const graphFunction = facade.snapshot.functions[0];
+    const workspaceUpdatedAt = facade.snapshot.updatedAt;
+    repository.save.calls.reset();
+
+    facade.updateLabel('missing', 'f9');
+    facade.updateLabel(graphFunction.id, '   ');
+    facade.updateLabel(graphFunction.id, graphFunction.label);
+
+    expect(repository.save).not.toHaveBeenCalled();
+    expect(facade.snapshot.functions[0]).toBe(graphFunction);
+    expect(facade.snapshot.updatedAt).toBe(workspaceUpdatedAt);
+  });
+
+  it('duplicates a function after the original and selects the copy', () => {
+    facade.addFunction('sin(x)');
+    facade.addFunction('x+y');
+    const [original, other] = facade.snapshot.functions;
+    const originalColorIndex = GRAPH_FUNCTION_COLORS.findIndex(
+      color => color === original.color
+    );
+    repository.save.calls.reset();
+
+    facade.duplicateFunction(original.id);
+
+    expect(facade.snapshot.functions.length).toBe(3);
+    expect(facade.snapshot.functions[0]).toBe(original);
+    expect(facade.snapshot.functions[1].expression).toBe(original.expression);
+    expect(facade.snapshot.functions[1].plotKind).toBe(original.plotKind);
+    expect(facade.snapshot.functions[1].visible).toBe(original.visible);
+    expect(facade.snapshot.functions[1].id).not.toBe(original.id);
+    expect(facade.snapshot.functions[1].label).toBe('f3');
+    expect(facade.snapshot.functions[1].color).toBe(
+      GRAPH_FUNCTION_COLORS[(originalColorIndex + 1) % GRAPH_FUNCTION_COLORS.length]
+    );
+    expect(facade.snapshot.functions[2]).toBe(other);
+    expect(facade.snapshot.selectedFunctionId)
+      .toBe(facade.snapshot.functions[1].id);
+    expect(repository.save).toHaveBeenCalledOnceWith(facade.snapshot);
+  });
+
+  it('does not duplicate when the limit is reached or the ID is missing', () => {
+    facade.addFunction('x');
+    for (let index = 1; index < MAX_GRAPH_FUNCTIONS; index++) {
+      facade.addFunction(`x+${index}`);
+    }
+    const original = facade.snapshot.functions[0];
+    repository.save.calls.reset();
+
+    facade.duplicateFunction('missing');
+    facade.duplicateFunction(original.id);
+
+    expect(repository.save).not.toHaveBeenCalled();
+    expect(facade.snapshot.functions.length).toBe(MAX_GRAPH_FUNCTIONS);
+    expect(facade.snapshot.functions[0]).toBe(original);
   });
 
   it('removes functions and clears selection only when the selected one is removed', () => {
@@ -287,13 +380,51 @@ describe('GraphWorkspaceFacade', () => {
     expect(facade.snapshot.selectedFunctionId).toBe(id);
   });
 
+  it('changes the view mode without disturbing functions or selection', () => {
+    facade.addFunction('x');
+    const before = facade.snapshot;
+    const selectedFunctionId = before.selectedFunctionId;
+    repository.save.calls.reset();
+
+    facade.setViewMode('3d');
+
+    expect(facade.snapshot.viewMode).toBe('3d');
+    expect(facade.snapshot.functions).toBe(before.functions);
+    expect(facade.snapshot.selectedFunctionId).toBe(selectedFunctionId);
+    expect(facade.snapshot.viewport2D).toBe(before.viewport2D);
+    expect(facade.snapshot.scene3D).toBe(before.scene3D);
+    expect(repository.save).toHaveBeenCalledOnceWith(facade.snapshot);
+  });
+
+  it('does not persist unchanged or invalid view modes', () => {
+    const previousState = facade.snapshot;
+    repository.save.calls.reset();
+
+    facade.setViewMode('2d');
+    facade.setViewMode('3d');
+    facade.setViewMode('3d');
+    facade.setViewMode('invalid' as unknown as '2d');
+
+    expect(repository.save).toHaveBeenCalledOnceWith(facade.snapshot);
+    expect(facade.snapshot.viewMode).toBe('3d');
+    expect(facade.snapshot).not.toBe(previousState);
+  });
+
   it('updates the viewport with a defensive copy', () => {
     const viewport = { xMin: -20, xMax: 20, yMin: -5, yMax: 5 };
 
     facade.setViewport(viewport);
 
+    expect(facade.snapshot.viewport2D).toEqual(viewport);
+    expect(facade.snapshot.viewport2D).not.toBe(viewport);
     expect(facade.snapshot.viewport).toEqual(viewport);
     expect(facade.snapshot.viewport).not.toBe(viewport);
+    expect(facade.snapshot.viewport).toEqual(facade.snapshot.viewport2D);
+    expect(facade.snapshot.viewport).not.toBe(facade.snapshot.viewport2D);
+
+    viewport.xMin = 999;
+    expect(facade.snapshot.viewport2D.xMin).toBe(-20);
+    expect(facade.snapshot.viewport.xMin).toBe(-20);
   });
 
   it('resets an altered viewport to the default and persists it once', () => {
@@ -306,8 +437,8 @@ describe('GraphWorkspaceFacade', () => {
 
     facade.resetViewport();
 
-    expect(facade.snapshot.viewport).toEqual(DEFAULT_GRAPH_VIEWPORT);
-    expect(facade.snapshot.viewport).not.toBe(DEFAULT_GRAPH_VIEWPORT);
+    expect(facade.snapshot.viewport2D).toEqual(DEFAULT_GRAPH_VIEWPORT_2D);
+    expect(facade.snapshot.viewport2D).not.toBe(DEFAULT_GRAPH_VIEWPORT_2D);
     expect(facade.snapshot.functions).toEqual([functionBeforeReset]);
     expect(facade.snapshot.selectedFunctionId).toBe(selectedFunctionId);
     expect(facade.snapshot.updatedAt.getTime())
@@ -330,7 +461,7 @@ describe('GraphWorkspaceFacade', () => {
 
     facade.setViewport({ xMin: 10, xMax: -10, yMin: -5, yMax: 5 });
 
-    expect(facade.snapshot.viewport).toBe(initialViewport);
+    expect(facade.snapshot.viewport2D).toBe(initialViewport);
   });
 
   it('clears functions and restores defaults without changing workspace identity', () => {
@@ -343,9 +474,11 @@ describe('GraphWorkspaceFacade', () => {
 
     expect(facade.snapshot.id).toBe(workspaceId);
     expect(facade.snapshot.createdAt).toBe(createdAt);
+    expect(facade.snapshot.viewMode).toBe('2d');
     expect(facade.snapshot.functions).toEqual([]);
     expect(facade.snapshot.selectedFunctionId).toBeNull();
-    expect(facade.snapshot.viewport).toEqual(DEFAULT_GRAPH_VIEWPORT);
+    expect(facade.snapshot.viewport2D).toEqual(DEFAULT_GRAPH_VIEWPORT_2D);
+    expect(facade.snapshot.scene3D).toEqual(DEFAULT_GRAPH_SCENE_3D);
   });
 
   it('enforces the provisional function limit', () => {
@@ -438,6 +571,10 @@ describe('GraphWorkspaceFacade', () => {
     facade.selectFunction('missing');
     facade.selectFunction(selectedId);
     facade.setViewport({ xMin: 5, xMax: -5, yMin: -4, yMax: 4 });
+    facade.updateLabel('missing', 'f10');
+    facade.updateLabel(first.id, first.label);
+    facade.updateLabel(first.id, '   ');
+    facade.duplicateFunction('missing');
 
     expect(repository.save).not.toHaveBeenCalled();
   });
@@ -484,10 +621,12 @@ describe('GraphWorkspaceFacade', () => {
 
   function createHydratedState(): GraphWorkspaceState {
     const timestamp = new Date('2026-05-06T07:08:09.000Z');
+    const viewport2D = { xMin: -4, xMax: 4, yMin: -3, yMax: 3 };
     return {
-      version: 1,
+      version: 2,
       id: 'persisted-workspace',
       name: 'Graph Workspace',
+      viewMode: '2d',
       functions: [
         {
           id: 'persisted-function',
@@ -501,7 +640,9 @@ describe('GraphWorkspaceFacade', () => {
         },
       ],
       selectedFunctionId: 'persisted-function',
-      viewport: { xMin: -4, xMax: 4, yMin: -3, yMax: 3 },
+      viewport2D,
+      viewport: viewport2D,
+      scene3D: DEFAULT_GRAPH_SCENE_3D,
       createdAt: timestamp,
       updatedAt: timestamp,
     };
