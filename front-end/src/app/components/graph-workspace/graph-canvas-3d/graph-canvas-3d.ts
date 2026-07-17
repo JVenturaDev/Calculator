@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  HostBinding,
   Input,
   OnChanges,
   OnDestroy,
@@ -63,9 +64,15 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
   @Input({ required: true }) scene!: GraphScene3D;
   @Input() selectedFunctionId: string | null = null;
   @Input() ariaLabel = 'Graph Workspace 3D canvas';
+  @Input() embedded = false;
   @Output() readonly sceneChange = new EventEmitter<GraphScene3D>();
   @Output() readonly functionSelect = new EventEmitter<string>();
   @Output() readonly hoverChange = new EventEmitter<GraphCanvasHover | null>();
+
+  @HostBinding('class.graph-canvas-shell--embedded')
+  get embeddedClass(): boolean {
+    return this.embedded;
+  }
 
   @ViewChild('plotContainer', { static: true })
   private plotContainer!: ElementRef<HTMLDivElement>;
@@ -79,6 +86,7 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
   private renderRevision = 0;
   private plotlyModule: GraphPlotly3DModule | null = null;
   private resizeObserver?: ResizeObserver;
+  private resizeFrame: number | null = null;
   private relayoutListenerAttached = false;
   private clickListenerAttached = false;
   private hoverListenersAttached = false;
@@ -122,6 +130,7 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
     this.detachClickListener();
     this.detachHoverListeners();
     this.resizeObserver?.disconnect();
+    this.cancelResizeFrame();
     this.plotReady = false;
 
     if (this.plotlyModule) {
@@ -155,6 +164,8 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
         this.attachHoverListeners();
       }
 
+      this.scheduleResize();
+
       if (this.destroyed || revision !== this.renderRevision) return;
       this.loading = false;
     } catch {
@@ -177,6 +188,25 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
     if (this.destroyed || !this.plotReady || !this.plotlyModule) return;
 
     void this.plotlyModule.Plots.resize(this.plotContainer.nativeElement);
+  }
+
+  private scheduleResize(): void {
+    this.cancelResizeFrame();
+    if (typeof requestAnimationFrame === 'undefined') return;
+
+    this.resizeFrame = requestAnimationFrame(() => {
+      this.resizeFrame = null;
+      this.resizePlot();
+    });
+  }
+
+  private cancelResizeFrame(): void {
+    if (this.resizeFrame === null || typeof cancelAnimationFrame === 'undefined') {
+      return;
+    }
+
+    cancelAnimationFrame(this.resizeFrame);
+    this.resizeFrame = null;
   }
 
   private attachRelayoutListener(): void {

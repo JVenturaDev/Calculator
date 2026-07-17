@@ -1,4 +1,10 @@
-import { Component } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { map } from 'rxjs';
@@ -25,8 +31,10 @@ interface DisplayViewModel {
   standalone: true,
   imports: [CommonModule, FormsModule]
 })
-export class DisplayComponent {
+export class DisplayComponent implements AfterViewInit, OnDestroy {
   readonly viewModel$;
+  @ViewChild('expressionInput') private expressionInput?: ElementRef<HTMLInputElement>;
+  private caretSyncHandle: number | null = null;
 
   constructor(
     private calculator: CalculatorFacade,
@@ -38,8 +46,20 @@ export class DisplayComponent {
     );
   }
 
+  ngAfterViewInit(): void {
+    this.scheduleCaretReveal();
+  }
+
+  ngOnDestroy(): void {
+    if (this.caretSyncHandle !== null) {
+      cancelAnimationFrame(this.caretSyncHandle);
+      this.caretSyncHandle = null;
+    }
+  }
+
   onExpressionChange(expression: string): void {
     this.calculator.setExpression(expression);
+    this.scheduleCaretReveal();
   }
 
   onKeyDown(event: KeyboardEvent): void {
@@ -52,6 +72,7 @@ export class DisplayComponent {
       }
 
       this.calculator.backspace();
+      this.scheduleCaretReveal();
     } else if (event.key === 'Enter') {
       const expr = this.calculator.snapshot.expression;
       const result = this.calculator.evaluate({
@@ -60,6 +81,11 @@ export class DisplayComponent {
       this.history.agregarId(expr, result);
       event.preventDefault();
     }
+  }
+
+  onExpressionFocus(): void {
+    this.inputService.setCalculatorTarget();
+    this.scheduleCaretReveal();
   }
 
   private toViewModel(state: CalculatorState): DisplayViewModel {
@@ -83,5 +109,30 @@ export class DisplayComponent {
     if (state.status === 'error') return 'Error';
     if (state.phase === 'result') return 'Resultado';
     return 'Listo';
+  }
+
+  private scheduleCaretReveal(): void {
+    if (this.caretSyncHandle !== null) {
+      cancelAnimationFrame(this.caretSyncHandle);
+    }
+
+    this.caretSyncHandle = requestAnimationFrame(() => {
+      this.caretSyncHandle = null;
+      const input = this.expressionInput?.nativeElement;
+      if (!input || document.activeElement !== input) return;
+
+      const selectionStart = input.selectionStart;
+      const selectionEnd = input.selectionEnd;
+      if (
+        selectionStart === null ||
+        selectionEnd === null ||
+        selectionStart !== selectionEnd ||
+        selectionEnd !== input.value.length
+      ) {
+        return;
+      }
+
+      input.scrollLeft = input.scrollWidth;
+    });
   }
 }

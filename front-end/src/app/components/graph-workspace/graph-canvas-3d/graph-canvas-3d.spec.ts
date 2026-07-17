@@ -216,12 +216,14 @@ describe('GraphCanvas3DComponent', () => {
     await fixture.whenStable();
 
     const plotCount = newPlot.calls.count();
+    const resizeCount = resize.calls.count();
     const container = fixture.nativeElement.querySelector('.graph-canvas-plot') as HTMLDivElement;
 
     resizeCallback([], {} as ResizeObserver);
 
     expect(observe).toHaveBeenCalledOnceWith(container);
-    expect(resize).toHaveBeenCalledOnceWith(container);
+    expect(resize.calls.count()).toBeGreaterThan(resizeCount);
+    expect(resize).toHaveBeenCalledWith(container);
     expect(newPlot.calls.count()).toBe(plotCount);
     expect(react).not.toHaveBeenCalled();
   });
@@ -407,6 +409,17 @@ describe('GraphCanvas3DComponent', () => {
     expect(plot?.getAttribute('aria-label')).toBe('Graph Workspace 3D');
     expect(samples).toEqual(sampleSnapshot as GraphSurfaceSample[]);
     expect(scene).toEqual(sceneSnapshot);
+  });
+
+  it('can render embedded without its own outer card styling', async () => {
+    component.embedded = true;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const shell = fixture.nativeElement.querySelector('.graph-canvas-shell');
+
+    expect(shell?.classList).toContain('graph-canvas-shell--embedded');
   });
 
   it('purges Plotly and disconnects resize on destroy', async () => {

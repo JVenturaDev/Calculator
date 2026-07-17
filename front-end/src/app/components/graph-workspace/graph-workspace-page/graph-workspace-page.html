@@ -39,22 +39,23 @@
       </button>
     </section>
 
-    <section
-      *ngIf="state.viewMode === '3d'"
-      class="gw-empty gw-mode-note"
-      role="status"
-      aria-live="polite"
-    >
-      <p>Vista 3D activa.</p>
-      <p *ngIf="lineFunctionCount(state.functions) > 0">
-        {{ lineFunctionCount(state.functions) }} función{{
-          lineFunctionCount(state.functions) === 1 ? '' : 'es'
-        }} Line no está disponible en la vista 3D.
-      </p>
-      <p>Las funciones Contour se muestran como superficies z = f(x, y) en 3D.</p>
-    </section>
-
     <section class="gw-canvas" aria-label="Canvas gráfico">
+      @if (state.viewMode === '3d') {
+        <div class="gw-canvas__context" role="status" aria-live="polite">
+          <div>Vista 3D activa.</div>
+          <div *ngIf="lineFunctionCount(state.functions) > 0">
+            {{ lineFunctionCount(state.functions) }} función{{
+              lineFunctionCount(state.functions) === 1 ? '' : 'es'
+            }} Line no está disponible en la vista 3D.
+          </div>
+          <div>Las funciones Contour se muestran como superficies z = f(x, y) en 3D.</div>
+        </div>
+      } @else {
+        <div
+          class="gw-canvas__context gw-canvas__context--hidden"
+          aria-hidden="true"
+        ></div>
+      }
       @if (state.viewMode === '2d') {
         <app-graph-canvas-container
           #graphCanvasContainer2d
@@ -194,55 +195,22 @@
         </li>
       </ol>
 
-      @if (state.viewMode === '2d') {
-        <ng-container *ngIf="vm$ | async as vm">
-          <app-graph-workspace-inspector
-            [selectedFunction]="vm.selectedFunction"
-            [selectedSample]="vm.selectedSample"
-            [viewport]="vm.viewport"
-            [summary]="{
-              totalFunctions: vm.state.functions.length,
-              visibleFunctions: vm.visibleFunctions,
-              readyFunctions: vm.readyFunctions,
-              invalidFunctions: vm.invalidFunctions,
-              unsupportedFunctions: vm.unsupportedFunctions
-            }"
-            [error]="vm.error"
-            [hoveredPoint]="hoveredPointForMode(state.viewMode)"
-          ></app-graph-workspace-inspector>
-        </ng-container>
-      } @else {
-        <section
-          class="gw-empty gw-3d-context"
-          aria-labelledby="graph-3d-context-title"
-        >
-          <p class="gw-eyebrow">Vista 3D</p>
-          <h2 id="graph-3d-context-title">Contexto real</h2>
-          <p>Selecciona una función para seguir editando etiqueta, color y visibilidad.</p>
-          <p>Las funciones Contour se muestran como superficies z = f(x, y) en 3D.</p>
-          <p>Funciones: {{ state.functions.length }}</p>
-          <p>Visibles: {{ visibleFunctionCount(state.functions) }}</p>
-          <p>Contour: {{ contourFunctionCount(state.functions) }}</p>
-          <p>Line: {{ lineFunctionCount(state.functions) }}</p>
-        </section>
-
-        <ng-container *ngIf="vm$ | async as vm">
-          <app-graph-workspace-inspector
-            [selectedFunction]="vm.selectedFunction"
-            [selectedSample]="vm.selectedSample"
-            [viewport]="vm.viewport"
-            [summary]="{
-              totalFunctions: vm.state.functions.length,
-              visibleFunctions: vm.visibleFunctions,
-              readyFunctions: vm.readyFunctions,
-              invalidFunctions: vm.invalidFunctions,
-              unsupportedFunctions: vm.unsupportedFunctions
-            }"
-            [error]="vm.error"
-            [hoveredPoint]="hoveredPointForMode(state.viewMode)"
-          ></app-graph-workspace-inspector>
-        </ng-container>
-      }
+      <ng-container *ngIf="vm$ | async as vm">
+        <app-graph-workspace-inspector
+          [selectedFunction]="vm.selectedFunction"
+          [selectedSample]="vm.selectedSample"
+          [viewport]="vm.viewport"
+          [summary]="{
+            totalFunctions: vm.state.functions.length,
+            visibleFunctions: vm.visibleFunctions,
+            readyFunctions: vm.readyFunctions,
+            invalidFunctions: vm.invalidFunctions,
+            unsupportedFunctions: vm.unsupportedFunctions
+          }"
+          [error]="vm.error"
+          [hoveredPoint]="hoveredPointForMode(state.viewMode)"
+        ></app-graph-workspace-inspector>
+      </ng-container>
     </section>
   </ng-container>
 </main>

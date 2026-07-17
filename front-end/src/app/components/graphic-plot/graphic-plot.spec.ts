@@ -11,6 +11,7 @@ import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
 
 describe('GraphicPlot', () => {
   let fixture: ComponentFixture<GraphicComponentPlot>;
+  let component: GraphicComponentPlot;
   let expression$: BehaviorSubject<string>;
   let engine: jasmine.SpyObj<CalculationEngine>;
   let newPlot: jasmine.Spy;
@@ -63,6 +64,7 @@ describe('GraphicPlot', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(GraphicComponentPlot);
+    component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
@@ -87,6 +89,16 @@ describe('GraphicPlot', () => {
     expect(config['responsive']).toBeTrue();
     expect(region?.getAttribute('role')).toBe('region');
     expect(region?.getAttribute('aria-label')).toBe('Ejemplo: y = sin(x)');
+  });
+
+  it('can render embedded without its own outer header', () => {
+    component.embedded = true;
+    fixture.detectChanges();
+
+    expect(nativeElement().querySelector('.graphic-header')).toBeNull();
+    expect(nativeElement().querySelector('.plot-container')).toBeTruthy();
+    expect(nativeElement().querySelector('.graphic-component')?.classList)
+      .toContain('graphic-component--embedded');
   });
 
   it('renders an expression with x as a scatter trace', () => {

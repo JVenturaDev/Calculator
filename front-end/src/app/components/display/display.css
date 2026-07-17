@@ -75,8 +75,9 @@
 }
 
 .expression-editor {
+  display: flex;
   min-width: 0;
-  overflow-x: auto;
+  overflow: hidden;
   border: 1px solid rgba(91, 96, 110, 0.42);
   border-radius: 9px;
   background: rgba(10, 11, 17, 0.52);
@@ -90,8 +91,8 @@
 
 .display-input {
   display: block;
+  min-width: 0;
   width: 100%;
-  min-width: 16rem;
   box-sizing: border-box;
   padding: 17px 16px;
   color: #f1eff7;
@@ -102,6 +103,10 @@
   font-size: clamp(1.25rem, 3vw, 1.65rem);
   line-height: 1.4;
   letter-spacing: 0.025em;
+  overflow-x: auto;
+  white-space: nowrap;
+  text-overflow: clip;
+  caret-color: var(--display-accent);
 }
 
 .display-input::placeholder {
@@ -122,6 +127,7 @@
   display: flex;
   min-width: 0;
   align-items: baseline;
+  justify-content: flex-end;
   gap: 10px;
   overflow-x: auto;
   color: var(--display-accent);
@@ -175,7 +181,6 @@
   }
 
   .display-input {
-    min-width: 12rem;
     padding: 14px 12px;
   }
 

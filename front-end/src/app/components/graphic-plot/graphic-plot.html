@@ -1,5 +1,5 @@
-<section class="graphic-component" aria-labelledby="graphic-plot-title">
-  <header class="graphic-header">
+<section class="graphic-component" [class.graphic-component--embedded]="embedded" aria-labelledby="graphic-plot-title">
+  <header *ngIf="!embedded" class="graphic-header">
     <div>
       <p>Visualización</p>
       <h3 id="graphic-plot-title">Gráfica</h3>

@@ -2,11 +2,25 @@
   display: block;
   min-width: 0;
   min-height: 0;
+  height: 100%;
 }
 
 .graph-canvas-container {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(136, 150, 176, 0.18);
+  border-radius: 28px;
+  background: rgba(18, 21, 31, 0.78);
+}
+
+.graph-canvas-container app-graph-canvas {
+  display: block;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
 }

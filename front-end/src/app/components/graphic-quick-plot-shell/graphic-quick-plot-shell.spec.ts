@@ -19,7 +19,9 @@ import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
   standalone: true,
   template: '<div class="graphic-plot-stub"></div>',
 })
-class GraphicPlotStubComponent {}
+class GraphicPlotStubComponent {
+  @Input() embedded = false;
+}
 
 @Component({
   selector: 'app-graph-canvas-3d',
@@ -31,6 +33,7 @@ class GraphCanvas3DStubComponent {
   @Input({ required: true }) scene!: GraphScene3D;
   @Input() selectedFunctionId: string | null = null;
   @Input() ariaLabel = '';
+  @Input() embedded = false;
   @Output() readonly sceneChange = new EventEmitter<GraphScene3D>();
 }
 
@@ -79,6 +82,8 @@ describe('GraphicQuickPlotShellComponent', () => {
     expect(fixture.componentInstance.viewMode).toBe('2d');
     expect(get2D()).not.toBeNull();
     expect(get3D()).toBeNull();
+    expect(get2DComponent()?.embedded).toBeTrue();
+    expect(toggle()).not.toBeNull();
     expect(buttons()[0].getAttribute('aria-pressed')).toBe('true');
     expect(buttons()[1].disabled).toBeTrue();
     expect(toolbar()?.getAttribute('aria-label')).toBe('Modo de visualización');
@@ -119,6 +124,7 @@ describe('GraphicQuickPlotShellComponent', () => {
 
     expect(fixture.componentInstance.viewMode).toBe('3d');
     expect(get3D()).not.toBeNull();
+    expect(get3D()?.embedded).toBeTrue();
     tick(122);
     fixture.detectChanges();
     expect(sampler3D.sampleFunction).toHaveBeenCalledTimes(1);
@@ -229,8 +235,18 @@ describe('GraphicQuickPlotShellComponent', () => {
     return fixture.nativeElement.querySelector('.graphic-quick-shell__toolbar');
   }
 
+  function toggle(): HTMLElement | null {
+    return fixture.nativeElement.querySelector('.graphic-quick-shell__toggle');
+  }
+
   function get2D(): HTMLElement | null {
     return fixture.nativeElement.querySelector('.graphic-plot-stub');
+  }
+
+  function get2DComponent(): GraphicPlotStubComponent | null {
+    return fixture.debugElement.query(
+      By.directive(GraphicPlotStubComponent)
+    )?.componentInstance as (GraphicPlotStubComponent | null) ?? null;
   }
 
   function get3D(): GraphCanvas3DStubComponent | null {

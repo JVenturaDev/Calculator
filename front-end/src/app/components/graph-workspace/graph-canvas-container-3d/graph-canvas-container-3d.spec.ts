@@ -215,12 +215,14 @@ describe('GraphCanvasContainer3DComponent', () => {
     await fixture.whenStable();
 
     const plotCount = newPlot.calls.count();
+    const resizeCount = resize.calls.count();
     const canvas = fixture.nativeElement.querySelector('.graph-canvas-plot') as HTMLDivElement;
 
     resizeCallback([], {} as ResizeObserver);
 
     expect(observe).toHaveBeenCalledOnceWith(canvas);
-    expect(resize).toHaveBeenCalledOnceWith(canvas);
+    expect(resize.calls.count()).toBeGreaterThan(resizeCount);
+    expect(resize).toHaveBeenCalledWith(canvas);
     expect(newPlot.calls.count()).toBe(plotCount);
   });
 

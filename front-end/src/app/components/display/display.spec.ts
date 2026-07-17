@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 
 import { DisplayComponent } from './display';
@@ -65,6 +65,25 @@ describe('DisplayComponent', () => {
 
     const input = getInput();
     expect(input.value).toBe('12+3');
+  });
+
+  it('keeps long expressions and results intact without truncating the value', async () => {
+    const longExpression = '1234567890'.repeat(5);
+    const longResult = '9'.repeat(40);
+
+    emitState({
+      expression: longExpression,
+      result: longResult,
+      phase: 'result',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(getInput().value).toBe(longExpression);
+    expect(fixture.nativeElement.querySelector('.result-value').textContent).toContain(
+      longResult
+    );
   });
 
   it('renders the original expression and result when phase is result', async () => {
@@ -177,6 +196,43 @@ describe('DisplayComponent', () => {
 
     expect(inputService.setCalculatorTarget).toHaveBeenCalledTimes(1);
   });
+
+  it('reveals the caret when the input is focused at the end of a long expression', fakeAsync(() => {
+    const input = getInput();
+    input.focus();
+    input.value = '1234567890'.repeat(6);
+    input.setSelectionRange(input.value.length, input.value.length);
+
+    const rafSpy = spyOn(window, 'requestAnimationFrame').and.callFake(
+      callback => {
+        callback(0);
+        return 1;
+      }
+    );
+
+    component.onExpressionChange(input.value);
+    tick();
+
+    expect(rafSpy).toHaveBeenCalled();
+    expect(input.scrollLeft).toBeGreaterThan(0);
+  }));
+
+  it('does not force the caret to the end when a middle selection is active', fakeAsync(() => {
+    const input = getInput();
+    input.focus();
+    input.value = '1234567890'.repeat(6);
+    input.setSelectionRange(8, 8);
+
+    spyOn(window, 'requestAnimationFrame').and.callFake(callback => {
+      callback(0);
+      return 1;
+    });
+
+    component.onExpressionChange(input.value);
+    tick();
+
+    expect(input.scrollLeft).toBe(0);
+  }));
 
   function emitState(partial: Partial<CalculatorState>): void {
     Object.assign(calculatorState, partial);

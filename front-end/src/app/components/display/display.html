@@ -15,6 +15,7 @@
 
   <div class="expression-editor">
     <input
+      #expressionInput
       id="calculatorInput"
       class="display-input"
       type="text"
@@ -25,7 +26,7 @@
       aria-describedby="expression-hint"
       [ngModel]="vm.expression"
       (ngModelChange)="onExpressionChange($event)"
-      (focus)="inputService.setCalculatorTarget()"
+      (focus)="onExpressionFocus()"
       (keydown)="onKeyDown($event)"
     />
   </div>

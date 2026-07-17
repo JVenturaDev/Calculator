@@ -1,4 +1,13 @@
-import { Component, Inject, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostBinding,
+  Inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { GraphicPlotService } from '../../services/plot-services/graphic-plot';
@@ -18,11 +27,18 @@ import {
   imports: [CommonModule]
 })
 export class GraphicComponentPlot implements OnInit, OnDestroy {
+  @Input() embedded = false;
+  @HostBinding('class.graphic-component--embedded')
+  get embeddedClass(): boolean {
+    return this.embedded;
+  }
+
   @ViewChild('plotContainer', { static: true }) plotContainer!: ElementRef<HTMLDivElement>;
   plotDescription = 'Ejemplo: y = sin(x)';
 
   private sub?: Subscription;
   private resizeObserver?: ResizeObserver;
+  private resizeFrame: number | null = null;
   private plotReady = false;
   private destroyed = false;
   private readonly plotConfig = {
@@ -48,6 +64,7 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
     this.destroyed = true;
     this.sub?.unsubscribe();
     this.resizeObserver?.disconnect();
+    this.cancelResizeFrame();
     this.plotReady = false;
     Plotly.purge(this.plotContainer.nativeElement);
   }
@@ -119,6 +136,7 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
       this.createLayout(title),
       this.plotConfig
     );
+    this.scheduleResize();
   }
 
   private createLayout(title: string) {
@@ -168,5 +186,24 @@ export class GraphicComponentPlot implements OnInit, OnDestroy {
   private resizePlot(): void {
     if (this.destroyed || !this.plotReady) return;
     void Plotly.Plots.resize(this.plotContainer.nativeElement);
+  }
+
+  private scheduleResize(): void {
+    this.cancelResizeFrame();
+    if (typeof requestAnimationFrame === 'undefined') return;
+
+    this.resizeFrame = requestAnimationFrame(() => {
+      this.resizeFrame = null;
+      this.resizePlot();
+    });
+  }
+
+  private cancelResizeFrame(): void {
+    if (this.resizeFrame === null || typeof cancelAnimationFrame === 'undefined') {
+      return;
+    }
+
+    cancelAnimationFrame(this.resizeFrame);
+    this.resizeFrame = null;
   }
 }

@@ -14,28 +14,30 @@
     role="group"
     aria-label="Modo de visualización"
   >
-    <button
-      type="button"
-      class="graphic-quick-shell__button"
-      [class.graphic-quick-shell__button--active]="viewMode === '2d'"
-      [attr.aria-pressed]="viewMode === '2d'"
-      (click)="selectViewMode('2d')"
-    >
-      2D
-    </button>
+    <div class="graphic-quick-shell__toggle">
+      <button
+        type="button"
+        class="graphic-quick-shell__button"
+        [class.graphic-quick-shell__button--active]="viewMode === '2d'"
+        [attr.aria-pressed]="viewMode === '2d'"
+        (click)="selectViewMode('2d')"
+      >
+        2D
+      </button>
 
-    <button
-      type="button"
-      class="graphic-quick-shell__button"
-      [class.graphic-quick-shell__button--active]="viewMode === '3d'"
-      [attr.aria-pressed]="viewMode === '3d'"
-      [disabled]="!canUse3D"
-      [attr.aria-disabled]="!canUse3D"
-      [attr.title]="canUse3D ? 'Cambiar a vista 3D' : compatibilityMessage"
-      (click)="selectViewMode('3d')"
-    >
-      3D
-    </button>
+      <button
+        type="button"
+        class="graphic-quick-shell__button"
+        [class.graphic-quick-shell__button--active]="viewMode === '3d'"
+        [attr.aria-pressed]="viewMode === '3d'"
+        [disabled]="!canUse3D"
+        [attr.aria-disabled]="!canUse3D"
+        [attr.title]="canUse3D ? 'Cambiar a vista 3D' : compatibilityMessage"
+        (click)="selectViewMode('3d')"
+      >
+        3D
+      </button>
+    </div>
   </div>
 
   <p
@@ -57,13 +59,14 @@
   </p>
 
   <div class="graphic-quick-shell__canvas">
-    <app-graphic-plot *ngIf="viewMode === '2d'"></app-graphic-plot>
+    <app-graphic-plot *ngIf="viewMode === '2d'" [embedded]="true"></app-graphic-plot>
 
     <app-graph-canvas-3d
       *ngIf="viewMode === '3d'"
       [samples]="surfaceSamples"
       [scene]="scene"
       [selectedFunctionId]="selectedFunctionId"
+      [embedded]="true"
       ariaLabel="Graph Workspace 3D canvas"
       (sceneChange)="onSceneChange($event)"
     ></app-graph-canvas-3d>

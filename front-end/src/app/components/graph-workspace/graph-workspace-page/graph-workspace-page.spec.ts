@@ -179,6 +179,34 @@ describe('GraphWorkspacePageComponent', () => {
       .not.toBeNull();
   });
 
+  it('keeps a shared canvas shell and only swaps the active canvas component', () => {
+    emitState(createState({ functions: [], viewMode: '2d' }));
+
+    const shell = nativeElement().querySelector('.gw-canvas');
+    const context = nativeElement().querySelector<HTMLElement>('.gw-canvas__context');
+
+    expect(shell).not.toBeNull();
+    expect(context).not.toBeNull();
+    expect(context?.classList.contains('gw-canvas__context--hidden')).toBeTrue();
+    expect(nativeElement().querySelector('app-graph-canvas-container'))
+      .not.toBeNull();
+    expect(nativeElement().querySelector('app-graph-canvas-container-3d'))
+      .toBeNull();
+
+    emitState(createState({ functions: [], viewMode: '3d' }));
+    fixture.detectChanges();
+
+    expect(nativeElement().querySelector('.gw-canvas')).toBe(shell);
+    expect(nativeElement().querySelector('.gw-canvas__context'))
+      .not.toBeNull();
+    expect(nativeElement().querySelector('app-graph-canvas-container'))
+      .toBeNull();
+    expect(nativeElement().querySelector('app-graph-canvas-container-3d'))
+      .not.toBeNull();
+    expect(nativeElement().querySelector<HTMLElement>('.gw-canvas__context')
+      ?.classList.contains('gw-canvas__context--hidden')).toBeFalse();
+  });
+
   it('renders the inspector in 3D mode and shows 3D hovered points', () => {
     emitState(createState({ functions: [graphFunction('fn-1')], viewMode: '3d' }));
 

@@ -1,11 +1,17 @@
 :host {
   display: block;
   min-width: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .graphic-quick-shell {
   display: flex;
   min-width: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   flex-direction: column;
   gap: 10px;
 }
@@ -58,13 +64,22 @@
   gap: 8px;
 }
 
+.graphic-quick-shell__toggle {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid rgba(96, 105, 123, 0.72);
+  border-radius: 12px;
+  background: rgba(25, 28, 36, 0.92);
+}
+
 .graphic-quick-shell__button {
+  min-width: 4.2rem;
   min-height: 44px;
   padding: 0.45rem 0.9rem;
   color: #c7cad4;
-  border: 1px solid rgba(96, 105, 123, 0.72);
-  border-radius: 10px;
-  background: rgba(25, 28, 36, 0.92);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   font: inherit;
   font-weight: 650;
   transition:
@@ -77,15 +92,21 @@
 .graphic-quick-shell__button:hover:not(:disabled),
 .graphic-quick-shell__button:focus-visible {
   color: #f0edf6;
-  border-color: rgba(120, 169, 255, 0.72);
   background: rgba(45, 53, 72, 0.96);
-  transform: translateY(-1px);
+  transform: none;
+}
+
+.graphic-quick-shell__button:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(120, 169, 255, 0.8);
 }
 
 .graphic-quick-shell__button--active {
   color: #f6f8ff;
-  border-color: rgba(120, 169, 255, 0.95);
   background: rgba(70, 94, 138, 0.96);
+}
+
+.graphic-quick-shell__button + .graphic-quick-shell__button {
+  border-left: 1px solid rgba(96, 105, 123, 0.72);
 }
 
 .graphic-quick-shell__button:disabled {
@@ -115,7 +136,10 @@
 }
 
 .graphic-quick-shell__canvas {
+  display: flex;
+  flex: 1;
   min-width: 0;
+  min-height: clamp(280px, 45vh, 420px);
   padding: 0.85rem;
   border: 1px solid rgba(136, 150, 176, 0.2);
   border-radius: 22px;
@@ -123,6 +147,16 @@
     radial-gradient(circle at 18% 12%, rgba(112, 88, 255, 0.18), transparent 34%),
     linear-gradient(145deg, rgba(24, 27, 39, 0.96), rgba(12, 14, 21, 0.98));
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+}
+
+.graphic-quick-shell__canvas > app-graphic-plot,
+.graphic-quick-shell__canvas > app-graph-canvas-3d {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
 }
 
 @media (max-width: 500px) {
@@ -141,5 +175,21 @@
   .graphic-quick-shell__canvas {
     padding: 0.7rem;
     border-radius: 18px;
+    min-height: clamp(280px, 45vh, 420px);
+  }
+
+  .graphic-quick-shell__toggle {
+    width: 100%;
+  }
+
+  .graphic-quick-shell__button {
+    flex: 1 1 0;
+    padding-inline: 0.75rem;
+  }
+}
+
+@media (min-width: 501px) {
+  .graphic-quick-shell__canvas {
+    min-height: clamp(320px, 48vh, 520px);
   }
 }

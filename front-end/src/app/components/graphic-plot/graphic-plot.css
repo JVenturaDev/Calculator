@@ -6,6 +6,11 @@
   min-height: 320px;
 }
 
+:host(.graphic-component--embedded) {
+  height: 100%;
+  min-height: 0;
+}
+
 .graphic-component {
   display: flex;
   box-sizing: border-box;
@@ -21,6 +26,16 @@
   background: #11131a;
 }
 
+.graphic-component--embedded {
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
 .graphic-header {
   display: flex;
   min-width: 0;
@@ -30,6 +45,10 @@
   gap: 12px;
   border-bottom: 1px solid rgba(66, 71, 84, 0.64);
   background: rgba(35, 37, 46, 0.82);
+}
+
+.graphic-component--embedded .graphic-header {
+  display: none;
 }
 
 .graphic-header p,
@@ -80,11 +99,22 @@
   background-size: 20px 20px;
 }
 
+.graphic-component--embedded .plot-viewport {
+  min-height: 0;
+  background:
+    radial-gradient(rgba(139, 151, 174, 0.11) 1px, transparent 1px),
+    #0f1117;
+}
+
 .plot-container {
   width: 100%;
   min-width: 0;
   height: 100%;
   min-height: 270px;
+}
+
+.graphic-component--embedded .plot-container {
+  min-height: 0;
 }
 
 @media (max-width: 500px) {
@@ -105,4 +135,9 @@
   .plot-container {
     min-height: 250px;
   }
+}
+
+.graphic-component--embedded,
+:host(.graphic-component--embedded) {
+  min-height: 0;
 }
