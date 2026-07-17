@@ -31,6 +31,9 @@ export class GraphWorkspacePageComponent {
   @ViewChild('graphCanvasContainer2d')
   graphCanvasContainer2d?: { hoveredPoint: GraphCanvasHover | null };
 
+  @ViewChild('graphCanvasContainer3d')
+  graphCanvasContainer3d?: { hoveredPoint: GraphCanvasHover | null };
+
   readonly state$ = this.facade.state$;
   readonly vm$ = this.viewModel.vm$;
 
@@ -93,5 +96,11 @@ export class GraphWorkspacePageComponent {
     return functions.filter(
       graphFunction => graphFunction.plotKind === 'contour'
     ).length;
+  }
+
+  hoveredPointForMode(mode: GraphViewMode): GraphCanvasHover | null {
+    return mode === '3d'
+      ? this.graphCanvasContainer3d?.hoveredPoint ?? null
+      : this.graphCanvasContainer2d?.hoveredPoint ?? null;
   }
 }

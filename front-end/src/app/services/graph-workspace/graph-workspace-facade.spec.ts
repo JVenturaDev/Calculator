@@ -464,6 +464,97 @@ describe('GraphWorkspaceFacade', () => {
     expect(facade.snapshot.viewport2D).toBe(initialViewport);
   });
 
+  it('updates the 3D scene with a defensive copy and persists it once', () => {
+    facade.addFunction('x');
+    const functionBeforeSceneUpdate = facade.snapshot.functions[0];
+    const selectedFunctionId = facade.snapshot.selectedFunctionId;
+    const scene = createScene3D();
+    repository.save.calls.reset();
+
+    facade.setScene3D(scene);
+
+    expect(facade.snapshot.scene3D).toEqual(scene);
+    expect(facade.snapshot.scene3D).not.toBe(scene);
+    expect(facade.snapshot.functions).toEqual([functionBeforeSceneUpdate]);
+    expect(facade.snapshot.selectedFunctionId).toBe(selectedFunctionId);
+    expect(repository.save).toHaveBeenCalledOnceWith(facade.snapshot);
+
+    scene.camera.eye.x = 999;
+    scene.xMin = -999;
+
+    expect(facade.snapshot.scene3D.camera.eye.x).toBe(1.75);
+    expect(facade.snapshot.scene3D.xMin).toBe(-12);
+  });
+
+  it('does not persist unchanged or invalid 3D scenes', () => {
+    facade.addFunction('x');
+    const currentScene = facade.snapshot.scene3D;
+    const workspaceUpdatedAt = facade.snapshot.updatedAt;
+    repository.save.calls.reset();
+
+    facade.setScene3D({
+      ...currentScene,
+      xMin: currentScene.xMin + 1e-12,
+      camera: {
+        eye: { ...currentScene.camera.eye },
+        up: { ...currentScene.camera.up },
+        center: { ...currentScene.camera.center },
+      },
+    });
+    facade.setScene3D({
+      ...currentScene,
+      xMin: 5,
+      xMax: -5,
+      camera: {
+        eye: { ...currentScene.camera.eye },
+        up: { ...currentScene.camera.up },
+        center: { ...currentScene.camera.center },
+      },
+    });
+
+    expect(repository.save).not.toHaveBeenCalled();
+    expect(facade.snapshot.scene3D).toBe(currentScene);
+    expect(facade.snapshot.updatedAt).toBe(workspaceUpdatedAt);
+  });
+
+  it('resets an altered 3D scene to the default and persists it once', () => {
+    facade.addFunction('x');
+    const functionBeforeReset = facade.snapshot.functions[0];
+    const selectedFunctionId = facade.snapshot.selectedFunctionId;
+    facade.setScene3D({
+      ...facade.snapshot.scene3D,
+      xMin: -12,
+      xMax: 12,
+      camera: {
+        eye: { x: 2, y: 2, z: 2 },
+        up: { ...facade.snapshot.scene3D.camera.up },
+        center: { ...facade.snapshot.scene3D.camera.center },
+      },
+    });
+    const updatedAtBeforeReset = facade.snapshot.updatedAt;
+    repository.save.calls.reset();
+
+    facade.resetScene3D();
+
+    expect(facade.snapshot.scene3D).toEqual(DEFAULT_GRAPH_SCENE_3D);
+    expect(facade.snapshot.scene3D).not.toBe(DEFAULT_GRAPH_SCENE_3D);
+    expect(facade.snapshot.functions).toEqual([functionBeforeReset]);
+    expect(facade.snapshot.selectedFunctionId).toBe(selectedFunctionId);
+    expect(facade.snapshot.updatedAt.getTime())
+      .toBeGreaterThan(updatedAtBeforeReset.getTime());
+    expect(repository.save).toHaveBeenCalledOnceWith(facade.snapshot);
+  });
+
+  it('does not persist resetScene3D when the scene is already default', () => {
+    const previousState = facade.snapshot;
+    repository.save.calls.reset();
+
+    facade.resetScene3D();
+
+    expect(facade.snapshot).toBe(previousState);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
   it('clears functions and restores defaults without changing workspace identity', () => {
     const workspaceId = facade.snapshot.id;
     const createdAt = facade.snapshot.createdAt;
@@ -645,6 +736,22 @@ describe('GraphWorkspaceFacade', () => {
       scene3D: DEFAULT_GRAPH_SCENE_3D,
       createdAt: timestamp,
       updatedAt: timestamp,
+    };
+  }
+
+  function createScene3D() {
+    return {
+      xMin: -12,
+      xMax: 12,
+      yMin: -8,
+      yMax: 8,
+      zMin: -6,
+      zMax: 6,
+      camera: {
+        eye: { x: 1.75, y: 1.5, z: 1.25 },
+        up: { x: 0, y: 0, z: 1 },
+        center: { x: 0, y: 0, z: 0 },
+      },
     };
   }
 });

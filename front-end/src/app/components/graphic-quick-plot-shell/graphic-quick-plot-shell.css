@@ -116,6 +116,13 @@
 
 .graphic-quick-shell__canvas {
   min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid rgba(136, 150, 176, 0.2);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(112, 88, 255, 0.18), transparent 34%),
+    linear-gradient(145deg, rgba(24, 27, 39, 0.96), rgba(12, 14, 21, 0.98));
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
 }
 
 @media (max-width: 500px) {
@@ -129,5 +136,10 @@
 
   .graphic-quick-shell__status {
     max-width: 52%;
+  }
+
+  .graphic-quick-shell__canvas {
+    padding: 0.7rem;
+    border-radius: 18px;
   }
 }

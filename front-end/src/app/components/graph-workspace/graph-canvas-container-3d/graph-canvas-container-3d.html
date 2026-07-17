@@ -1,5 +1,16 @@
 <ng-container *ngIf="vm$ | async as vm">
   <section class="graph-canvas-container-3d" [attr.aria-label]="ariaLabel">
+    <header class="graph-canvas-container-3d__toolbar" aria-label="Controles de vista 3D">
+      <button
+        class="graph-canvas-container-3d__button"
+        type="button"
+        aria-label="Restablecer vista 3D"
+        (click)="resetScene3D()"
+      >
+        Reset 3D view
+      </button>
+    </header>
+
     <p
       *ngIf="vm.error"
       class="graph-canvas-container-3d__error"
@@ -15,6 +26,9 @@
       [scene]="vm.scene"
       [selectedFunctionId]="vm.selectedFunctionId"
       [ariaLabel]="ariaLabel"
+      (functionSelect)="onFunctionSelect($event)"
+      (hoverChange)="onHoverChange($event)"
+      (sceneChange)="onSceneChange($event)"
     ></app-graph-canvas-3d>
   </section>
 </ng-container>

@@ -1,10 +1,12 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
+import { By } from '@angular/platform-browser';
 
 import { GraphCanvas3DComponent } from '../graph-canvas-3d/graph-canvas-3d';
 import { GraphCanvasContainer3DComponent } from './graph-canvas-container-3d';
 import { GraphPlotly3DLoaderService } from '../../../services/graph-workspace/graph-plotly-3d-loader';
+import { GraphWorkspaceFacade } from '../../../services/graph-workspace/graph-workspace-facade';
 import {
   GraphWorkspaceSamplingViewModel3DService,
   type GraphWorkspaceSamplingViewModel3D,
@@ -14,13 +16,13 @@ import {
   createInitialGraphWorkspaceState,
 } from '../../../services/graph-workspace/graph-workspace-state';
 import type { GraphSurfaceSample } from '../../../services/graph-workspace/graph-sampling-3d';
-import { By } from '@angular/platform-browser';
 
 describe('GraphCanvasContainer3DComponent', () => {
   let fixture: ComponentFixture<GraphCanvasContainer3DComponent>;
   let component: GraphCanvasContainer3DComponent;
   let viewModel$: BehaviorSubject<GraphWorkspaceSamplingViewModel3D>;
   let loader: jasmine.SpyObj<GraphPlotly3DLoaderService>;
+  let facade: jasmine.SpyObj<GraphWorkspaceFacade>;
   let newPlot: jasmine.Spy;
   let react: jasmine.Spy;
   let resize: jasmine.Spy;
@@ -79,12 +81,22 @@ describe('GraphCanvasContainer3DComponent', () => {
       Plots: { resize },
     });
 
+    facade = jasmine.createSpyObj<GraphWorkspaceFacade>('GraphWorkspaceFacade', [
+      'selectFunction',
+      'setScene3D',
+      'resetScene3D',
+    ]);
+
     viewModel$ = new BehaviorSubject(createVm());
 
     await TestBed.configureTestingModule({
       imports: [GraphCanvasContainer3DComponent, CommonModule],
       providers: [
-        { provide: GraphWorkspaceSamplingViewModel3DService, useValue: { vm$: viewModel$.asObservable() } },
+        { provide: GraphWorkspaceFacade, useValue: facade },
+        {
+          provide: GraphWorkspaceSamplingViewModel3DService,
+          useValue: { vm$: viewModel$.asObservable() },
+        },
         { provide: GraphPlotly3DLoaderService, useValue: loader },
       ],
     }).compileComponents();
@@ -131,6 +143,65 @@ describe('GraphCanvasContainer3DComponent', () => {
 
     const error = fixture.nativeElement.querySelector('.graph-canvas-container-3d__error');
     expect(error?.textContent).toContain('No se pudo muestrear la vista gráfica 3D.');
+  });
+
+  it('forwards scene changes and reset actions to the facade', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const nextScene = {
+      ...createVm().scene,
+      xMin: -14,
+    };
+
+    const canvas = fixture.debugElement.query(By.directive(GraphCanvas3DComponent));
+    canvas.componentInstance.sceneChange.emit(nextScene);
+    fixture.detectChanges();
+
+    expect(facade.setScene3D).toHaveBeenCalledOnceWith(nextScene);
+
+    const resetButton = fixture.nativeElement.querySelector(
+      '.graph-canvas-container-3d__button'
+    ) as HTMLButtonElement;
+    resetButton.click();
+
+    expect(facade.resetScene3D).toHaveBeenCalledTimes(1);
+    expect(resetButton.getAttribute('type')).toBe('button');
+    expect(resetButton.getAttribute('aria-label')).toBe('Restablecer vista 3D');
+  });
+
+  it('selects functions emitted by the 3D canvas without changing the scene', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const canvas = fixture.debugElement.query(By.directive(GraphCanvas3DComponent));
+    canvas.componentInstance.functionSelect.emit('surface-1');
+
+    expect(facade.selectFunction).toHaveBeenCalledOnceWith('surface-1');
+    expect(facade.setScene3D).not.toHaveBeenCalled();
+  });
+
+  it('stores hovered points locally and clears them without calling the facade', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const hoveredPoint = {
+      functionId: 'surface-1',
+      x: 1.25,
+      y: -2.5,
+      z: 3.75,
+      pointIndex: 7,
+    };
+
+    const canvas = fixture.debugElement.query(By.directive(GraphCanvas3DComponent));
+    canvas.componentInstance.hoverChange.emit(hoveredPoint);
+
+    expect(component.hoveredPoint).toBe(hoveredPoint);
+    expect(facade.selectFunction).not.toHaveBeenCalled();
+    expect(facade.setScene3D).not.toHaveBeenCalled();
+
+    canvas.componentInstance.hoverChange.emit(null);
+    expect(component.hoveredPoint).toBeNull();
   });
 
   it('does not inject the sampler or Plotly directly', () => {

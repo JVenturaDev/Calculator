@@ -15,6 +15,7 @@ import {
 } from './graph-workspace-state';
 
 export const MAX_GRAPH_FUNCTIONS = 12;
+const SCENE_VALUE_TOLERANCE = 1e-9;
 
 export const GRAPH_FUNCTION_COLORS = [
   '#78a9ff',
@@ -227,6 +228,31 @@ export class GraphWorkspaceFacade {
     });
   }
 
+  setScene3D(scene: GraphScene3D): void {
+    if (!this.isValidScene3D(scene)) return;
+
+    const nextScene = cloneScene3D(scene);
+    if (this.sameScene3D(this.snapshot.scene3D, nextScene)) return;
+
+    this.commit({
+      ...this.snapshot,
+      scene3D: nextScene,
+      updatedAt: this.nextTimestamp(),
+    });
+  }
+
+  resetScene3D(): void {
+    if (this.sameScene3D(this.snapshot.scene3D, DEFAULT_GRAPH_SCENE_3D)) {
+      return;
+    }
+
+    this.commit({
+      ...this.snapshot,
+      scene3D: cloneScene3D(DEFAULT_GRAPH_SCENE_3D),
+      updatedAt: this.nextTimestamp(),
+    });
+  }
+
   resetViewport(): void {
     if (
       this.sameViewport(this.snapshot.viewport2D, DEFAULT_GRAPH_VIEWPORT_2D)
@@ -342,6 +368,31 @@ export class GraphWorkspaceFacade {
     );
   }
 
+  private isValidScene3D(scene: GraphScene3D): boolean {
+    return (
+      Number.isFinite(scene.xMin) &&
+      Number.isFinite(scene.xMax) &&
+      Number.isFinite(scene.yMin) &&
+      Number.isFinite(scene.yMax) &&
+      Number.isFinite(scene.zMin) &&
+      Number.isFinite(scene.zMax) &&
+      scene.xMin < scene.xMax &&
+      scene.yMin < scene.yMax &&
+      scene.zMin < scene.zMax &&
+      this.isValidVector3(scene.camera.eye) &&
+      this.isValidVector3(scene.camera.up) &&
+      this.isValidVector3(scene.camera.center)
+    );
+  }
+
+  private isValidVector3(vector: GraphScene3D['camera']['eye']): boolean {
+    return (
+      Number.isFinite(vector.x) &&
+      Number.isFinite(vector.y) &&
+      Number.isFinite(vector.z)
+    );
+  }
+
   private sameViewport(
     left: GraphViewport2D,
     right: GraphViewport2D
@@ -352,6 +403,35 @@ export class GraphWorkspaceFacade {
       left.yMin === right.yMin &&
       left.yMax === right.yMax
     );
+  }
+
+  private sameScene3D(left: GraphScene3D, right: GraphScene3D): boolean {
+    return (
+      this.sameNumber(left.xMin, right.xMin) &&
+      this.sameNumber(left.xMax, right.xMax) &&
+      this.sameNumber(left.yMin, right.yMin) &&
+      this.sameNumber(left.yMax, right.yMax) &&
+      this.sameNumber(left.zMin, right.zMin) &&
+      this.sameNumber(left.zMax, right.zMax) &&
+      this.sameVector3(left.camera.eye, right.camera.eye) &&
+      this.sameVector3(left.camera.up, right.camera.up) &&
+      this.sameVector3(left.camera.center, right.camera.center)
+    );
+  }
+
+  private sameVector3(
+    left: GraphScene3D['camera']['eye'],
+    right: GraphScene3D['camera']['eye']
+  ): boolean {
+    return (
+      this.sameNumber(left.x, right.x) &&
+      this.sameNumber(left.y, right.y) &&
+      this.sameNumber(left.z, right.z)
+    );
+  }
+
+  private sameNumber(left: number, right: number): boolean {
+    return Math.abs(left - right) <= SCENE_VALUE_TOLERANCE;
   }
 
   private loadInitialState(): GraphWorkspaceState {

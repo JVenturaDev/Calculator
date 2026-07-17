@@ -10,12 +10,10 @@
   flex-direction: column;
   min-height: clamp(320px, 58vh, 760px);
   height: 100%;
-  border: 1px solid rgba(136, 150, 176, 0.2);
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at 18% 12%, rgba(112, 88, 255, 0.18), transparent 34%),
-    linear-gradient(145deg, rgba(24, 27, 39, 0.96), rgba(12, 14, 21, 0.98));
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -95,5 +93,12 @@
   .graph-canvas-shell,
   .graph-canvas-plot {
     min-height: clamp(520px, 68vh, 900px);
+  }
+}
+
+@media (max-width: 500px) {
+  .graph-canvas-shell,
+  .graph-canvas-plot {
+    min-height: clamp(300px, 52vh, 460px);
   }
 }

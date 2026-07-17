@@ -17,18 +17,34 @@ import {
   cloneDefaultGraphScene3D,
   type GraphScene3D,
 } from '../../../services/graph-workspace/graph-workspace-state';
-import type { GraphSurfaceSample, GraphSurfaceTraceData } from '../../../services/graph-workspace/graph-sampling-3d';
+import type { GraphSurfaceSample } from '../../../services/graph-workspace/graph-sampling-3d';
+import { type GraphCanvasHover } from '../graph-canvas/graph-canvas';
 
 type PlotlyTrace = Record<string, unknown>;
 type PlotlyLayout = Record<string, unknown>;
 type PlotlyConfig = Record<string, unknown>;
 type PlotlyRelayoutEvent = Record<string, unknown>;
+type PlotlyPoint = {
+  readonly data?: { readonly uid?: unknown };
+  readonly fullData?: { readonly uid?: unknown };
+  readonly x?: unknown;
+  readonly y?: unknown;
+  readonly z?: unknown;
+  readonly pointIndex?: unknown;
+  readonly pointNumber?: unknown;
+};
+type PlotlyClickEvent = {
+  readonly points?: readonly PlotlyPoint[];
+};
 type PlotlyEventTarget = HTMLDivElement & {
   on?: PlotlyEventRegistrar;
   removeListener?: PlotlyEventRegistrar;
 };
 type PlotlyEventRegistrar = {
   (eventName: 'plotly_relayout', handler: (event: PlotlyRelayoutEvent) => void): void;
+  (eventName: 'plotly_click', handler: (event: PlotlyClickEvent) => void): void;
+  (eventName: 'plotly_hover', handler: (event: PlotlyClickEvent) => void): void;
+  (eventName: 'plotly_unhover', handler: () => void): void;
 };
 
 const DIMMED_TRACE_OPACITY = 0.42;
@@ -48,6 +64,8 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
   @Input() selectedFunctionId: string | null = null;
   @Input() ariaLabel = 'Graph Workspace 3D canvas';
   @Output() readonly sceneChange = new EventEmitter<GraphScene3D>();
+  @Output() readonly functionSelect = new EventEmitter<string>();
+  @Output() readonly hoverChange = new EventEmitter<GraphCanvasHover | null>();
 
   @ViewChild('plotContainer', { static: true })
   private plotContainer!: ElementRef<HTMLDivElement>;
@@ -62,6 +80,8 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
   private plotlyModule: GraphPlotly3DModule | null = null;
   private resizeObserver?: ResizeObserver;
   private relayoutListenerAttached = false;
+  private clickListenerAttached = false;
+  private hoverListenersAttached = false;
   private currentScene: GraphScene3D = cloneDefaultGraphScene3D();
 
   private readonly plotConfig: PlotlyConfig = {
@@ -99,6 +119,8 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
   ngOnDestroy(): void {
     this.destroyed = true;
     this.detachRelayoutListener();
+    this.detachClickListener();
+    this.detachHoverListeners();
     this.resizeObserver?.disconnect();
     this.plotReady = false;
 
@@ -129,6 +151,8 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
         await module.newPlot(element, data, layout, this.plotConfig);
         this.plotReady = true;
         this.attachRelayoutListener();
+        this.attachClickListener();
+        this.attachHoverListeners();
       }
 
       if (this.destroyed || revision !== this.renderRevision) return;
@@ -173,12 +197,68 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
     this.relayoutListenerAttached = false;
   }
 
+  private attachClickListener(): void {
+    if (this.clickListenerAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    if (typeof element.on !== 'function') return;
+
+    element.on('plotly_click', this.onClick);
+    this.clickListenerAttached = true;
+  }
+
+  private detachClickListener(): void {
+    if (!this.clickListenerAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    element.removeListener?.('plotly_click', this.onClick);
+    this.clickListenerAttached = false;
+  }
+
+  private attachHoverListeners(): void {
+    if (this.hoverListenersAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    if (typeof element.on !== 'function') return;
+
+    element.on('plotly_hover', this.onHover);
+    element.on('plotly_unhover', this.onUnhover);
+    this.hoverListenersAttached = true;
+  }
+
+  private detachHoverListeners(): void {
+    if (!this.hoverListenersAttached) return;
+
+    const element = this.plotContainer.nativeElement as PlotlyEventTarget;
+    element.removeListener?.('plotly_hover', this.onHover);
+    element.removeListener?.('plotly_unhover', this.onUnhover);
+    this.hoverListenersAttached = false;
+  }
+
   private readonly onRelayout = (event: PlotlyRelayoutEvent): void => {
     const nextScene = this.extractSceneChange(event);
     if (!nextScene) return;
 
     this.currentScene = nextScene;
     this.sceneChange.emit(nextScene);
+  };
+
+  private readonly onClick = (event: PlotlyClickEvent): void => {
+    const functionId = this.extractFunctionId(event);
+    if (!functionId) return;
+
+    this.functionSelect.emit(functionId);
+  };
+
+  private readonly onHover = (event: PlotlyClickEvent): void => {
+    const hover = this.extractHover(event);
+    if (!hover) return;
+
+    this.hoverChange.emit(hover);
+  };
+
+  private readonly onUnhover = (): void => {
+    this.hoverChange.emit(null);
   };
 
   private extractSceneChange(event: PlotlyRelayoutEvent): GraphScene3D | null {
@@ -341,54 +421,86 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
     );
   }
 
+  private toPointIndex(value: unknown): number | null {
+    return typeof value === 'number' && Number.isInteger(value) && value >= 0
+      ? value
+      : null;
+  }
+
+  private extractFunctionId(event: PlotlyClickEvent): string | null {
+    const point = event.points?.[0];
+    const uid = point?.data?.uid ?? point?.fullData?.uid;
+
+    if (typeof uid !== 'string') return null;
+
+    const functionId = uid.trim();
+    return functionId.length > 0 ? functionId : null;
+  }
+
+  private extractHover(event: PlotlyClickEvent): GraphCanvasHover | null {
+    const point = event.points?.[0];
+    const functionId = this.extractFunctionId(event);
+    if (!point || !functionId) return null;
+
+    const x = this.toFiniteNumber(point.x);
+    const y = this.toFiniteNumber(point.y);
+    const z = this.toFiniteNumber(point.z);
+    if (x === null || y === null || z === null) return null;
+
+    const pointIndex = this.toPointIndex(point.pointIndex ?? point.pointNumber);
+
+    return {
+      functionId,
+      x,
+      y,
+      z,
+      ...(pointIndex !== null ? { pointIndex } : {}),
+    };
+  }
+
   private createTraces(): PlotlyTrace[] {
-    const readyTraces = this.samples
-      .filter(sample => sample.status === 'ready' && sample.trace)
-      .map(sample => this.toTrace(sample.trace as GraphSurfaceTraceData));
+    const traces = this.samples.reduce<PlotlyTrace[]>((list, sample) => {
+      if (sample.status !== 'ready' || !sample.trace) return list;
 
-    if (this.selectedFunctionId === null) {
-      return readyTraces;
-    }
+      const trace = sample.trace;
+      const isSelected = trace.functionId === this.selectedFunctionId;
+      const hasSelection = this.selectedFunctionId !== null;
+      const opacity = isSelected ? SELECTED_TRACE_OPACITY : DIMMED_TRACE_OPACITY;
 
-    const selectedIndex = readyTraces.findIndex(
+      list.push({
+        type: 'surface',
+        x: [...trace.x],
+        y: [...trace.y],
+        z: trace.z.map(row => [...row]),
+        name: trace.label,
+        uid: trace.functionId,
+        legendgroup: trace.functionId,
+        ...(hasSelection ? { opacity } : {}),
+        colorscale: [
+          [0, trace.color],
+          [1, trace.color],
+        ],
+        showscale: false,
+      });
+      return list;
+    }, []);
+
+    return this.selectedFunctionId === null
+      ? traces
+      : this.moveSelectedTraceToEnd(traces);
+  }
+
+  private moveSelectedTraceToEnd(traces: PlotlyTrace[]): PlotlyTrace[] {
+    const selectedIndex = traces.findIndex(
       trace => trace['uid'] === this.selectedFunctionId
     );
-    if (selectedIndex < 0) return readyTraces;
-
-    const traces = readyTraces.map(trace =>
-      trace['uid'] === this.selectedFunctionId
-        ? { ...trace, opacity: SELECTED_TRACE_OPACITY }
-        : { ...trace, opacity: DIMMED_TRACE_OPACITY }
-    );
+    if (selectedIndex < 0) return traces;
 
     return [
       ...traces.slice(0, selectedIndex),
       ...traces.slice(selectedIndex + 1),
       traces[selectedIndex],
     ];
-  }
-
-  private toTrace(trace: GraphSurfaceTraceData): PlotlyTrace {
-    return {
-      type: 'surface',
-      x: [...trace.x],
-      y: [...trace.y],
-      z: trace.z.map(row => [...row]),
-      name: trace.label,
-      uid: trace.functionId,
-      legendgroup: trace.functionId,
-      showscale: false,
-      colorscale: [
-        [0, trace.color],
-        [1, trace.color],
-      ],
-      opacity:
-        this.selectedFunctionId === null
-          ? undefined
-          : trace.functionId === this.selectedFunctionId
-            ? SELECTED_TRACE_OPACITY
-            : DIMMED_TRACE_OPACITY,
-    };
   }
 
   private createLayout(): PlotlyLayout {
@@ -400,28 +512,34 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
         color: '#c7cad4',
         family: '"JetBrains Mono", Consolas, monospace',
       },
-      margin: { t: 18, r: 8, l: 8, b: 8 },
+      margin: { t: 24, r: 18, l: 48, b: 44 },
       showlegend: true,
-      hovermode: false,
+      hovermode: 'closest',
+      legend: {
+        orientation: 'h',
+        x: 0,
+        y: 1.12,
+        font: { color: '#d8d9e3', size: 11 },
+      },
+      hoverlabel: {
+        bgcolor: '#292c35',
+        bordercolor: '#596173',
+        font: { color: '#f0edf6' },
+      },
       scene: {
-        xaxis: this.createAxis([this.currentScene.xMin, this.currentScene.xMax]),
-        yaxis: this.createAxis([this.currentScene.yMin, this.currentScene.yMax]),
-        zaxis: this.createAxis([this.currentScene.zMin, this.currentScene.zMax]),
+        xaxis: this.createAxis('x', [this.currentScene.xMin, this.currentScene.xMax]),
+        yaxis: this.createAxis('y', [this.currentScene.yMin, this.currentScene.yMax]),
+        zaxis: this.createAxis('z', [this.currentScene.zMin, this.currentScene.zMax]),
         camera: this.cloneCamera(this.currentScene.camera),
         aspectmode: 'cube',
         bgcolor: '#0f1117',
       },
-      legend: {
-        orientation: 'h',
-        x: 0,
-        y: 1.08,
-        font: { color: '#d8d9e3', size: 11 },
-      },
     };
   }
 
-  private createAxis(range: [number, number]): PlotlyLayout {
+  private createAxis(label: string, range: [number, number]): PlotlyLayout {
     return {
+      title: { text: label, font: { color: '#aeb4c2', size: 11 } },
       range,
       color: '#aeb4c2',
       gridcolor: 'rgba(119, 128, 147, 0.22)',
@@ -429,7 +547,7 @@ export class GraphCanvas3DComponent implements AfterViewInit, OnChanges, OnDestr
       backgroundcolor: '#0f1117',
       linecolor: 'rgba(119, 128, 147, 0.34)',
       tickfont: { color: '#9399a8', size: 10 },
-      title: { font: { color: '#aeb4c2', size: 11 } },
+      automargin: true,
     };
   }
 

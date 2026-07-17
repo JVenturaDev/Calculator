@@ -31,7 +31,6 @@ import {
 class GraphCanvasContainerStubComponent {
   hoveredPoint: GraphCanvasHover | null = null;
 }
-
 @Component({
   selector: 'app-graph-canvas-container-3d',
   standalone: true,
@@ -39,8 +38,8 @@ class GraphCanvasContainerStubComponent {
 })
 class GraphCanvasContainer3DStubComponent {
   @Input() ariaLabel = '';
+  hoveredPoint: GraphCanvasHover | null = null;
 }
-
 @Component({
   selector: 'app-graph-workspace-inspector',
   standalone: true,
@@ -54,7 +53,6 @@ class GraphWorkspaceInspectorStubComponent {
   @Input() error: string | null = null;
   @Input() hoveredPoint: GraphCanvasHover | null = null;
 }
-
 describe('GraphWorkspacePageComponent', () => {
   let fixture: ComponentFixture<GraphWorkspacePageComponent>;
   let stateSubject: BehaviorSubject<GraphWorkspaceState>;
@@ -181,6 +179,35 @@ describe('GraphWorkspacePageComponent', () => {
       .not.toBeNull();
   });
 
+  it('renders the inspector in 3D mode and shows 3D hovered points', () => {
+    emitState(createState({ functions: [graphFunction('fn-1')], viewMode: '3d' }));
+
+    const canvas3d = fixture.debugElement.query(
+      By.directive(GraphCanvasContainer3DStubComponent)
+    ).componentInstance as GraphCanvasContainer3DStubComponent;
+    canvas3d.hoveredPoint = {
+      functionId: 'fn-1',
+      x: 1.5,
+      y: -2.5,
+      z: 3.75,
+      pointIndex: 4,
+    };
+
+    fixture.detectChanges();
+
+    const inspector = fixture.debugElement.query(
+      By.directive(GraphWorkspaceInspectorStubComponent)
+    ).componentInstance as GraphWorkspaceInspectorStubComponent;
+
+    expect(inspector.hoveredPoint).toEqual({
+      functionId: 'fn-1',
+      x: 1.5,
+      y: -2.5,
+      z: 3.75,
+      pointIndex: 4,
+    });
+  });
+
   it('renders the graph inspector', () => {
     expect(nativeElement().querySelector('app-graph-workspace-inspector'))
       .not.toBeNull();
@@ -220,9 +247,9 @@ describe('GraphWorkspacePageComponent', () => {
     expect(labelInputs[0].value).toBe('f1');
     expect(labelInputs[1].value).toBe('f2');
     expect(expressionInputs[0].getAttribute('aria-label'))
-      .toBe('Expresión de f1');
+      .toBe('expresión de f1');
     expect(expressionInputs[1].getAttribute('aria-label'))
-      .toBe('Expresión de f2');
+      .toBe('expresión de f2');
   });
 
   it('updates an expression from the input', () => {
@@ -380,6 +407,25 @@ describe('GraphWorkspacePageComponent', () => {
     expect(inspector.hoveredPoint).toBe(hoveredPoint);
   });
 
+  it('clears the transient hover when switching to 3D mode', () => {
+    const canvas2d = fixture.debugElement.query(
+      By.directive(GraphCanvasContainerStubComponent)
+    ).componentInstance as GraphCanvasContainerStubComponent;
+    canvas2d.hoveredPoint = {
+      functionId: 'fn-1',
+      x: 1,
+      y: 2,
+    };
+    fixture.detectChanges();
+
+    emitState(createState({ viewMode: '3d' }));
+
+    const inspector = fixture.debugElement.query(
+      By.directive(GraphWorkspaceInspectorStubComponent)
+    ).componentInstance as GraphWorkspaceInspectorStubComponent;
+    expect(inspector.hoveredPoint).toBeNull();
+  });
+
   it('uses accessible labels and button types', () => {
     emitState(createState({
       functions: [graphFunction('fn-1')],
@@ -392,7 +438,7 @@ describe('GraphWorkspacePageComponent', () => {
     const buttons = Array.from(nativeElement().querySelectorAll('button'));
 
     expect(expressionInput.getAttribute('aria-label'))
-      .toBe('Expresión de f1');
+      .toBe('expresión de f1');
     expect(labelInput.getAttribute('aria-label')).toBe('Etiqueta de f1');
     expect(expressionInput).not.toBeNull();
     expect(labelInput).not.toBeNull();

@@ -62,6 +62,7 @@
         ></app-graph-canvas-container>
       } @else {
         <app-graph-canvas-container-3d
+          #graphCanvasContainer3d
           ariaLabel="Graph Workspace 3D canvas"
         ></app-graph-canvas-container-3d>
       }
@@ -132,7 +133,7 @@
               type="text"
               autocomplete="off"
               spellcheck="false"
-              [attr.aria-label]="'Expresión de ' + graphFunction.label"
+              [attr.aria-label]="'expresión de ' + graphFunction.label"
               [value]="graphFunction.expression"
               [attr.placeholder]="
                 graphFunction.plotKind === 'line' ? 'sin(x)' : 'x^2 + y^2'
@@ -207,7 +208,7 @@
               unsupportedFunctions: vm.unsupportedFunctions
             }"
             [error]="vm.error"
-            [hoveredPoint]="graphCanvasContainer2d?.hoveredPoint ?? null"
+            [hoveredPoint]="hoveredPointForMode(state.viewMode)"
           ></app-graph-workspace-inspector>
         </ng-container>
       } @else {
@@ -224,6 +225,23 @@
           <p>Contour: {{ contourFunctionCount(state.functions) }}</p>
           <p>Line: {{ lineFunctionCount(state.functions) }}</p>
         </section>
+
+        <ng-container *ngIf="vm$ | async as vm">
+          <app-graph-workspace-inspector
+            [selectedFunction]="vm.selectedFunction"
+            [selectedSample]="vm.selectedSample"
+            [viewport]="vm.viewport"
+            [summary]="{
+              totalFunctions: vm.state.functions.length,
+              visibleFunctions: vm.visibleFunctions,
+              readyFunctions: vm.readyFunctions,
+              invalidFunctions: vm.invalidFunctions,
+              unsupportedFunctions: vm.unsupportedFunctions
+            }"
+            [error]="vm.error"
+            [hoveredPoint]="hoveredPointForMode(state.viewMode)"
+          ></app-graph-workspace-inspector>
+        </ng-container>
       }
     </section>
   </ng-container>

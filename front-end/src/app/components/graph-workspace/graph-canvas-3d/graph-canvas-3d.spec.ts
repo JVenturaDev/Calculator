@@ -1,6 +1,7 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+﻿import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { GraphCanvas3DComponent } from './graph-canvas-3d';
+import { type GraphCanvasHover } from '../graph-canvas/graph-canvas';
 import { GraphPlotly3DLoaderService, type GraphPlotly3DModule } from '../../../services/graph-workspace/graph-plotly-3d-loader';
 import {
   cloneDefaultGraphScene3D,
@@ -25,6 +26,13 @@ describe('GraphCanvas3DComponent', () => {
   let relayoutHandler:
     | ((event: Record<string, unknown>) => void)
     | undefined;
+  let clickHandler:
+    | ((event: Record<string, unknown>) => void)
+    | undefined;
+  let hoverHandler:
+    | ((event: Record<string, unknown>) => void)
+    | undefined;
+  let unhoverHandler: (() => void) | undefined;
   let originalResizeObserver: typeof ResizeObserver | undefined;
   let originalOn: unknown;
   let originalRemoveListener: unknown;
@@ -46,9 +54,21 @@ describe('GraphCanvas3DComponent', () => {
     originalRemoveListener = divPrototype.removeListener;
 
     on = jasmine.createSpy('on').and.callFake(
-      (eventName: string, handler: (event: Record<string, unknown>) => void) => {
+      (eventName: string, handler: (event?: Record<string, unknown>) => void) => {
         if (eventName === 'plotly_relayout') {
           relayoutHandler = handler;
+        }
+
+        if (eventName === 'plotly_click') {
+          clickHandler = handler;
+        }
+
+        if (eventName === 'plotly_hover') {
+          hoverHandler = handler;
+        }
+
+        if (eventName === 'plotly_unhover') {
+          unhoverHandler = handler as () => void;
         }
       }
     );
@@ -231,6 +251,101 @@ describe('GraphCanvas3DComponent', () => {
     expect(emitted[0].zMax).toBe(6);
   });
 
+  it('emits functionSelect from a surface click using uid fallbacks', async () => {
+    const emitted: string[] = [];
+    component.functionSelect.subscribe(functionId => emitted.push(functionId));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    clickHandler?.({
+      points: [
+        {
+          data: { uid: 'surface-1' },
+        },
+      ],
+    });
+    clickHandler?.({
+      points: [
+        {
+          fullData: { uid: 'surface-2' },
+        },
+      ],
+    });
+    clickHandler?.({
+      points: [],
+    });
+    clickHandler?.({
+      points: [
+        {
+          data: { uid: '' },
+        },
+      ],
+    });
+
+    expect(emitted).toEqual(['surface-1', 'surface-2']);
+  });
+
+  it('emits hoverChange with x, y, z and pointIndex for valid hover points', async () => {
+    const emitted: Array<GraphCanvasHover | null> = [];
+    component.hoverChange.subscribe(point => emitted.push(point));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    hoverHandler?.({
+      points: [
+        {
+          data: { uid: 'surface-1' },
+          x: 1.25,
+          y: -2.5,
+          z: 3.75,
+          pointIndex: 9,
+        },
+      ],
+    });
+    hoverHandler?.({
+      points: [
+        {
+          fullData: { uid: 'surface-2' },
+          x: 4,
+          y: 5,
+          z: 6,
+          pointNumber: 7,
+        },
+      ],
+    });
+    hoverHandler?.({
+      points: [
+        {
+          data: { uid: 'surface-3' },
+          x: Number.NaN,
+          y: 1,
+          z: 2,
+        },
+      ],
+    });
+    unhoverHandler?.();
+
+    expect(emitted).toEqual([
+      {
+        functionId: 'surface-1',
+        x: 1.25,
+        y: -2.5,
+        z: 3.75,
+        pointIndex: 9,
+      },
+      {
+        functionId: 'surface-2',
+        x: 4,
+        y: 5,
+        z: 6,
+        pointIndex: 7,
+      },
+      null,
+    ]);
+  });
+
   it('ignores incomplete, autorange and invalid relayout updates', async () => {
     const emitted = spyOn(component.sceneChange, 'emit');
 
@@ -307,6 +422,18 @@ describe('GraphCanvas3DComponent', () => {
       'plotly_relayout',
       jasmine.any(Function)
     );
+    expect(removeListener).toHaveBeenCalledWith(
+      'plotly_click',
+      jasmine.any(Function)
+    );
+    expect(removeListener).toHaveBeenCalledWith(
+      'plotly_hover',
+      jasmine.any(Function)
+    );
+    expect(removeListener).toHaveBeenCalledWith(
+      'plotly_unhover',
+      jasmine.any(Function)
+    );
     expect(purge).toHaveBeenCalledOnceWith(container);
   });
 
@@ -355,6 +482,7 @@ describe('GraphCanvas3DComponent', () => {
 
     return { promise, resolve, reject };
   }
+
 });
 
 interface PlotlyEventPrototype {
