@@ -51,4 +51,35 @@ describe('HistoryService', () => {
     expect(service.getHistory()).toEqual([]);
     expect(localStorage.getItem('historial')).toBeNull();
   });
+
+  it('stores optional CAS metadata retrocompatibly', () => {
+    const calculationResult = {
+      kind: 'symbolic' as const,
+      operation: 'simplify' as const,
+      source: 'simplify(2*x + 3*x)',
+      display: '5 * x',
+      exact: true,
+      expression: '5 * x',
+      latex: '5 * x',
+    };
+
+    service.addToHistory(3, 'simplify(2*x + 3*x)', '5 * x', calculationResult);
+
+    expect(service.getHistory()).toEqual([
+      {
+        idi: 3,
+        expression: 'simplify(2*x + 3*x)',
+        result: '5 * x',
+        calculationResult,
+      },
+    ]);
+    expect(JSON.parse(localStorage.getItem('historial') ?? '[]')).toEqual([
+      {
+        idi: 3,
+        expression: 'simplify(2*x + 3*x)',
+        result: '5 * x',
+        calculationResult,
+      },
+    ]);
+  });
 });

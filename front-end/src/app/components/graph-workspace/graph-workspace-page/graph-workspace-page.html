@@ -15,11 +15,7 @@
   </header>
 
   <ng-container *ngIf="state$ | async as state">
-    <section
-      class="gw-mode-switch"
-      role="group"
-      aria-label="Modo de visualización"
-    >
+    <section class="gw-mode-switch" role="group" aria-label="Modo de visualización">
       <button
         class="gw-mode-switch__button"
         type="button"
@@ -39,178 +35,180 @@
       </button>
     </section>
 
-    <section class="gw-canvas" aria-label="Canvas gráfico">
-      @if (state.viewMode === '3d') {
-        <div class="gw-canvas__context" role="status" aria-live="polite">
-          <div>Vista 3D activa.</div>
-          <div *ngIf="lineFunctionCount(state.functions) > 0">
-            {{ lineFunctionCount(state.functions) }} función{{
-              lineFunctionCount(state.functions) === 1 ? '' : 'es'
-            }} Line no está disponible en la vista 3D.
-          </div>
-          <div>Las funciones Contour se muestran como superficies z = f(x, y) en 3D.</div>
-        </div>
-      } @else {
-        <div
-          class="gw-canvas__context gw-canvas__context--hidden"
-          aria-hidden="true"
-        ></div>
-      }
-      @if (state.viewMode === '2d') {
-        <app-graph-canvas-container
-          #graphCanvasContainer2d
-          ariaLabel="Graph Workspace canvas"
-        ></app-graph-canvas-container>
-      } @else {
-        <app-graph-canvas-container-3d
-          #graphCanvasContainer3d
-          ariaLabel="Graph Workspace 3D canvas"
-        ></app-graph-canvas-container-3d>
-      }
-    </section>
-
-    <section class="gw-panel" aria-labelledby="graph-functions-title">
-      <div class="gw-panel__head">
-        <div>
-          <p class="gw-eyebrow">Functions</p>
-          <h2 id="graph-functions-title">Funciones</h2>
-        </div>
-        <span class="gw-count">{{ state.functions.length }} / 12</span>
-      </div>
-
-      <p *ngIf="state.functions.length === 0" class="gw-empty">
-        Aún no hay funciones. Añade una función para comenzar a graficar.
-      </p>
-
-      <ol *ngIf="state.functions.length > 0" class="gw-list">
-        <li
-          *ngFor="let graphFunction of state.functions; trackBy: trackFunction"
-          class="gf-card"
-          [class.gf-card--selected]="state.selectedFunctionId === graphFunction.id"
-        >
-          <span
-            class="gf-color"
-            [style.background]="graphFunction.color"
-            aria-hidden="true"
-          ></span>
-
-          <div class="gf-head">
-            <input
-              [id]="'graph-label-' + graphFunction.id"
-              class="gf-name"
-              type="text"
-              autocomplete="off"
-              spellcheck="false"
-              maxlength="32"
-              [value]="graphFunction.label"
-              [attr.aria-label]="'Etiqueta de ' + graphFunction.label"
-              (input)="updateLabel(graphFunction.id, $event)"
-            />
-
-            <button
-              class="gf-act gf-act--toggle"
-              type="button"
-              [class.gf-act--active]="graphFunction.visible"
-              [attr.aria-pressed]="graphFunction.visible"
-              [attr.aria-label]="
-                graphFunction.visible
-                  ? 'Ocultar ' + graphFunction.label
-                  : 'Mostrar ' + graphFunction.label
-              "
-              (click)="toggleFunction(graphFunction.id)"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
-                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              <span>{{ graphFunction.visible ? 'Visible' : 'Oculta' }}</span>
-            </button>
-          </div>
-
-          <div class="gf-expr">
-            <span class="gf-prefix" aria-hidden="true">(x)=</span>
-            <input
-              [id]="'graph-expression-' + graphFunction.id"
-              type="text"
-              autocomplete="off"
-              spellcheck="false"
-              [attr.aria-label]="'expresión de ' + graphFunction.label"
-              [value]="graphFunction.expression"
-              [attr.placeholder]="
-                graphFunction.plotKind === 'line' ? 'sin(x)' : 'x^2 + y^2'
-              "
-              (input)="updateExpression(graphFunction.id, $event)"
-            />
-          </div>
-
-          <div class="gf-foot">
-            <label class="gf-kind">
-              <span>Tipo</span>
-              <select
-                [value]="graphFunction.plotKind"
-                [attr.aria-label]="'Tipo de gráfica para ' + graphFunction.label"
-                (change)="setPlotKind(graphFunction.id, $event)"
-              >
-                <option value="line">Line</option>
-                <option value="contour">Contour</option>
-              </select>
-            </label>
-
-            <div class="gf-actions" aria-label="Acciones de función">
-              <button
-                class="gf-act gf-act--select"
-                type="button"
-                [attr.aria-pressed]="state.selectedFunctionId === graphFunction.id"
-                [attr.aria-label]="'Seleccionar ' + graphFunction.label"
-                (click)="selectFunction(graphFunction.id)"
-              >
-                <span>Seleccionar</span>
-              </button>
-
-              <button
-                class="gf-act gf-act--dup"
-                type="button"
-                [attr.aria-label]="'Duplicar ' + graphFunction.label"
-                (click)="duplicateFunction(graphFunction.id)"
-              >
-                <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
-                  <path d="M9 3h10v10M7 7h10v10H7z" />
-                </svg>
-                <span>Duplicar</span>
-              </button>
-
-              <button
-                class="gf-act gf-act--danger"
-                type="button"
-                [attr.aria-label]="'Eliminar ' + graphFunction.label"
-                (click)="removeFunction(graphFunction.id)"
-              >
-                <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
-                  <path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" />
-                </svg>
-                <span>Eliminar</span>
-              </button>
+    @if (vm$ | async; as vm) {
+      <div class="gw-layout">
+        <section class="gw-functions gw-panel" aria-labelledby="graph-functions-title">
+          <div class="gw-panel__head">
+            <div>
+              <p class="gw-eyebrow">Functions</p>
+              <h2 id="graph-functions-title">Funciones</h2>
             </div>
+            <span class="gw-count">{{ state.functions.length }} / 12</span>
           </div>
-        </li>
-      </ol>
 
-      <ng-container *ngIf="vm$ | async as vm">
-        <app-graph-workspace-inspector
-          [selectedFunction]="vm.selectedFunction"
-          [selectedSample]="vm.selectedSample"
-          [viewport]="vm.viewport"
-          [summary]="{
-            totalFunctions: vm.state.functions.length,
-            visibleFunctions: vm.visibleFunctions,
-            readyFunctions: vm.readyFunctions,
-            invalidFunctions: vm.invalidFunctions,
-            unsupportedFunctions: vm.unsupportedFunctions
-          }"
-          [error]="vm.error"
-          [hoveredPoint]="hoveredPointForMode(state.viewMode)"
-        ></app-graph-workspace-inspector>
-      </ng-container>
-    </section>
+          <p *ngIf="state.functions.length === 0" class="gw-empty">
+            Aún no hay funciones. Añade una función para comenzar a graficar.
+          </p>
+
+          <ol *ngIf="state.functions.length > 0" class="gw-list">
+            <li
+              *ngFor="let graphFunction of state.functions; trackBy: trackFunction"
+              class="gf-card"
+              [class.gf-card--selected]="state.selectedFunctionId === graphFunction.id"
+            >
+              <span
+                class="gf-color"
+                [style.background]="graphFunction.color"
+                aria-hidden="true"
+              ></span>
+
+              <div class="gf-head">
+                <input
+                  [id]="'graph-label-' + graphFunction.id"
+                  class="gf-name"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  maxlength="32"
+                  [value]="graphFunction.label"
+                  [attr.aria-label]="'Etiqueta de ' + graphFunction.label"
+                  (input)="updateLabel(graphFunction.id, $event)"
+                />
+
+                <button
+                  class="gf-act gf-act--toggle"
+                  type="button"
+                  [class.gf-act--active]="graphFunction.visible"
+                  [attr.aria-pressed]="graphFunction.visible"
+                  [attr.aria-label]="
+                    graphFunction.visible
+                      ? 'Ocultar ' + graphFunction.label
+                      : 'Mostrar ' + graphFunction.label
+                  "
+                  (click)="toggleFunction(graphFunction.id)"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <span>{{ graphFunction.visible ? 'Visible' : 'Oculta' }}</span>
+                </button>
+              </div>
+
+              <div class="gf-expr">
+                <span class="gf-prefix" aria-hidden="true">(x)=</span>
+                <input
+                  [id]="'graph-expression-' + graphFunction.id"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  [attr.aria-label]="'expresión de ' + graphFunction.label"
+                  [value]="graphFunction.expression"
+                  [attr.placeholder]="
+                    graphFunction.plotKind === 'line' ? 'sin(x)' : 'x^2 + y^2'
+                  "
+                  (input)="updateExpression(graphFunction.id, $event)"
+                />
+              </div>
+
+              <div class="gf-foot">
+                <label class="gf-kind">
+                  <span>Tipo</span>
+                  <select
+                    [value]="graphFunction.plotKind"
+                    [attr.aria-label]="'Tipo de gráfica para ' + graphFunction.label"
+                    (change)="setPlotKind(graphFunction.id, $event)"
+                  >
+                    <option value="line">Line</option>
+                    <option value="contour">Contour</option>
+                  </select>
+                </label>
+
+                <div class="gf-actions" aria-label="Acciones de función">
+                  <button
+                    class="gf-act gf-act--select"
+                    type="button"
+                    [attr.aria-pressed]="state.selectedFunctionId === graphFunction.id"
+                    [attr.aria-label]="'Seleccionar ' + graphFunction.label"
+                    (click)="selectFunction(graphFunction.id)"
+                  >
+                    <span>Seleccionar</span>
+                  </button>
+
+                  <button
+                    class="gf-act gf-act--dup"
+                    type="button"
+                    [attr.aria-label]="'Duplicar ' + graphFunction.label"
+                    (click)="duplicateFunction(graphFunction.id)"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                      <path d="M9 3h10v10M7 7h10v10H7z" />
+                    </svg>
+                    <span>Duplicar</span>
+                  </button>
+
+                  <button
+                    class="gf-act gf-act--danger"
+                    type="button"
+                    [attr.aria-label]="'Eliminar ' + graphFunction.label"
+                    (click)="removeFunction(graphFunction.id)"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" />
+                    </svg>
+                    <span>Eliminar</span>
+                  </button>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section class="gw-canvas" aria-label="Canvas gráfico">
+          @if (state.viewMode === '3d') {
+            <div class="gw-canvas__context" role="status" aria-live="polite">
+              <div>Vista 3D activa.</div>
+              <div *ngIf="lineFunctionCount(state.functions) > 0">
+                {{ lineFunctionCount(state.functions) }} función{{
+                  lineFunctionCount(state.functions) === 1 ? '' : 'es'
+                }} Line no está disponible en la vista 3D.
+              </div>
+              <div>Las funciones Contour se muestran como superficies z = f(x, y) en 3D.</div>
+            </div>
+          } @else {
+            <div class="gw-canvas__context gw-canvas__context--hidden" aria-hidden="true"></div>
+          }
+
+          @if (state.viewMode === '2d') {
+            <app-graph-canvas-container
+              #graphCanvasContainer2d
+              ariaLabel="Graph Workspace canvas"
+            ></app-graph-canvas-container>
+          } @else {
+            <app-graph-canvas-container-3d
+              #graphCanvasContainer3d
+              ariaLabel="Graph Workspace 3D canvas"
+            ></app-graph-canvas-container-3d>
+          }
+        </section>
+
+        <section class="gw-inspector" aria-label="Inspector gráfico">
+          <app-graph-workspace-inspector
+            [selectedFunction]="vm.selectedFunction"
+            [selectedSample]="vm.selectedSample"
+            [viewport]="vm.viewport"
+            [summary]="{
+              totalFunctions: vm.state.functions.length,
+              visibleFunctions: vm.visibleFunctions,
+              readyFunctions: vm.readyFunctions,
+              invalidFunctions: vm.invalidFunctions,
+              unsupportedFunctions: vm.unsupportedFunctions
+            }"
+            [error]="vm.error"
+            [hoveredPoint]="hoveredPointForMode(state.viewMode)"
+          ></app-graph-workspace-inspector>
+        </section>
+      </div>
+    }
   </ng-container>
 </main>

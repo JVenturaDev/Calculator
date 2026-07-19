@@ -207,6 +207,19 @@ describe('GraphWorkspacePageComponent', () => {
       ?.classList.contains('gw-canvas__context--hidden')).toBeFalse();
   });
 
+  it('keeps functions, canvas and inspector as sibling regions', () => {
+    const layout = nativeElement().querySelector('.gw-layout');
+
+    expect(layout).not.toBeNull();
+    expect(layout?.children.length).toBe(3);
+    expect((layout?.children[0] as HTMLElement).classList.contains('gw-functions'))
+      .toBeTrue();
+    expect((layout?.children[1] as HTMLElement).classList.contains('gw-canvas'))
+      .toBeTrue();
+    expect((layout?.children[2] as HTMLElement).classList.contains('gw-inspector'))
+      .toBeTrue();
+  });
+
   it('renders the inspector in 3D mode and shows 3D hovered points', () => {
     emitState(createState({ functions: [graphFunction('fn-1')], viewMode: '3d' }));
 
@@ -262,6 +275,10 @@ describe('GraphWorkspacePageComponent', () => {
     }));
 
     const cards = nativeElement().querySelectorAll('.gf-card');
+    const mainRows = nativeElement().querySelectorAll('.gf-head');
+    const expressionRows = nativeElement().querySelectorAll('.gf-expr');
+    const footRows = nativeElement().querySelectorAll('.gf-foot');
+    const actionGroups = nativeElement().querySelectorAll('.gf-actions');
     const labelInputs = nativeElement().querySelectorAll<HTMLInputElement>(
       '.gf-name'
     );
@@ -270,6 +287,10 @@ describe('GraphWorkspacePageComponent', () => {
     );
 
     expect(cards.length).toBe(2);
+    expect(mainRows.length).toBe(2);
+    expect(expressionRows.length).toBe(2);
+    expect(footRows.length).toBe(2);
+    expect(actionGroups.length).toBe(2);
     expect(labelInputs.length).toBe(2);
     expect(expressionInputs.length).toBe(2);
     expect(labelInputs[0].value).toBe('f1');

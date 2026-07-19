@@ -29,6 +29,26 @@ describe('PolishCalculationEngine', () => {
     expect((result as Complex).im).toBeCloseTo(2);
   });
 
+  it('supports unary minus with exact numeric and complex operands', () => {
+    const cases: Array<[string, number | Complex]> = [
+      ['-2', -2],
+      ['2 * -3', -6],
+      ['1 + -2', -1],
+      ['-(2 + 3)', -5],
+    ];
+
+    for (const [source, expected] of cases) {
+      expect(engine.evaluate(source)).toEqual(expected);
+    }
+
+    const complex = engine.evaluate('sqrt(-1)');
+    expect(complex).toBeInstanceOf(Complex);
+    if (complex instanceof Complex) {
+      expect(complex.re).toBeCloseTo(0);
+      expect(complex.im).toBeCloseTo(1);
+    }
+  });
+
   it('keeps variables and angle modes from the Calculator contract', () => {
     expect(engine.evaluate('2x+1', { variables: { x: 3 } })).toBe(7);
     expect(engine.evaluate('sin(90)', { angleMode: 'DEG' })).toBeCloseTo(1);

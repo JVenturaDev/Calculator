@@ -1,16 +1,41 @@
-import { TestBed } from '@angular/core/testing';
-
 import { Tokenizer } from './tokenizer';
 
 describe('Tokenizer', () => {
-  let service: Tokenizer;
+  const tokenizer = new Tokenizer();
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Tokenizer);
+  it('keeps unary minus as a standalone operator token', () => {
+    expect(tokenizer.tokenize('-x').map(token => token.value)).toEqual(['-', 'x']);
+    expect(tokenizer.tokenize('-(-x)').map(token => token.value)).toEqual([
+      '-',
+      '(',
+      '-',
+      'x',
+      ')',
+    ]);
+    expect(tokenizer.tokenize('2 * -x').map(token => token.value)).toEqual([
+      '2',
+      '*',
+      '-',
+      'x',
+    ]);
+    expect(tokenizer.tokenize('x + -y').map(token => token.value)).toEqual([
+      'x',
+      '+',
+      '-',
+      'y',
+    ]);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
+  it('can emit unary minus tokens for postfix evaluation', () => {
+    expect(tokenizer.tokenize('-x', { unaryOperators: true }).map(token => token.value)).toEqual([
+      'u-',
+      'x',
+    ]);
+    expect(tokenizer.tokenize('2 * -3', { unaryOperators: true }).map(token => token.value)).toEqual([
+      '2',
+      '*',
+      'u-',
+      '3',
+    ]);
   });
 });

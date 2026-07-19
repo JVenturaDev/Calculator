@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import Complex from 'complex.js';
 
 import { evaluator } from './polish-evaluator';
 import { Tokenizer } from './tokenizer';
@@ -44,5 +45,24 @@ describe('PolishParser', () => {
 
     expect(evaluation.steps[0].stackBefore).toEqual([2, 3]);
     expect(evaluation.steps[0].stackAfter?.[0].toString()).toBe('5');
+  });
+
+  it('supports unary minus in postfix evaluation', () => {
+    const tokenizer = new Tokenizer();
+    const parserService = new parser();
+
+    const numeric = service.evaluatePostFix(
+      parserService.toPostFix(tokenizer.tokenize('-2', { unaryOperators: true }))
+    );
+    expect(numeric).toBe(-2);
+
+    const complex = service.evaluatePostFix(
+      parserService.toPostFix(tokenizer.tokenize('sqrt(-1)', { unaryOperators: true }))
+    );
+    expect(complex).toBeInstanceOf(Complex);
+    if (complex instanceof Complex) {
+      expect(complex.re).toBeCloseTo(0);
+      expect(complex.im).toBeCloseTo(1);
+    }
   });
 });

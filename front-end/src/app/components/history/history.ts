@@ -37,6 +37,16 @@ export class HistoryComponent implements OnInit, OnDestroy {
   }
 
   restoreHistory(item: HistoryItem): void {
+    const calculationResult = item.calculationResult;
+    if (calculationResult && calculationResult.kind !== 'numeric') {
+      this.calculator.restoreCalculation(
+        item.expression,
+        item.result,
+        calculationResult
+      );
+      return;
+    }
+
     this.calculator.restoreCalculation(item.expression, item.result);
   }
 

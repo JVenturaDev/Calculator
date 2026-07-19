@@ -31,7 +31,7 @@ export class PolishCalculationEngine implements CalculationEngine {
       stackSnapshots: false,
     });
     const normalized = this.normalize(expression);
-    const tokens = this.tokenizer.tokenize(normalized);
+    const tokens = this.tokenizer.tokenize(normalized, { unaryOperators: true });
     const postfix = this.parserService.toPostFix(tokens);
     const result = this.polishEvaluator.evaluatePostFix(
       postfix,

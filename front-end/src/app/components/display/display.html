@@ -43,7 +43,11 @@
 
     <ng-template #resultContent>
       <span class="result-label">Resultado</span>
-      <output class="result-value" [class.result-empty]="vm.result === null">
+      <output
+        class="result-value"
+        [class.result-empty]="vm.result === null"
+        [class.result-multiline]="vm.resultIsMultiline"
+      >
         <span class="result-symbol" *ngIf="vm.result !== null" aria-hidden="true">=</span>
         {{ vm.result ?? '—' }}
       </output>

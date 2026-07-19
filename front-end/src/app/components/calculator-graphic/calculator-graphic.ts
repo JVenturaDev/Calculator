@@ -20,6 +20,7 @@ import {
   CalculationEngine,
 } from '../../services/engine-services/calculation-engine.contract';
 import { ToastService } from '../../services/toast-services/toast';
+import { CalculatorCasCommandRouterService } from '../../services/cas/calculator-cas-command-router';
 @Component({
   selector: 'app-graphic',
   templateUrl: './calculator-graphic.html',
@@ -46,7 +47,8 @@ export class GraphicComponent implements OnInit, OnDestroy {
     private inputService: InputService,
     private wsService: WorkspaceService,
     private polishEvaluator: evaluator,
-    private toast: ToastService
+    private toast: ToastService,
+    private casCommandRouter: CalculatorCasCommandRouterService
   ) { }
 
   ngOnInit(): void {
@@ -184,6 +186,12 @@ export class GraphicComponent implements OnInit, OnDestroy {
 
         case '=':
           const expr = this.calculator.snapshot.expression;
+          if (this.casCommandRouter.canHandle(expr)) {
+            const result = this.calculator.evaluate();
+            this.storeHistory(expr, result);
+            return;
+          }
+
           const preprocessed = this.process.preprocessExpression(expr);
           const graphVariables = detectGraphVariables(expr, this.tokenizer);
 
@@ -208,7 +216,7 @@ export class GraphicComponent implements OnInit, OnDestroy {
           const stateRes: string | number = rawResult instanceof Complex ? displayRes : rawResult;
 
           this.calculator.restoreCalculation(expr, stateRes);
-          this.history.agregarId(expr, stateRes);
+          this.storeHistory(expr, stateRes);
           return;
 
         default:
@@ -271,4 +279,14 @@ export class GraphicComponent implements OnInit, OnDestroy {
   }
 
   clearHistory(): void { this.history.clearHistory(); }
+
+  private storeHistory(expression: string, result: string | number): void {
+    const calculationResult = this.calculator.snapshot.calculationResult;
+    if (calculationResult && calculationResult.kind !== 'numeric') {
+      this.history.agregarId(expression, result, calculationResult);
+      return;
+    }
+
+    this.history.agregarId(expression, result);
+  }
 }

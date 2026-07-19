@@ -4,6 +4,7 @@ import { CalculatorBasicComponent } from './calculator-basic';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 import {
   createInitialCalculatorState,
+  type CalculatorSymbolicComputationResult,
   type CalculatorState,
 } from '../../services/calculator-state/calculator-state';
 import { HistoryService } from '../../services/history-services/history';
@@ -157,6 +158,30 @@ describe('CalculatorBasicComponent', () => {
 
     expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith();
     expect(mockHistory.agregarId).toHaveBeenCalledWith('2+2', 4);
+  });
+
+  it('preserves CAS metadata when saving symbolic results to history', () => {
+    const calculationResult: CalculatorSymbolicComputationResult = {
+      kind: 'symbolic',
+      source: 'simplify(2*x + 3*x)',
+      operation: 'simplify',
+      display: '5 * x',
+      exact: true,
+      expression: '5 * x',
+      latex: '5x',
+    };
+    calculatorState.expression = 'simplify(2*x + 3*x)';
+    calculatorState.calculationResult = calculationResult;
+    mockCalculator.evaluate.and.returnValue('5 * x' as never);
+
+    clickToken('=');
+
+    expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith();
+    expect(mockHistory.agregarId).toHaveBeenCalledWith(
+      'simplify(2*x + 3*x)',
+      '5 * x',
+      calculationResult
+    );
   });
 
   it('captures evaluation errors without alerting or duplicating a message', () => {

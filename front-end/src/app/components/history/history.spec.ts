@@ -88,6 +88,36 @@ describe('HistoryComponent', () => {
     expect(calculator.restoreCalculation).toHaveBeenCalledOnceWith('6*7', 42);
   });
 
+  it('restores CAS metadata when it exists in the history item', () => {
+    const calculationResult: NonNullable<HistoryItem['calculationResult']> = {
+      kind: 'equation-solutions',
+      operation: 'solve',
+      source: 'solve(x^2 - 1 = 0, x)',
+      display: 'x = -1\nx = 1',
+      exact: true,
+      expression: 'solve(x^2 - 1 = 0, x)',
+      latex: ['-1', '1'],
+      variable: 'x',
+      solutionKind: 'finite',
+      solutions: ['-1', '1'],
+    };
+    const item: HistoryItem = {
+      idi: 2,
+      expression: 'solve(x^2 - 1 = 0, x)',
+      result: 'x = -1\nx = 1',
+      calculationResult,
+    };
+    renderHistory([item]);
+
+    (fixture.nativeElement.querySelector('.restore-history') as HTMLButtonElement).click();
+
+    expect(calculator.restoreCalculation).toHaveBeenCalledOnceWith(
+      'solve(x^2 - 1 = 0, x)',
+      'x = -1\nx = 1',
+      calculationResult
+    );
+  });
+
   it('delegates delete and clear bindings to the repository', () => {
     renderHistory([
       {

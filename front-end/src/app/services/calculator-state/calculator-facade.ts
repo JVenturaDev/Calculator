@@ -6,6 +6,10 @@ import {
   type CalculationEngine,
   type CalculationOptions,
 } from '../engine-services/calculation-engine.contract';
+import {
+  CalculatorCasCommandRouterService,
+  type CalculatorCasCommandResult,
+} from '../cas/calculator-cas-command-router';
 import { Tokenizer } from '../polish-services/tokenizer';
 import { detectGraphVariables } from '../polish-services/graph-variable-detector';
 import { createInitialCalculatorState } from './calculator-state';
@@ -13,6 +17,7 @@ import type {
   CalculatorAngleMode,
   CalculatorInputTarget,
   CalculatorMode,
+  CalculatorComputationResult,
   CalculatorState,
 } from './calculator-state';
 
@@ -23,6 +28,7 @@ export type CalculationContextUpdate = Partial<
 @Injectable({ providedIn: 'root' })
 export class CalculatorFacade {
   private readonly engine = inject<CalculationEngine>(CALCULATION_ENGINE);
+  private readonly commandRouter = inject(CalculatorCasCommandRouterService);
   private readonly tokenizer = inject(Tokenizer);
   private readonly stateSubject = new BehaviorSubject<CalculatorState>(
     createInitialCalculatorState()
@@ -47,6 +53,7 @@ export class CalculatorFacade {
       lastExpression: expression,
       phase: 'editing',
       error: null,
+      calculationResult: null,
     });
   }
 
@@ -55,6 +62,7 @@ export class CalculatorFacade {
       expression,
       phase: 'editing',
       error: null,
+      calculationResult: null,
     });
   }
 
@@ -63,6 +71,7 @@ export class CalculatorFacade {
       expression: '',
       lastExpression: null,
       result: null,
+      calculationResult: null,
       phase: 'editing',
       status: 'idle',
       error: null,
@@ -77,6 +86,7 @@ export class CalculatorFacade {
       lastExpression: expression,
       phase: 'editing',
       error: null,
+      calculationResult: null,
     });
   }
 
@@ -92,6 +102,7 @@ export class CalculatorFacade {
       lastExpression: toggledExpression,
       phase: 'editing',
       error: null,
+      calculationResult: null,
     });
   }
 
@@ -118,6 +129,34 @@ export class CalculatorFacade {
 
   evaluate(options?: CalculationOptions): number | string {
     const expression = this.snapshot.expression;
+    const commandResult = this.commandRouter.execute(expression);
+    if (commandResult) {
+      if (!commandResult.ok) {
+        this.update({
+          status: 'error',
+          error: {
+            code: commandResult.error.code,
+            message: commandResult.error.message,
+          },
+          calculationResult: null,
+        });
+        throw new Error(commandResult.error.message);
+      }
+
+      const resultDetails = this.mapCommandResult(commandResult.result);
+      this.update({
+        expression: resultDetails.display,
+        lastExpression: expression,
+        result: resultDetails.display,
+        calculationResult: resultDetails,
+        phase: 'result',
+        status: 'idle',
+        error: null,
+      });
+
+      return resultDetails.display;
+    }
+
     const graphVariables =
       this.snapshot.mode === 'graphic'
         ? detectGraphVariables(expression, this.tokenizer)
@@ -130,7 +169,7 @@ export class CalculatorFacade {
               ...graphVariables.variables,
               ...(options?.variables ?? {}),
             },
-          }
+        }
         : options;
     this.update({ status: 'evaluating', error: null });
 
@@ -139,11 +178,16 @@ export class CalculatorFacade {
       const result: number | string = rawResult instanceof Complex
         ? rawResult.toString().replace('=', '')
         : rawResult;
+      const calculationResult = this.buildNumericCalculationResult(
+        expression,
+        result
+      );
 
       this.update({
         expression: String(result),
         lastExpression: expression,
         result,
+        calculationResult,
         phase: 'result',
         status: 'idle',
         error: null,
@@ -157,16 +201,22 @@ export class CalculatorFacade {
           code: 'EVALUATION_ERROR',
           message: error instanceof Error ? error.message : String(error),
         },
+        calculationResult: null,
       });
       throw error;
     }
   }
 
-  restoreCalculation(expression: string, result: number | string): void {
+  restoreCalculation(
+    expression: string,
+    result: number | string,
+    calculationResult: CalculatorComputationResult | null = null
+  ): void {
     this.update({
       expression: String(result),
       lastExpression: expression,
       result,
+      calculationResult,
       phase: 'result',
       status: 'idle',
       error: null,
@@ -178,6 +228,7 @@ export class CalculatorFacade {
       expression,
       lastExpression: expression,
       result,
+      calculationResult: null,
       phase: 'editing',
       status: 'idle',
       error: null,
@@ -190,6 +241,7 @@ export class CalculatorFacade {
       expression: String(result),
       lastExpression: expression,
       result,
+      calculationResult: null,
       phase: 'result',
       status: 'idle',
       error: null,
@@ -212,6 +264,7 @@ export class CalculatorFacade {
   reportError(error: unknown, code = 'EVALUATION_ERROR'): void {
     this.update({
       status: 'error',
+      calculationResult: null,
       error: {
         code,
         message: error instanceof Error ? error.message : String(error),
@@ -238,5 +291,52 @@ export class CalculatorFacade {
       ...this.snapshot,
       ...partial,
     });
+  }
+
+  private buildNumericCalculationResult(
+    source: string,
+    result: number | string
+  ): CalculatorComputationResult {
+    return {
+      kind: 'numeric',
+      operation: 'evaluate',
+      source,
+      display: String(result),
+      exact: typeof result === 'number' && Number.isFinite(result) && Number.isInteger(result),
+      value: result,
+    };
+  }
+
+  private mapCommandResult(
+    commandResult: CalculatorCasCommandResult
+  ): CalculatorComputationResult {
+    if (commandResult.kind === 'equation-solutions') {
+      return {
+        kind: 'equation-solutions',
+        operation: 'solve',
+        source: commandResult.source,
+        display: commandResult.display,
+        exact: commandResult.exact,
+        expression: commandResult.expression,
+        latex: commandResult.latex as readonly string[],
+        variable: commandResult.variable ?? 'x',
+        solutionKind: commandResult.solutionKind ?? 'finite',
+        solutions: commandResult.solutions ?? [],
+      };
+    }
+
+    return {
+      kind: 'symbolic',
+      operation: commandResult.operation as
+        | 'simplify'
+        | 'expand'
+        | 'factor'
+        | 'differentiate',
+      source: commandResult.source,
+      display: commandResult.display,
+      exact: commandResult.exact,
+      expression: commandResult.expression,
+      latex: String(commandResult.latex),
+    };
   }
 }

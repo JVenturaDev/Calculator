@@ -4,6 +4,7 @@ import { CalculatorScientificComponent } from './calculator-scientific';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 import {
   createInitialCalculatorState,
+  type CalculatorSymbolicComputationResult,
   type CalculatorState,
 } from '../../services/calculator-state/calculator-state';
 import { HistoryService } from '../../services/history-services/history';
@@ -184,6 +185,30 @@ describe('CalculatorScientificComponent', () => {
 
     expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith({ angleMode: 'RAD' });
     expect(mockHistory.agregarId).toHaveBeenCalledWith('sqrt(9)', 3);
+  });
+
+  it('preserves CAS metadata when saving symbolic results to history', () => {
+    const calculationResult: CalculatorSymbolicComputationResult = {
+      kind: 'symbolic',
+      source: 'factor(x^2 - 1)',
+      operation: 'factor',
+      display: '(x - 1) * (x + 1)',
+      exact: true,
+      expression: '(x - 1) * (x + 1)',
+      latex: '(x - 1)(x + 1)',
+    };
+    calculatorState.expression = 'factor(x^2 - 1)';
+    calculatorState.calculationResult = calculationResult;
+    mockCalculator.evaluate.and.returnValue('(x - 1) * (x + 1)' as never);
+
+    clickToken('=');
+
+    expect(mockCalculator.evaluate).toHaveBeenCalledOnceWith({ angleMode: 'RAD' });
+    expect(mockHistory.agregarId).toHaveBeenCalledWith(
+      'factor(x^2 - 1)',
+      '(x - 1) * (x + 1)',
+      calculationResult
+    );
   });
 
   it('captures evaluation errors without alerting or duplicating a message', () => {

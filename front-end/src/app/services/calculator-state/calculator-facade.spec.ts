@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import Complex from 'complex.js';
 import { CALCULATION_ENGINE } from '../engine-services/calculation-engine.contract';
 import { CalculatorFacade } from './calculator-facade';
+import type { CalculatorComputationResult } from './calculator-state';
 
 describe('CalculatorFacade', () => {
   let facade: CalculatorFacade;
@@ -39,6 +40,7 @@ describe('CalculatorFacade', () => {
     facade.clear();
     expect(facade.snapshot.expression).toBe('');
     expect(facade.snapshot.result).toBeNull();
+    expect(facade.snapshot.calculationResult).toBeNull();
   });
 
   it('toggles the leading sign without changing an empty expression', () => {
@@ -182,6 +184,50 @@ describe('CalculatorFacade', () => {
     expect(result).toBe('2 + 3i');
     expect(facade.snapshot.expression).toBe('2 + 3i');
     expect(facade.snapshot.result).toBe('2 + 3i');
+  });
+
+  it('evaluates simplify CAS commands through the public router', () => {
+    facade.setExpression('simplify(2*x + 3*x)');
+
+    const result = facade.evaluate();
+
+    expect(engine.evaluate).not.toHaveBeenCalled();
+    expect(result).toBe('5 * x');
+    expect(facade.snapshot.expression).toBe('5 * x');
+    expect(facade.snapshot.result).toBe('5 * x');
+    expect(facade.snapshot.calculationResult).toEqual({
+      kind: 'symbolic',
+      operation: 'simplify',
+      source: 'simplify(2*x + 3*x)',
+      display: '5 * x',
+      exact: true,
+      expression: '5 * x',
+      latex: '5 * x',
+    } as CalculatorComputationResult);
+  });
+
+  it('evaluates solve CAS commands and stores the structured metadata', () => {
+    facade.setExpression('solve(x^2 - 1 = 0, x)');
+
+    const result = facade.evaluate();
+
+    expect(engine.evaluate).not.toHaveBeenCalled();
+    expect(result).toContain('x = -1');
+    expect(result).toContain('x = 1');
+    expect(facade.snapshot.expression).toContain('x = -1');
+    expect(facade.snapshot.result).toBe(result);
+    expect(facade.snapshot.calculationResult).toEqual({
+      kind: 'equation-solutions',
+      operation: 'solve',
+      source: 'solve(x^2 - 1 = 0, x)',
+      display: result,
+      exact: true,
+      expression: 'solve(x^2 - 1 = 0, x)',
+      latex: ['-1', '1'],
+      variable: 'x',
+      solutionKind: 'finite',
+      solutions: ['-1', '1'],
+    } as CalculatorComputationResult);
   });
 
   it('restores a completed calculation', () => {

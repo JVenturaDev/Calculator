@@ -1,15 +1,20 @@
 import { Injectable } from '@angular/core';
 
 export interface Token {
-  type: 'number' | 'operator' | 'variable' | 'function' | 'paren'|'comma';
+  type: 'number' | 'operator' | 'variable' | 'function' | 'paren' | 'comma';
   value: string;
 }
 
+export interface TokenizeOptions {
+  readonly unaryOperators?: boolean;
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class Tokenizer {
-  private readonly operators = '+-*/^!';
+  private readonly operators = '+-*/^!=';
+  private readonly piSymbols = ['π', 'Ï€'];
   private readonly functions = [
     'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
     'asec', 'acsc', 'acot',
@@ -18,49 +23,60 @@ export class Tokenizer {
     'asinh', 'acosh', 'atanh',
     'asech', 'acsch', 'acoth',
     'ln', 'log', 'sqrt', 'cbrt', 'abs', 'floor', 'ceil', 'exp', 'expe', 'yroot',
-    'logxy', 'pow', 'mod', 'deg', 'dms', 'factorial', 'xylog', '%'
+    'logxy', 'pow', 'mod', 'deg', 'dms', 'factorial', 'xylog', '%',
   ];
 
-  tokenize(expression: string): Token[] {
+  tokenize(expression: string, options: TokenizeOptions = {}): Token[] {
     const tokens: Token[] = [];
     let current = '';
-    let lastToken: Token | null = null;
+    let canBeUnary = true;
+
+    const flushCurrent = (): void => {
+      if (!current) {
+        return;
+      }
+
+      tokens.push(this.createToken(current));
+      current = '';
+      canBeUnary = false;
+    };
 
     for (let i = 0; i < expression.length; i++) {
       const char = expression[i];
       const next = expression[i + 1];
 
+      if (char === ' ') {
+        continue;
+      }
+
       if (this.operators.includes(char)) {
-        if (char === '-') {
-          const isUnary = (!current && (!lastToken || lastToken.type === 'operator' ||
-            (lastToken.type === 'paren' && lastToken.value === '(')));
-          if (isUnary) {
-            current += char;
-            continue;
-          }
+        flushCurrent();
+
+        if (options.unaryOperators && canBeUnary && char === '-') {
+          tokens.push({ type: 'operator', value: 'u-' });
+          canBeUnary = true;
+          continue;
         }
-        if (current) {
-          tokens.push(this.createToken(current));
-          lastToken = tokens[tokens.length - 1];
-          current = '';
+
+        if (options.unaryOperators && canBeUnary && char === '+') {
+          canBeUnary = true;
+          continue;
         }
 
         tokens.push({ type: 'operator', value: char });
-        lastToken = tokens[tokens.length - 1];
-      }
-      else if (char === ',') {
-        if (current) {
-          tokens.push(this.createToken(current));
-          current = '';
-        }
-        tokens.push({ type: 'comma', value: ',' });
+        canBeUnary = true;
+        continue;
       }
 
-      else if (/[<>⩵≠≤≥]/.test(char)) {
-        if (current) {
-          tokens.push(this.createToken(current));
-          current = '';
-        }
+      if (char === ',') {
+        flushCurrent();
+        tokens.push({ type: 'comma', value: ',' });
+        canBeUnary = true;
+        continue;
+      }
+
+      if (/[<>â©µâ‰ â‰¤â‰¥]/.test(char)) {
+        flushCurrent();
         let op = char;
         if ((char === '<' || char === '>') && next === '=') {
           op += '=';
@@ -70,46 +86,49 @@ export class Tokenizer {
           i++;
         }
         tokens.push({ type: 'operator', value: op });
+        canBeUnary = true;
+        continue;
       }
 
-      else if (/[0-9.]/.test(char)) {
-        if (current && /[a-zA-Zπ]/.test(current[current.length - 1])) {
-          tokens.push(this.createToken(current));
+      if (/[0-9.]/.test(char)) {
+        if (current && /[a-zA-ZπÏ€]/.test(current[current.length - 1])) {
+          flushCurrent();
           tokens.push({ type: 'operator', value: '*' });
-          current = '';
+          canBeUnary = true;
         }
         current += char;
+        canBeUnary = false;
+        continue;
       }
 
-      else if (/[a-zA-Zπ]/.test(char)) {
+      if (/[a-zA-ZπÏ€]/.test(char)) {
         if (current && !isNaN(Number(current))) {
-          tokens.push(this.createToken(current));
+          flushCurrent();
           tokens.push({ type: 'operator', value: '*' });
-          current = '';
+          canBeUnary = true;
         }
         current += char;
+        canBeUnary = false;
+        continue;
       }
 
       if (char === '%') {
+        flushCurrent();
         tokens.push({ type: 'function', value: '%' });
+        canBeUnary = false;
+        continue;
       }
 
-      else if (char === '(' || char === ')') {
-        if (current) {
-          tokens.push(this.createToken(current));
-          lastToken = tokens[tokens.length - 1];
-          current = '';
-        }
+      if (char === '(' || char === ')') {
+        flushCurrent();
         tokens.push({ type: 'paren', value: char });
-        lastToken = tokens[tokens.length - 1];
+        canBeUnary = char === '(';
+        continue;
       }
-      else if (char === ' ') continue;
     }
 
-    if (current) {
-      const token = this.createToken(current);
-      tokens.push(token);
-    }
+    flushCurrent();
+
     const finalTokens: Token[] = [];
     for (let i = 0; i < tokens.length; i++) {
       finalTokens.push(tokens[i]);
@@ -117,24 +136,37 @@ export class Tokenizer {
         const cur = tokens[i];
         const next = tokens[i + 1];
         if (
-          (cur.type === 'number' && (next.type === 'variable' || next.type === 'function' ||
-            (next.type === 'paren' && next.value === '('))) ||
-          (cur.type === 'variable' && (next.type === 'number' || next.type === 'function' ||
-            (next.type === 'paren' && next.value === '('))) ||
-          (cur.type === 'paren' && cur.value === ')' && (next.type === 'variable' ||
-            next.type === 'number' || (next.type === 'paren' && next.value === '(')))
+          (cur.type === 'number' && (
+            next.type === 'variable' ||
+            next.type === 'function' ||
+            (next.type === 'paren' && next.value === '(')
+          )) ||
+          (cur.type === 'variable' && (
+            next.type === 'number' ||
+            next.type === 'function' ||
+            (next.type === 'paren' && next.value === '(')
+          )) ||
+          (cur.type === 'paren' && cur.value === ')' && (
+            next.type === 'variable' ||
+            next.type === 'number' ||
+            (next.type === 'paren' && next.value === '(')
+          ))
         ) {
           finalTokens.push({ type: 'operator', value: '*' });
         }
-
       }
-    } return finalTokens;
+    }
+
+    return finalTokens;
   }
+
   private createToken(str: string): Token {
     if (!isNaN(Number(str))) {
       return { type: 'number', value: str };
     }
-    if (str === 'π') return { type: 'variable', value: 'π' };
+    if (this.piSymbols.includes(str)) {
+      return { type: 'variable', value: 'π' };
+    }
 
     if (this.functions.includes(str)) {
       return { type: 'function', value: str };
@@ -142,5 +174,3 @@ export class Tokenizer {
     return { type: 'variable', value: str };
   }
 }
-
-

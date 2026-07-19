@@ -297,4 +297,41 @@ describe('DisplayComponent with real CalculatorFacade', () => {
     );
     expect(history.agregarId).toHaveBeenCalledOnceWith('x', 1);
   });
+
+  it('renders CAS solve results on multiple lines and stores metadata when Enter is pressed', async () => {
+    const calculator = TestBed.inject(CalculatorFacade);
+    const input = fixture.nativeElement.querySelector(
+      '#calculatorInput'
+    ) as HTMLInputElement;
+
+    calculator.setExpression('solve(x^2 - 1 = 0, x)');
+    input.value = 'solve(x^2 - 1 = 0, x)';
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true })
+    );
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector('.result-value').classList.contains('result-multiline')
+    ).toBeTrue();
+    expect(fixture.nativeElement.querySelector('.result-value').textContent).toContain(
+      'x = -1'
+    );
+    expect(fixture.nativeElement.querySelector('.result-value').textContent).toContain(
+      'x = 1'
+    );
+    expect(history.agregarId).toHaveBeenCalledOnceWith(
+      'solve(x^2 - 1 = 0, x)',
+      jasmine.stringMatching(/x = -1/),
+      jasmine.objectContaining({
+        kind: 'equation-solutions',
+        operation: 'solve',
+        variable: 'x',
+        solutionKind: 'finite',
+      })
+    );
+  });
 });

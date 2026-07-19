@@ -225,6 +225,8 @@ export class evaluator {
     const B = b instanceof Complex ? b : b !== undefined ? new Complex(b) : undefined;
 
     switch (op) {
+      case 'u-':
+        return a instanceof Complex ? a.mul(-1) : -a;
       // operadores binarios
       case '+': return A.add(B!);
       case '-': return A.sub(B!);

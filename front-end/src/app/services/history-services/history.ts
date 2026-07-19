@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import type { CalculatorComputationResult } from '../calculator-state/calculator-state';
 
 export interface HistoryItem {
   idi: number;
   expression: string;
   result: string | number;
+  calculationResult?: CalculatorComputationResult | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -34,13 +36,32 @@ export class HistoryService {
     return [...this.history];
   }
 
-  addToHistory(idi: number, expression: string, result: string | number): void {
-    this.history.push({ idi, expression, result });
+  addToHistory(
+    idi: number,
+    expression: string,
+    result: string | number,
+    calculationResult?: CalculatorComputationResult | null
+  ): void {
+    this.history.push({
+      idi,
+      expression,
+      result,
+      ...(calculationResult ? { calculationResult } : {}),
+    });
     this.saveToLocalStorage();
   }
 
-  agregarId(expression: string, result: string | number): void {
-    this.addToHistory(Date.now() + Math.random(), expression, result);
+  agregarId(
+    expression: string,
+    result: string | number,
+    calculationResult?: CalculatorComputationResult | null
+  ): void {
+    this.addToHistory(
+      Date.now() + Math.random(),
+      expression,
+      result,
+      calculationResult
+    );
   }
 
   clearHistory(): void {

@@ -19,6 +19,7 @@ import type {
 interface DisplayViewModel {
   expression: string;
   result: string | null;
+  resultIsMultiline: boolean;
   error: string | null;
   status: CalculatorStatus;
   statusLabel: string;
@@ -74,12 +75,16 @@ export class DisplayComponent implements AfterViewInit, OnDestroy {
       this.calculator.backspace();
       this.scheduleCaretReveal();
     } else if (event.key === 'Enter') {
-      const expr = this.calculator.snapshot.expression;
-      const result = this.calculator.evaluate({
-        angleMode: this.calculator.snapshot.angleMode,
-      });
-      this.history.agregarId(expr, result);
       event.preventDefault();
+      try {
+        const expr = this.calculator.snapshot.expression;
+        const result = this.calculator.evaluate({
+          angleMode: this.calculator.snapshot.angleMode,
+        });
+        this.storeHistory(expr, result);
+      } catch {
+        // El facade ya conserva el error para que el display lo muestre.
+      }
     }
   }
 
@@ -98,6 +103,10 @@ export class DisplayComponent implements AfterViewInit, OnDestroy {
         state.phase === 'result' && state.result !== null
           ? String(state.result)
           : null,
+      resultIsMultiline:
+        state.phase === 'result' &&
+        state.result !== null &&
+        String(state.result).includes('\n'),
       error: state.error?.message ?? null,
       status: state.status,
       statusLabel: this.getStatusLabel(state),
@@ -134,5 +143,15 @@ export class DisplayComponent implements AfterViewInit, OnDestroy {
 
       input.scrollLeft = input.scrollWidth;
     });
+  }
+
+  private storeHistory(expression: string, result: number | string): void {
+    const calculationResult = this.calculator.snapshot.calculationResult;
+    if (calculationResult && calculationResult.kind !== 'numeric') {
+      this.history.agregarId(expression, result, calculationResult);
+      return;
+    }
+
+    this.history.agregarId(expression, result);
   }
 }

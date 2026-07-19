@@ -5,6 +5,7 @@ import { GraphicComponent } from './calculator-graphic';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
 import {
   createInitialCalculatorState,
+  type CalculatorSymbolicComputationResult,
   type CalculatorState,
 } from '../../services/calculator-state/calculator-state';
 import {
@@ -60,6 +61,7 @@ describe('GraphicComponent', () => {
         'backspace',
         'toggleSign',
         'setExpression',
+        'evaluate',
         'restoreCalculation',
         'reportError',
       ],
@@ -313,6 +315,30 @@ describe('GraphicComponent', () => {
     expect(engine.evaluate).not.toHaveBeenCalled();
     expect(calculator.restoreCalculation).toHaveBeenCalledOnceWith('2+2', 4);
     expect(history.agregarId).toHaveBeenCalledWith('2+2', 4);
+  });
+
+  it('preserves CAS metadata when a symbolic command is evaluated from Graphic', () => {
+    const calculationResult: CalculatorSymbolicComputationResult = {
+      kind: 'symbolic',
+      source: 'simplify(2*x + 3*x)',
+      operation: 'simplify',
+      display: '5 * x',
+      exact: true,
+      expression: '5 * x',
+      latex: '5x',
+    };
+    calculatorState.expression = 'simplify(2*x + 3*x)';
+    calculatorState.calculationResult = calculationResult;
+    calculator.evaluate.and.returnValue('5 * x' as never);
+
+    component.handleButtonClick('=');
+
+    expect(calculator.evaluate).toHaveBeenCalledOnceWith();
+    expect(history.agregarId).toHaveBeenCalledWith(
+      'simplify(2*x + 3*x)',
+      '5 * x',
+      calculationResult
+    );
   });
 
   it('keeps graphical evaluation and sends the preprocessed expression to the plot', () => {

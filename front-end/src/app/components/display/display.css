@@ -138,6 +138,11 @@
   white-space: nowrap;
 }
 
+.result-value.result-multiline {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .result-symbol {
   color: #9297a5;
   font-size: 0.72em;

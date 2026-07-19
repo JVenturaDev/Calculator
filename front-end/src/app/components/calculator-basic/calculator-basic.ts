@@ -75,7 +75,7 @@ export class CalculatorBasicComponent {
         case '=':
           const expr = this.calculator.snapshot.expression;
           const result = this.calculator.evaluate();
-          this.history.agregarId(expr, result);
+          this.storeHistory(expr, result);
           return;
         default:
           this.calculator.appendToken(value);
@@ -110,5 +110,15 @@ export class CalculatorBasicComponent {
   }
   clearHistory(): void {
     this.history.clearHistory();
+  }
+
+  private storeHistory(expression: string, result: number | string): void {
+    const calculationResult = this.calculator.snapshot.calculationResult;
+    if (calculationResult && calculationResult.kind !== 'numeric') {
+      this.history.agregarId(expression, result, calculationResult);
+      return;
+    }
+
+    this.history.agregarId(expression, result);
   }
 }
