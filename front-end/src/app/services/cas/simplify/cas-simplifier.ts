@@ -16,6 +16,10 @@ import { createCasError } from '../errors/cas-errors';
 import { DEFAULT_CAS_LIMITS, resolveCasLimits, type CasLimits } from '../limits/cas-limits';
 import { casFailure, casSuccess, type CasResult } from '../result/cas-result';
 import { formatCasExpression } from '../format/cas-formatter';
+import {
+  buildCanonicalNegativeCasExpression,
+  extractNegativeCasExpression,
+} from '../canonical/cas-negative';
 import { toExpressionIfPolynomial } from '../polynomial/cas-polynomial';
 import { reduceExactRationalExpression } from '../rational/cas-rational';
 
@@ -39,7 +43,7 @@ export function simplifyCasExpression(
     return casFailure(
       createCasError(
         'TOO_COMPLEX',
-        'La expresi�n CAS supera el l�mite de complejidad.'
+        'La expresión CAS supera el límite de complejidad.'
       )
     );
   }
@@ -92,7 +96,7 @@ export function simplifyCasExpression(
       return casFailure(
         createCasError(
           'TOO_COMPLEX',
-          'La expresi�n CAS supera el l�mite de complejidad.'
+          'La expresión CAS supera el límite de complejidad.'
         )
       );
     }
@@ -114,7 +118,7 @@ export function simplifyCasExpression(
   return casFailure(
     createCasError(
       'ITERATION_LIMIT',
-      'La simplificaci�n CAS no convergi� dentro del l�mite de iteraciones.'
+      'La simplificación CAS no convergió dentro del límite de iteraciones.'
     )
   );
 }
@@ -255,13 +259,14 @@ function simplifyAddition(
   const signedTerms: Array<{ readonly sign: 1 | -1; readonly expression: CasExpression }> = [];
 
   for (const term of terms) {
-    if (term.kind === 'number') {
-      numericTotal += term.value;
-    } else if (term.kind === 'unary' && term.operator === '-') {
+    const negativeTerm = extractNegativeCasExpression(term);
+    if (negativeTerm.negative) {
       signedTerms.push({
         sign: -1,
-        expression: term.operand,
+        expression: negativeTerm.magnitude,
       });
+    } else if (term.kind === 'number') {
+      numericTotal += term.value;
     } else {
       signedTerms.push({
         sign: 1,
@@ -284,7 +289,9 @@ function simplifyAddition(
   let result: CasExpression | null = null;
   for (const term of signedTerms) {
     if (result === null) {
-      result = term.sign === -1 ? unaryNode('-', term.expression) : term.expression;
+      result = term.sign === -1
+        ? buildCanonicalNegativeCasExpression(term.expression)
+        : term.expression;
       continue;
     }
 
@@ -315,6 +322,11 @@ function simplifySubtraction(
 
   if (left.kind === 'number' && right.kind === 'number') {
     return createNumberResult(left.value - right.value);
+  }
+
+  const negativeRight = extractNegativeCasExpression(right);
+  if (negativeRight.negative) {
+    return simplifyAddition(left, negativeRight.magnitude);
   }
 
   return casSuccess(canonicalizePolynomialExpression(binaryNode('-', left, right)));
@@ -353,6 +365,19 @@ function simplifyMultiplication(
 
   if (numericProduct === 1) {
     return casSuccess(symbolicProductResult.value);
+  }
+
+  if (numericProduct === -1) {
+    return casSuccess(unaryNode('-', symbolicProductResult.value));
+  }
+
+  if (numericProduct < 0) {
+    return casSuccess(
+      unaryNode(
+        '-',
+        binaryNode('*', numberNode(Math.abs(numericProduct)), symbolicProductResult.value)
+      )
+    );
   }
 
   return casSuccess(
@@ -419,7 +444,7 @@ function simplifyPower(
       return casFailure(
         createCasError(
           'TOO_COMPLEX',
-          'El resultado num�rico de la potencia no es finito.'
+          'El resultado numérico de la potencia no es finito.'
         )
       );
     }
@@ -702,7 +727,7 @@ function withinLimits(
 function createNumberResult(value: number): CasResult<CasExpression> {
   if (!Number.isFinite(value)) {
     return casFailure(
-      createCasError('TOO_COMPLEX', 'El resultado num�rico no es finito.')
+      createCasError('TOO_COMPLEX', 'El resultado numérico no es finito.')
     );
   }
 
@@ -722,7 +747,7 @@ function createDivisionResult(
   const result = numerator / denominator;
   if (!Number.isFinite(result)) {
     return casFailure(
-      createCasError('TOO_COMPLEX', 'El resultado num�rico no es finito.')
+      createCasError('TOO_COMPLEX', 'El resultado numérico no es finito.')
     );
   }
 

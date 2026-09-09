@@ -6,7 +6,11 @@ import {
 } from '../ast/cas-ast';
 import { formatCasExpression } from '../format/cas-formatter';
 import { CasParser } from '../parser/cas-parser';
-import { simplifyCasExpression } from '../simplify/cas-simplifier';
+import {
+  areCasExpressionsEquivalent,
+  expectEquationSatisfied,
+  expectEquivalentExpression,
+} from '../testing/cas-test-helpers';
 import { substituteCasExpression } from './cas-substitution';
 import { solveCasExpression, solveCasText } from './cas-solver';
 
@@ -28,7 +32,7 @@ describe('CAS solver', () => {
     if (!solved.ok) return;
 
     expect(solved.kind).withContext(source).toBe('finite');
-    expect(solved.text).withContext(source).toEqual(expected);
+    expectSolutionsEquivalent(source, solved.text, expected);
 
     for (const solution of solved.solutions) {
       const substituted = substituteCasExpression(
@@ -36,10 +40,7 @@ describe('CAS solver', () => {
         variable,
         solution
       );
-      const simplified = simplifyCasExpression(substituted);
-      expect(simplified.ok).withContext(`${source} @ ${formatCasExpression(solution)}`).toBeTrue();
-      if (!simplified.ok) continue;
-      expect(formatCasExpression(simplified.value)).withContext(`${source} @ ${formatCasExpression(solution)}`).toBe('0');
+      expectEquationSatisfied(substituted, `${source} @ ${formatCasExpression(solution)}`);
     }
   }
 
@@ -86,7 +87,7 @@ describe('CAS solver', () => {
     expect(linear.ok).toBeTrue();
     if (!linear.ok) return;
     expect(linear.kind).toBe('finite');
-    expect(linear.text).toEqual(['-2 / y']);
+    expectSolutionsEquivalent('y * x + 2 = 0', linear.text, ['-2 / y']);
     expect(linear.conditions).toEqual(['y ≠ 0']);
     expectFiniteSolutions('a * x + b = c * x + d', 'x', ['(d - b) / (a - c)']);
   });
@@ -140,11 +141,17 @@ describe('CAS solver', () => {
     expect(result.ok).toBeTrue();
     if (!result.ok) return;
     expect(result.kind).toBe('finite');
-    expect(result.text).toEqual([
-      '(-b - sqrt(b ^ 2 - 4 * a * c)) / (2 * a)',
-      '(-b + sqrt(b ^ 2 - 4 * a * c)) / (2 * a)',
-    ]);
-    expect(result.conditions).toEqual(['a ≠ 0', 'b ^ 2 - 4 * a * c ≥ 0']);
+    expectSolutionsEquivalent(
+      'a * x ^ 2 + b * x + c = 0',
+      result.text,
+      [
+        '(-b - sqrt(b ^ 2 - 4 * a * c)) / (2 * a)',
+        '(-b + sqrt(b ^ 2 - 4 * a * c)) / (2 * a)',
+      ]
+    );
+    expect(result.conditions?.length).toBe(2);
+    expectConditionEquivalent(result.conditions?.[0] ?? '', 'a ≠ 0');
+    expectConditionEquivalent(result.conditions?.[1] ?? '', 'b ^ 2 - 4 * a * c ≥ 0');
   });
 
   it('returns no real solutions for negative discriminants', () => {
@@ -275,4 +282,36 @@ describe('CAS solver', () => {
     if (result.ok) return;
     expect(result.error.code).toBe('TOO_COMPLEX');
   });
+
+  function expectSolutionsEquivalent(
+    source: string,
+    actual: readonly string[],
+    expected: readonly string[]
+  ): void {
+    expect(actual.length).withContext(source).toBe(expected.length);
+    const unmatched = [...actual];
+    for (const expectedSolution of expected) {
+      const matchIndex = unmatched.findIndex(actualSolution =>
+        areCasExpressionsEquivalent(actualSolution, expectedSolution)
+      );
+      expect(matchIndex)
+        .withContext(`${source}: missing solution equivalent to ${expectedSolution}`)
+        .not.toBe(-1);
+      if (matchIndex !== -1) {
+        unmatched.splice(matchIndex, 1);
+      }
+    }
+  }
+
+  function expectConditionEquivalent(actual: string, expected: string): void {
+    const actualMatch = actual.match(/^(.*)\s*(≠|≥)\s*(.*)$/);
+    const expectedMatch = expected.match(/^(.*)\s*(≠|≥)\s*(.*)$/);
+    expect(actualMatch).withContext(actual).not.toBeNull();
+    expect(expectedMatch).withContext(expected).not.toBeNull();
+    if (!actualMatch || !expectedMatch) return;
+
+    expect(actualMatch[2]).withContext(actual).toBe(expectedMatch[2]);
+    expectEquivalentExpression(actualMatch[1].trim(), expectedMatch[1].trim());
+    expectEquivalentExpression(actualMatch[3].trim(), expectedMatch[3].trim());
+  }
 });

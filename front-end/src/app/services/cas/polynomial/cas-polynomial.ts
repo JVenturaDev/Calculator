@@ -11,6 +11,10 @@ import { createCasError } from '../errors/cas-errors';
 import { DEFAULT_CAS_LIMITS, resolveCasLimits, type CasLimits } from '../limits/cas-limits';
 import { casFailure, casSuccess, type CasResult } from '../result/cas-result';
 import { approximateRationalValue, buildExactDivision } from '../rational/cas-rational';
+import {
+  buildCanonicalNegativeCasExpression,
+  extractNegativeCasExpression,
+} from '../canonical/cas-negative';
 
 export interface PolynomialTerm {
   readonly coefficient: number;
@@ -78,11 +82,12 @@ export function fromPolynomial(polynomial: Polynomial): CasExpression {
 
   let result: CasExpression | null = null;
   for (const term of expression) {
-    if (term.kind === 'unary' && term.operator === '-') {
+    const negativeTerm = extractNegativeCasExpression(term);
+    if (negativeTerm.negative) {
       result =
         result === null
-          ? unaryNode('-', term.operand)
-          : binaryNode('-', result, term.operand);
+          ? buildCanonicalNegativeCasExpression(negativeTerm.magnitude)
+          : binaryNode('-', result, negativeTerm.magnitude);
       continue;
     }
 
@@ -442,6 +447,12 @@ function compareTerms(left: PolynomialTerm, right: PolynomialTerm): number {
 
   if (leftDegree !== rightDegree) {
     return rightDegree - leftDegree;
+  }
+
+  const leftSign = Math.sign(left.coefficient);
+  const rightSign = Math.sign(right.coefficient);
+  if (leftSign !== rightSign) {
+    return rightSign - leftSign;
   }
 
   const leftKey = termKey(left.powers);

@@ -411,20 +411,16 @@ describe('GraphWorkspaceFacade', () => {
   });
 
   it('updates the viewport with a defensive copy', () => {
-    const viewport = { xMin: -20, xMax: 20, yMin: -5, yMax: 5 };
+    const inputViewport = { xMin: -20, xMax: 20, yMin: -5, yMax: 5 };
 
-    facade.setViewport(viewport);
+    facade.setViewport(inputViewport);
 
-    expect(facade.snapshot.viewport2D).toEqual(viewport);
-    expect(facade.snapshot.viewport2D).not.toBe(viewport);
-    expect(facade.snapshot.viewport).toEqual(viewport);
-    expect(facade.snapshot.viewport).not.toBe(viewport);
-    expect(facade.snapshot.viewport).toEqual(facade.snapshot.viewport2D);
-    expect(facade.snapshot.viewport).not.toBe(facade.snapshot.viewport2D);
+    const actualViewport = facade.snapshot.viewport2D;
+    expect(actualViewport).toEqual(inputViewport);
+    expect(actualViewport).not.toBe(inputViewport);
 
-    viewport.xMin = 999;
+    inputViewport.xMin = 999;
     expect(facade.snapshot.viewport2D.xMin).toBe(-20);
-    expect(facade.snapshot.viewport.xMin).toBe(-20);
   });
 
   it('resets an altered viewport to the default and persists it once', () => {

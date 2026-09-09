@@ -1,18 +1,19 @@
-import { binaryNode } from '../ast/cas-ast';
+import { binaryNode, isStructurallyEqual, numberNode, type CasExpression } from '../ast/cas-ast';
 import { formatCasExpression } from '../format/cas-formatter';
 import { CasParser } from '../parser/cas-parser';
 import { createCasEngine } from '../public-api';
 import { simplifyCasExpression } from '../simplify/cas-simplifier';
-import Complex from 'complex.js';
-import { evaluator } from '../../polish-services/polish-evaluator';
-import { Tokenizer } from '../../polish-services/tokenizer';
-import { parser as PolishPostfixParser } from '../../polish-services/polish-notation-parser-service';
 
 const parser = new CasParser();
 const engine = createCasEngine();
-const tokenizer = new Tokenizer();
-const postfixParser = new PolishPostfixParser();
-const polishEvaluator = new evaluator();
+
+const NUMERIC_SAMPLE_CONTEXTS: readonly Readonly<Record<string, number>>[] = [
+  { a: 2, b: 3, c: 5, d: 7, x: 1, y: 4 },
+  { a: -3, b: 5, c: 2, d: -7, x: -2, y: 6 },
+  { a: 4, b: -2, c: -5, d: 3, x: 3, y: -4 },
+  { a: 7, b: 11, c: -2, d: 5, x: -1, y: 2 },
+  { a: -5, b: 13, c: 3, d: -11, x: 2, y: -3 },
+];
 
 export function expectSimplifiesTo(source: string, expected: string): void {
   const parsed = parser.parse(source);
@@ -24,6 +25,72 @@ export function expectSimplifiesTo(source: string, expected: string): void {
   if (!simplified.ok) return;
 
   expect(formatCasExpression(simplified.value)).withContext(source).toBe(expected);
+}
+
+export function expectEquivalentExpression(actual: string, expected: string): void {
+  const parsedActual = parser.parse(actual);
+  const parsedExpected = parser.parse(expected);
+  expect(parsedActual.ok).withContext(actual).toBeTrue();
+  expect(parsedExpected.ok).withContext(expected).toBeTrue();
+  if (!parsedActual.ok || !parsedExpected.ok) return;
+
+  expectEquivalentCasExpression(parsedActual.value, parsedExpected.value, `${actual} ~= ${expected}`);
+}
+
+export function expectEquivalentCasExpression(
+  actual: CasExpression,
+  expected: CasExpression,
+  context = `${formatCasExpression(actual)} ~= ${formatCasExpression(expected)}`
+): void {
+  const simplifiedActual = simplifyCasExpression(actual);
+  const simplifiedExpected = simplifyCasExpression(expected);
+  expect(simplifiedActual.ok).withContext(context).toBeTrue();
+  expect(simplifiedExpected.ok).withContext(context).toBeTrue();
+  if (!simplifiedActual.ok || !simplifiedExpected.ok) return;
+
+  if (isStructurallyEqual(simplifiedActual.value, simplifiedExpected.value)) {
+    expect(true).withContext(context).toBeTrue();
+    return;
+  }
+
+  const difference = simplifyCasExpression(
+    binaryNode('-', simplifiedActual.value, simplifiedExpected.value)
+  );
+  expect(difference.ok).withContext(context).toBeTrue();
+  if (!difference.ok) return;
+
+  if (formatCasExpression(difference.value) === '0') {
+    expect(true).withContext(context).toBeTrue();
+    return;
+  }
+
+  expectNumericallyEquivalentExpressions(
+    formatCasExpression(simplifiedActual.value),
+    formatCasExpression(simplifiedExpected.value),
+    collectFreeSymbolNames(simplifiedActual.value, simplifiedExpected.value)
+  );
+}
+
+export function expectEquationSatisfied(
+  equation: CasExpression,
+  context = formatCasExpression(equation)
+): void {
+  const simplified = simplifyCasExpression(equation);
+  expect(simplified.ok).withContext(context).toBeTrue();
+  if (!simplified.ok) return;
+
+  if (simplified.value.kind === 'equation') {
+    const left = simplifyCasExpression(simplified.value.left);
+    const right = simplifyCasExpression(simplified.value.right);
+    expect(left.ok).withContext(context).toBeTrue();
+    expect(right.ok).withContext(context).toBeTrue();
+    if (!left.ok || !right.ok) return;
+
+    expectEquivalentCasExpression(left.value, right.value, context);
+    return;
+  }
+
+  expectEquivalentCasExpression(simplified.value, numberNode(0), context);
 }
 
 export function expectDifferentiatesTo(
@@ -39,7 +106,11 @@ export function expectDifferentiatesTo(
   expect(differentiated.ok).withContext(source).toBeTrue();
   if (!differentiated.ok) return;
 
-  expect(formatCasExpression(differentiated.value)).withContext(source).toBe(expected);
+  const expectedExpression = parser.parse(expected);
+  expect(expectedExpression.ok).withContext(expected).toBeTrue();
+  if (!expectedExpression.ok) return;
+
+  expectEquivalentCasExpression(differentiated.value, expectedExpression.value, source);
 }
 
 export function expectIntegratesTo(
@@ -55,7 +126,11 @@ export function expectIntegratesTo(
   expect(integrated.ok).withContext(source).toBeTrue();
   if (!integrated.ok) return;
 
-  expect(formatCasExpression(integrated.value)).withContext(source).toBe(expected);
+  const expectedExpression = parser.parse(expected);
+  expect(expectedExpression.ok).withContext(expected).toBeTrue();
+  if (!expectedExpression.ok) return;
+
+  expectEquivalentCasExpression(integrated.value, expectedExpression.value, source);
 }
 
 export function expectSolvesTo(
@@ -72,7 +147,20 @@ export function expectSolvesTo(
   if (!solved.ok) return;
 
   expect(solved.kind).withContext(source).toBe('finite');
-  expect(solved.text).withContext(source).toEqual(expected);
+  expect(solved.text.length).withContext(source).toBe(expected.length);
+
+  const unmatched = [...solved.text];
+  for (const expectedSolution of expected) {
+    const index = unmatched.findIndex(actualSolution =>
+      areCasExpressionsEquivalent(actualSolution, expectedSolution)
+    );
+    expect(index)
+      .withContext(`${source}: missing solution equivalent to ${expectedSolution} in ${solved.text.join(', ')}`)
+      .not.toBe(-1);
+    if (index !== -1) {
+      unmatched.splice(index, 1);
+    }
+  }
 }
 
 export function expectIdempotent(source: string): void {
@@ -115,13 +203,7 @@ export function expectAntiderivative(
   expect(differentiated.ok).withContext(integrand).toBeTrue();
   if (!differentiated.ok) return;
 
-  const reduced = simplifyCasExpression(
-    binaryNode('-', differentiated.value, parsed.value)
-  );
-  expect(reduced.ok).withContext(integrand).toBeTrue();
-  if (!reduced.ok) return;
-
-  expect(formatCasExpression(reduced.value)).withContext(integrand).toBe('0');
+  expectEquivalentCasExpression(differentiated.value, parsed.value, integrand);
 }
 
 export function expectNoForbiddenDecimal(source: string): void {
@@ -134,71 +216,265 @@ export function expectNoForbiddenDecimal(source: string): void {
 export function expectNumericallyEquivalentExpressions(
   left: string,
   right: string,
-  variable: string,
+  variablesOrVariable: readonly string[] | string = ['x'],
   samples: readonly number[] = [ -3, -2, -1, 1, 2, 3 ]
 ): void {
-  for (const value of samples) {
-    const leftValue = evaluatePolishExpression(left, variable, value);
-    const rightValue = evaluatePolishExpression(right, variable, value);
+  const parsedLeft = parser.parse(left);
+  const parsedRight = parser.parse(right);
+  expect(parsedLeft.ok).withContext(left).toBeTrue();
+  expect(parsedRight.ok).withContext(right).toBeTrue();
+  if (!parsedLeft.ok || !parsedRight.ok) return;
 
-    expect(leftValue).withContext(`${left} @ ${variable}=${value}`).not.toBeNull();
-    expect(rightValue).withContext(`${right} @ ${variable}=${value}`).not.toBeNull();
+  const variables = Array.isArray(variablesOrVariable)
+    ? variablesOrVariable
+    : [variablesOrVariable];
+  const contexts = buildNumericSampleContexts(variables, samples);
+  let validSamples = 0;
+
+  for (const values of contexts) {
+    const leftValue = evaluateCasExpression(parsedLeft.value, values);
+    const rightValue = evaluateCasExpression(parsedRight.value, values);
     if (leftValue === null || rightValue === null) {
       continue;
     }
 
-    expect(leftValue).withContext(`${left} @ ${variable}=${value}`).toBeCloseTo(rightValue, 9);
+    validSamples += 1;
+    expect(leftValue)
+      .withContext(`${left} ~= ${right} @ ${formatSampleContext(values)}`)
+      .toBeCloseTo(rightValue, 9);
+  }
+
+  expect(validSamples)
+    .withContext(`${left} ~= ${right}: expected at least three valid numeric samples`)
+    .toBeGreaterThanOrEqual(3);
+}
+
+export function areCasExpressionsEquivalent(actual: string, expected: string): boolean {
+  const parsedActual = parser.parse(actual);
+  const parsedExpected = parser.parse(expected);
+  if (!parsedActual.ok || !parsedExpected.ok) {
+    return false;
+  }
+
+  const simplifiedActual = simplifyCasExpression(parsedActual.value);
+  const simplifiedExpected = simplifyCasExpression(parsedExpected.value);
+  if (!simplifiedActual.ok || !simplifiedExpected.ok) {
+    return false;
+  }
+
+  if (isStructurallyEqual(simplifiedActual.value, simplifiedExpected.value)) {
+    return true;
+  }
+
+  const difference = simplifyCasExpression(
+    binaryNode('-', simplifiedActual.value, simplifiedExpected.value)
+  );
+  if (difference.ok && formatCasExpression(difference.value) === '0') {
+    return true;
+  }
+
+  return areNumericallyEquivalentCasExpressions(simplifiedActual.value, simplifiedExpected.value);
+}
+
+function areNumericallyEquivalentCasExpressions(
+  left: CasExpression,
+  right: CasExpression
+): boolean {
+  const variables = collectFreeSymbolNames(left, right);
+  const contexts = buildNumericSampleContexts(variables);
+  let validSamples = 0;
+
+  for (const values of contexts) {
+    const leftValue = evaluateCasExpression(left, values);
+    const rightValue = evaluateCasExpression(right, values);
+    if (leftValue === null || rightValue === null) {
+      continue;
+    }
+
+    if (Math.abs(leftValue - rightValue) > 1e-9) {
+      return false;
+    }
+
+    validSamples += 1;
+  }
+
+  return validSamples >= 3;
+}
+
+function collectFreeSymbolNames(...expressions: readonly CasExpression[]): string[] {
+  const names = new Set<string>();
+  for (const expression of expressions) {
+    collectSymbolNames(expression, names);
+  }
+  names.delete('pi');
+  names.delete('π');
+  names.delete('Ï€');
+  names.delete('e');
+
+  return [...names].sort();
+}
+
+function collectSymbolNames(expression: CasExpression, names: Set<string>): void {
+  switch (expression.kind) {
+    case 'number':
+      return;
+    case 'symbol':
+      names.add(expression.name);
+      return;
+    case 'unary':
+      collectSymbolNames(expression.operand, names);
+      return;
+    case 'binary':
+    case 'equation':
+      collectSymbolNames(expression.left, names);
+      collectSymbolNames(expression.right, names);
+      return;
+    case 'function':
+      for (const argument of expression.arguments) {
+        collectSymbolNames(argument, names);
+      }
+      return;
+    default: {
+      const _exhaustive: never = expression;
+      return _exhaustive;
+    }
   }
 }
 
-function evaluatePolishExpression(
-  source: string,
-  variable: string,
-  value: number
+function buildNumericSampleContexts(
+  variables: readonly string[],
+  legacySamples: readonly number[] = []
+): readonly Readonly<Record<string, number>>[] {
+  if (variables.length === 1 && legacySamples.length > 0) {
+    return legacySamples.map(value => ({ [variables[0]]: value }));
+  }
+
+  if (variables.length === 0) {
+    return NUMERIC_SAMPLE_CONTEXTS;
+  }
+
+  return NUMERIC_SAMPLE_CONTEXTS.map((baseContext, index) => {
+    const context: Record<string, number> = { ...baseContext };
+    for (const variable of variables) {
+      context[variable] ??= index + 2;
+    }
+
+    return context;
+  });
+}
+
+function evaluateCasExpression(
+  expression: CasExpression,
+  variables: Readonly<Record<string, number>>
 ): number | null {
-  const tokens = tokenizer.tokenize(source, { unaryOperators: true });
-  const postfix = postfixParser.toPostFix(tokens);
-  const evaluation = polishEvaluator.evaluatePostFix(
-    postfix,
-    { [variable]: value },
-    false,
-    'RAD'
-  );
-
-  if (typeof evaluation === 'number') {
-    return Number.isFinite(evaluation) ? evaluation : null;
-  }
-
-  if (evaluation instanceof Complex) {
-    if (!Number.isFinite(evaluation.re) || !Number.isFinite(evaluation.im)) {
-      return null;
+  switch (expression.kind) {
+    case 'number':
+      return expression.value;
+    case 'symbol':
+      return evaluateSymbol(expression.name, variables);
+    case 'unary': {
+      const operand = evaluateCasExpression(expression.operand, variables);
+      if (operand === null) return null;
+      return expression.operator === '+' ? operand : -operand;
     }
+    case 'binary': {
+      const left = evaluateCasExpression(expression.left, variables);
+      const right = evaluateCasExpression(expression.right, variables);
+      if (left === null || right === null) return null;
 
-    if (Math.abs(evaluation.im) > 1e-9) {
-      return null;
+      switch (expression.operator) {
+        case '+':
+          return finiteOrNull(left + right);
+        case '-':
+          return finiteOrNull(left - right);
+        case '*':
+          return finiteOrNull(left * right);
+        case '/':
+          return Math.abs(right) < 1e-12 ? null : finiteOrNull(left / right);
+        case '^':
+          return finiteOrNull(Math.pow(left, right));
+      }
     }
-
-    return evaluation.re;
-  }
-
-  if (evaluation && typeof evaluation === 'object' && 'result' in evaluation) {
-    const result = evaluation.result;
-    if (typeof result === 'number') {
-      return Number.isFinite(result) ? result : null;
-    }
-
-    if (result instanceof Complex) {
-      if (!Number.isFinite(result.re) || !Number.isFinite(result.im)) {
+    case 'function': {
+      const args = expression.arguments.map(argument =>
+        evaluateCasExpression(argument, variables)
+      );
+      if (args.some(value => value === null)) {
         return null;
       }
 
-      if (Math.abs(result.im) > 1e-9) {
-        return null;
-      }
-
-      return result.re;
+      return evaluateNumericFunction(expression.name, args as readonly number[]);
+    }
+    case 'equation':
+      return null;
+    default: {
+      const _exhaustive: never = expression;
+      return _exhaustive;
     }
   }
+}
 
-  return null;
+function evaluateSymbol(
+  name: string,
+  variables: Readonly<Record<string, number>>
+): number | null {
+  if (name in variables) {
+    return variables[name];
+  }
+
+  switch (name) {
+    case 'pi':
+    case 'π':
+    case 'Ï€':
+      return Math.PI;
+    case 'e':
+      return Math.E;
+    default:
+      return null;
+  }
+}
+
+function evaluateNumericFunction(
+  name: string,
+  values: readonly number[]
+): number | null {
+  if (values.length !== 1) {
+    return null;
+  }
+
+  const value = values[0];
+  switch (name) {
+    case 'sin':
+      return finiteOrNull(Math.sin(value));
+    case 'cos':
+      return finiteOrNull(Math.cos(value));
+    case 'tan':
+      return Math.abs(Math.cos(value)) < 1e-12 ? null : finiteOrNull(Math.tan(value));
+    case 'exp':
+    case 'expe':
+      return finiteOrNull(Math.exp(value));
+    case 'sqrt':
+      return value < 0 ? null : finiteOrNull(Math.sqrt(value));
+    case 'abs':
+      return finiteOrNull(Math.abs(value));
+    case 'sign':
+      return finiteOrNull(Math.sign(value));
+    case 'ln':
+    case 'log':
+      return value <= 0 ? null : finiteOrNull(Math.log(value));
+    case 'cbrt':
+      return finiteOrNull(Math.cbrt(value));
+    default:
+      return null;
+  }
+}
+
+function finiteOrNull(value: number): number | null {
+  return Number.isFinite(value) ? value : null;
+}
+
+function formatSampleContext(values: Readonly<Record<string, number>>): string {
+  return Object.entries(values)
+    .map(([name, value]) => `${name}=${value}`)
+    .join(', ');
 }

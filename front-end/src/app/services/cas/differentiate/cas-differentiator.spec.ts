@@ -62,7 +62,6 @@ describe('CAS differentiation', () => {
   it('applies chain rule to supported functions', () => {
     const cases: Array<[string, string]> = [
       ['sin(x ^ 2)', '2 * x * cos(x ^ 2)'],
-      ['cos(3 * x)', '-3 * sin(3 * x)'],
       ['sqrt(x + 1)', '1 / (2 * sqrt(x + 1))'],
       ['ln(x ^ 2 + 1)', '2 * x / (x ^ 2 + 1)'],
       ['exp(x + 1)', 'exp(x + 1)'],
@@ -151,7 +150,7 @@ describe('CAS differentiation', () => {
     expect(unsupported).toEqual({
       ok: false,
       error: jasmine.objectContaining({
-        code: 'UNSUPPORTED_EXPRESSION',
+        code: 'CAS_UNSUPPORTED_DERIVATIVE',
       }),
     });
 
@@ -254,6 +253,8 @@ describe('CAS differentiation', () => {
 
       expect(formatCasExpression(second.value)).withContext(source).toBe(text);
     }
+
+    expectDifferentiatesTo('cos(3 * x)', 'x', '-3 * sin(3 * x)');
   });
 });
 

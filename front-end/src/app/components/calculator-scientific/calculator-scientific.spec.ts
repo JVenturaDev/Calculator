@@ -121,16 +121,24 @@ describe('CalculatorScientificComponent', () => {
     mouseInput.remove();
   });
 
-  it('keeps exactly 80 explicit button elements when memory is expanded', () => {
+  it('renders the expected semantic button groups when memory is expanded', () => {
     component.showMemoryButtons = true;
+    component.showCasTools = true;
     fixture.detectChanges();
 
-    const buttons = Array.from(
-      nativeElement().querySelectorAll<HTMLButtonElement>('button')
-    );
+    const tokenButtons = nativeElement().querySelectorAll<HTMLButtonElement>('[data-token]');
+    const memoryButtons = nativeElement().querySelectorAll<HTMLButtonElement>('[data-memory-action]');
+    const casActions = nativeElement().querySelectorAll<HTMLButtonElement>('[data-cas-action]');
+    const controlButtons = nativeElement().querySelectorAll<HTMLButtonElement>('[data-control]');
 
-    expect(buttons.length).toBe(81);
-    expect(buttons.every(button => button.type === 'button')).toBeTrue();
+    expect(tokenButtons.length).toBe(71);
+    expect(memoryButtons.length).toBe(5);
+    expect(casActions.length).toBe(10);
+    expect(controlButtons.length).toBe(3);
+    expect(
+      Array.from(nativeElement().querySelectorAll<HTMLButtonElement>('button'))
+        .every(button => button.type === 'button')
+    ).toBeTrue();
   });
 
   it('renders a compact CAS button and opens a discoverable panel', () => {

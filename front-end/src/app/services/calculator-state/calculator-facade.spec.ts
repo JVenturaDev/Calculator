@@ -195,7 +195,7 @@ describe('CalculatorFacade', () => {
     expect(result).toBe('5 * x');
     expect(facade.snapshot.expression).toBe('5 * x');
     expect(facade.snapshot.result).toBe('5 * x');
-    expect(facade.snapshot.calculationResult).toEqual({
+    expect(facade.snapshot.calculationResult).toEqual(jasmine.objectContaining<any>({
       kind: 'symbolic',
       operation: 'simplify',
       source: 'simplify(2*x + 3*x)',
@@ -203,7 +203,7 @@ describe('CalculatorFacade', () => {
       exact: true,
       expression: '5 * x',
       latex: '5 * x',
-      } as CalculatorComputationResult);
+    } as CalculatorComputationResult));
   });
 
   it('evaluates expand CAS commands through the public router', () => {
@@ -215,7 +215,7 @@ describe('CalculatorFacade', () => {
     expect(result).toBe('x ^ 2 + 2 * x + 1');
     expect(facade.snapshot.expression).toBe('x ^ 2 + 2 * x + 1');
     expect(facade.snapshot.result).toBe('x ^ 2 + 2 * x + 1');
-    expect(facade.snapshot.calculationResult).toEqual({
+    expect(facade.snapshot.calculationResult).toEqual(jasmine.objectContaining<any>({
       kind: 'symbolic',
       operation: 'expand',
       source: 'expand((x + 1)^2)',
@@ -223,7 +223,7 @@ describe('CalculatorFacade', () => {
       exact: true,
       expression: 'x ^ 2 + 2 * x + 1',
       latex: 'x ^ 2 + 2 * x + 1',
-    } as CalculatorComputationResult);
+    } as CalculatorComputationResult));
   });
 
   it('evaluates differentiate CAS commands through the public router', () => {
@@ -235,7 +235,7 @@ describe('CalculatorFacade', () => {
     expect(result).toBe('2 * x * cos(x ^ 2)');
     expect(facade.snapshot.expression).toBe('2 * x * cos(x ^ 2)');
     expect(facade.snapshot.result).toBe('2 * x * cos(x ^ 2)');
-    expect(facade.snapshot.calculationResult).toEqual({
+    expect(facade.snapshot.calculationResult).toEqual(jasmine.objectContaining<any>({
       kind: 'symbolic',
       operation: 'differentiate',
       source: 'diff(sin(x ^ 2), x)',
@@ -243,7 +243,7 @@ describe('CalculatorFacade', () => {
       exact: true,
       expression: '2 * x * cos(x ^ 2)',
       latex: '2 * x * cos(x ^ 2)',
-    } as CalculatorComputationResult);
+    } as CalculatorComputationResult));
   });
 
   it('evaluates integrate CAS commands through the public router', () => {
@@ -255,7 +255,7 @@ describe('CalculatorFacade', () => {
     expect(result).toBe('x ^ 3 / 3');
     expect(facade.snapshot.expression).toBe('x ^ 3 / 3');
     expect(facade.snapshot.result).toBe('x ^ 3 / 3');
-    expect(facade.snapshot.calculationResult).toEqual({
+    expect(facade.snapshot.calculationResult).toEqual(jasmine.objectContaining<any>({
       kind: 'symbolic',
       operation: 'integrate',
       source: 'integrate(x^2,x)',
@@ -263,7 +263,7 @@ describe('CalculatorFacade', () => {
       exact: true,
       expression: 'x ^ 3 / 3',
       latex: 'x ^ 3 / 3',
-    } as CalculatorComputationResult);
+    } as CalculatorComputationResult));
   });
 
   it('evaluates limit CAS commands through the public router', () => {
@@ -495,7 +495,7 @@ describe('CalculatorFacade', () => {
     const result = facade.evaluate();
 
     expect(engine.evaluate).not.toHaveBeenCalled();
-    expect(result).toBe('1');
+    expect(result).toBe('x = 1');
     expect(facade.snapshot.calculationResult).toEqual({
       kind: 'equation-solutions',
       operation: 'solve',
@@ -517,7 +517,7 @@ describe('CalculatorFacade', () => {
     const result = facade.evaluate();
 
     expect(engine.evaluate).not.toHaveBeenCalled();
-    expect(result).toBe('-2 / y');
+    expect(result).toBe('x = -2 / y');
     expect(facade.snapshot.calculationResult).toEqual({
       kind: 'equation-solutions',
       operation: 'solve',

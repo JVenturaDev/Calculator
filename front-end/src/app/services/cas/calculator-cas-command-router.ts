@@ -8,6 +8,7 @@ import {
   type CasSolutionKind,
   type CasSolveResult,
 } from './public-api';
+import { validateCasVariable } from './variable/cas-variable';
 
 export type CalculatorCasCommandName =
   | 'simplify'
@@ -411,8 +412,27 @@ export class CalculatorCasCommandRouterService {
         );
       }
 
+      const variable = validateCasVariable(args[1].trim());
+      if (!variable.ok) {
+        return this.failure(
+          normalizedCommand,
+          trimmed,
+          variable.error.code,
+          variable.error.message
+        );
+      }
+
       if (args.length === 4) {
         const direction = args[3].trim();
+        if (!this.isIdentifier(direction)) {
+          return this.failure(
+            normalizedCommand,
+            trimmed,
+            'CAS_COMMAND_ARITY_ERROR',
+            'limit requiere exactamente tres o cuatro argumentos.'
+          );
+        }
+
         if (direction !== 'left' && direction !== 'right') {
           return this.failure(
             normalizedCommand,

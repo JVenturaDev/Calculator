@@ -41,11 +41,21 @@ describe('limitCasExpression', () => {
     point: string,
     direction?: 'both' | 'left' | 'right'
   ): void {
+    expectLimitError(source, variable, point, 'CAS_UNSUPPORTED_LIMIT', direction);
+  }
+
+  function expectLimitError(
+    source: string,
+    variable: string,
+    point: string,
+    expectedCode: string,
+    direction?: 'both' | 'left' | 'right'
+  ): void {
     const limited = limitCasText(source, variable, point, parser, { direction });
 
     expect(limited.ok).withContext(source).toBeFalse();
     if (!limited.ok) {
-      expect(limited.error.code).withContext(source).toBe('CAS_UNSUPPORTED_LIMIT');
+      expect(limited.error.code).withContext(source).toBe(expectedCode);
     }
   }
 
@@ -106,10 +116,10 @@ describe('limitCasExpression', () => {
     expectLimitText('1 / x^2', 'x', '0', '+∞');
 
     expectLimitText('ln(x)', 'x', '0', '-∞', 'right');
-    expectUnsupported('ln(x)', 'x', '0', 'left');
+    expectLimitError('ln(x)', 'x', '0', 'CAS_LIMIT_DOMAIN_ERROR', 'left');
 
     expectLimitText('sqrt(x)', 'x', '0', '0', 'right');
-    expectUnsupported('sqrt(x)', 'x', '0', 'left');
+    expectLimitError('sqrt(x)', 'x', '0', 'CAS_LIMIT_DOMAIN_ERROR', 'left');
   });
 
   it('supports infinite points', () => {
@@ -132,7 +142,7 @@ describe('limitCasExpression', () => {
   });
 
   it('rejects unsupported or discontinuous cases', () => {
-    expectUnsupported('sin(x) / x', 'x', '0');
+    expectLimitDoesNotExist('sin(x) / x', 'x', '0');
     expectUnsupported('factorial(x)', 'x', '1');
   });
 

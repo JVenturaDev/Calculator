@@ -11,6 +11,7 @@ import { createCasError } from '../errors/cas-errors';
 import { DEFAULT_CAS_LIMITS, resolveCasLimits, type CasLimits } from '../limits/cas-limits';
 import { casFailure, casSuccess, type CasResult } from '../result/cas-result';
 import { formatCasExpression } from '../format/cas-formatter';
+import { extractNegativeCasExpression } from '../canonical/cas-negative';
 import { simplifyCasExpression } from '../simplify/cas-simplifier';
 import { validateCasVariable } from '../variable/cas-variable';
 import { containsVariable } from '../solve/cas-substitution';
@@ -296,10 +297,13 @@ function matchLogarithmicSeries(
     return null;
   }
 
-  if (
-    coefficient.kind !== 'number' ||
-    (coefficient.value !== 1 && coefficient.value !== -1)
-  ) {
+  const negativeCoefficient = extractNegativeCasExpression(coefficient);
+  const coefficientSign = isExactOne(coefficient)
+    ? 1
+    : negativeCoefficient.negative && isExactOne(negativeCoefficient.magnitude)
+      ? -1
+      : null;
+  if (coefficientSign === null) {
     return null;
   }
 
@@ -308,7 +312,7 @@ function matchLogarithmicSeries(
     value: '1',
   };
 
-  const interval = coefficient.value > 0
+  const interval = coefficientSign > 0
     ? {
         left: '-1',
         right: '1',
@@ -386,7 +390,7 @@ function isEntireExpression(expression: CasExpression, variable: string): boolea
     case 'number':
       return true;
     case 'symbol':
-      return expression.name !== variable;
+      return true;
     case 'unary':
       return isEntireExpression(expression.operand, variable);
     case 'binary':

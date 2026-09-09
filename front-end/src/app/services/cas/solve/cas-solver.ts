@@ -14,6 +14,7 @@ import { DEFAULT_CAS_LIMITS, resolveCasLimits, type CasLimits } from '../limits/
 import { casFailure, casSuccess, type CasFailure, type CasResult } from '../result/cas-result';
 import { formatCasExpression } from '../format/cas-formatter';
 import { simplifyCasExpression } from '../simplify/cas-simplifier';
+import { extractNegativeCasExpression } from '../canonical/cas-negative';
 import {
   fromPolynomial,
   normalizePolynomial,
@@ -499,16 +500,17 @@ function solveFunctionEquationSide(
       });
     }
     case 'abs': {
-      if (normalizedOther.kind !== 'number') {
-        return null;
-      }
-
-      if (normalizedOther.value < 0) {
+      const negativeOther = extractNegativeCasExpression(normalizedOther);
+      if (negativeOther.negative && negativeOther.magnitude.kind === 'number') {
         return createSolveResult(
           'none',
           variable,
           equationNode(functionExpression, otherExpression)
         );
+      }
+
+      if (normalizedOther.kind !== 'number') {
+        return null;
       }
 
       if (normalizedOther.kind === 'number' && normalizedOther.value === 0) {
@@ -612,11 +614,16 @@ function solveAffineEquation(
   }
 
   const candidate = buildDivisionExpression(unaryMinus(constant), coefficient, limits);
+  const conditions =
+    coefficient.kind !== 'number'
+      ? [`${formatCasExpression(coefficient)} ≠ 0`]
+      : [];
   return buildFiniteSolutionResult(
     variable,
     originalEquation,
     [candidate],
-    limits
+    limits,
+    conditions
   );
 }
 

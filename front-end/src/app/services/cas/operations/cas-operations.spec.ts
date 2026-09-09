@@ -1,6 +1,7 @@
 import { binaryNode, numberNode, symbolNode } from '../ast/cas-ast';
 import { formatCasExpression } from '../format/cas-formatter';
 import { CasParser } from '../parser/cas-parser';
+import { expectEquivalentExpression } from '../testing/cas-test-helpers';
 import { expandCasExpression, factorCasExpression } from './cas-operations';
 
 describe('CAS operations', () => {
@@ -14,7 +15,7 @@ describe('CAS operations', () => {
       ['(x + 1) * (x - 1)', 'x ^ 2 + -1'],
       ['(x + y) * z', 'x * z + y * z'],
       ['(x + 1) ^ 2', 'x ^ 2 + 2 * x + 1'],
-      ['(x - 1) ^ 2', 'x ^ 2 + -2 * x + 1'],
+      ['(x - 1) ^ 2', 'x ^ 2 - 2 * x + 1'],
     ];
 
     for (const [source, expected] of cases) {
@@ -26,7 +27,7 @@ describe('CAS operations', () => {
       expect(expanded.ok).withContext(source).toBeTrue();
       if (!expanded.ok) continue;
 
-      expect(formatCasExpression(expanded.value)).withContext(source).toBe(expected);
+      expectEquivalentExpression(formatCasExpression(expanded.value), expected);
     }
   });
 

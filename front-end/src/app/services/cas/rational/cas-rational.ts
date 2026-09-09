@@ -224,7 +224,7 @@ function buildRationalExpression(approximation: RationalApproximation): CasExpre
   }
 
   if (numerator === -1) {
-    return unaryNode('-', binaryNode('/', numberNode(1), numberNode(denominator)));
+    return binaryNode('/', numberNode(-1), numberNode(denominator));
   }
 
   return binaryNode('/', numberNode(numerator), numberNode(denominator));

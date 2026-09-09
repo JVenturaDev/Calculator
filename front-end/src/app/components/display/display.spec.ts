@@ -320,10 +320,10 @@ describe('DisplayComponent with real CalculatorFacade', () => {
     expect(fixture.nativeElement.querySelector('.solve-solution').textContent).toContain(
       'x ='
     );
-    expect(fixture.nativeElement.querySelector('.solve-solutions').textContent).toContain(
+    expect(normalizedText('.solve-solutions')).toContain(
       '-1'
     );
-    expect(fixture.nativeElement.querySelector('.solve-solutions').textContent).toContain(
+    expect(normalizedText('.solve-solutions')).toContain(
       '1'
     );
     expect(history.agregarId).toHaveBeenCalledOnceWith(
@@ -358,9 +358,9 @@ describe('DisplayComponent with real CalculatorFacade', () => {
     expect(
       fixture.nativeElement.querySelector('.solve-result .result-label').textContent.trim()
     ).toBe('Solución');
-    expect(fixture.nativeElement.querySelector('.solve-solutions').textContent).toContain(
-      'x = 9'
-    );
+    const solution = fixture.nativeElement.querySelector('.solve-solution');
+    expect(solution.querySelector('.solve-variable').textContent.trim()).toBe('x =');
+    expect(solution.querySelector('.solve-expression').textContent.trim()).toBe('9');
   });
 
   it('renders formal solve results with conditions', async () => {
@@ -387,10 +387,10 @@ describe('DisplayComponent with real CalculatorFacade', () => {
     expect(fixture.nativeElement.querySelector('.solve-solutions').textContent).toContain(
       '-2 / y'
     );
-    expect(fixture.nativeElement.querySelector('.solve-conditions').textContent).toContain(
+    expect(normalizedText('.solve-conditions')).toContain(
       'Condición'
     );
-    expect(fixture.nativeElement.querySelector('.solve-conditions').textContent).toContain(
+    expect(normalizedText('.solve-conditions')).toContain(
       'y ≠ 0'
     );
   });
@@ -425,4 +425,10 @@ describe('DisplayComponent with real CalculatorFacade', () => {
     expect(fixture.nativeElement.querySelector('.solve-result .result-label').textContent.trim())
       .toBe('Infinitas soluciones');
   });
+
+  function normalizedText(selector: string): string {
+    return (
+      fixture.nativeElement.querySelector(selector)?.textContent ?? ''
+    ).replace(/\s+/g, ' ').trim();
+  }
 });

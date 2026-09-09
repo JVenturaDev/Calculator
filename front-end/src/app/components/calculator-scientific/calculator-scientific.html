@@ -83,7 +83,7 @@
             class="key cas-action"
             [attr.data-cas-action]="action.id"
             [attr.aria-label]="action.ariaLabel"
-            [attr.title]="action.description + ' ? ' + action.example"
+            [attr.title]="action.description + ' → ' + action.example"
             (click)="insertCasAction(action)"
           >
             <span class="cas-action-label">{{ action.label }}</span>
@@ -105,7 +105,7 @@
             class="key cas-action"
             [attr.data-cas-action]="action.id"
             [attr.aria-label]="action.ariaLabel"
-            [attr.title]="action.description + ' ? ' + action.example"
+            [attr.title]="action.description + ' → ' + action.example"
             (click)="insertCasAction(action)"
           >
             <span class="cas-action-label">{{ action.label }}</span>
@@ -127,7 +127,7 @@
             class="key cas-action"
             [attr.data-cas-action]="action.id"
             [attr.aria-label]="action.ariaLabel"
-            [attr.title]="action.description + ' ? ' + action.example"
+            [attr.title]="action.description + ' → ' + action.example"
             (click)="insertCasAction(action)"
           >
             <span class="cas-action-label">{{ action.label }}</span>
@@ -137,6 +137,7 @@
         </div>
       </section>
     </div>
+  </section>
 
   <div
     *ngIf="showMemoryButtons"

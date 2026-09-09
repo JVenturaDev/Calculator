@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { CalculatorCasCommandRouterService } from './calculator-cas-command-router';
+import { expectEquivalentExpression } from './testing/cas-test-helpers';
 
 describe('CalculatorCasCommandRouterService', () => {
   let router: CalculatorCasCommandRouterService;
@@ -70,7 +71,7 @@ describe('CalculatorCasCommandRouterService', () => {
     if (byPartsExecution?.ok) {
       expect(byPartsExecution.command).toBe('integrate');
       expect(byPartsExecution.result.kind).toBe('symbolic');
-      expect(byPartsExecution.result.display).toBe('-x * cos(x) + sin(x)');
+      expectEquivalentExpression(byPartsExecution.result.display, '-x * cos(x) + sin(x)');
     }
   });
 

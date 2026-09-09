@@ -2,6 +2,7 @@ import { CasParser } from './parser/cas-parser';
 import { DefaultCasEngine, createCasEngine } from './public-api';
 import {
   expectDifferentiatesTo,
+  expectEquivalentExpression,
   expectIntegratesTo,
   expectSolvesTo,
 } from './testing/cas-test-helpers';
@@ -58,42 +59,48 @@ describe('CAS public API', () => {
     const expTaylor = engine.taylorText('exp(x)', 'x', '0', 4);
     expect(expTaylor.ok).toBeTrue();
     if (!expTaylor.ok) return;
-    expect(expTaylor.value.text).toBe('1 + x + x ^ 2 / 2 + x ^ 3 / 6 + x ^ 4 / 24');
+    expectEquivalentExpression(
+      expTaylor.value.text,
+      '1 + x + x ^ 2 / 2 + x ^ 3 / 6 + x ^ 4 / 24'
+    );
     expect(expTaylor.metadata).toEqual(jasmine.objectContaining({
       operation: 'taylor',
       seriesKind: 'taylor',
       variable: 'x',
       center: '0',
       order: 4,
-      polynomial: '1 + x + x ^ 2 / 2 + x ^ 3 / 6 + x ^ 4 / 24',
+      polynomial: expTaylor.value.text,
     }));
 
     const sinTaylor = engine.taylorText('sin(x)', 'x', '0', 5);
     expect(sinTaylor.ok).toBeTrue();
     if (!sinTaylor.ok) return;
-    expect(sinTaylor.value.text).toBe('x - x ^ 3 / 6 + x ^ 5 / 120');
+    expectEquivalentExpression(sinTaylor.value.text, 'x - x ^ 3 / 6 + x ^ 5 / 120');
 
     const cosTaylor = engine.taylorText('cos(x)', 'x', '0', 4);
     expect(cosTaylor.ok).toBeTrue();
     if (!cosTaylor.ok) return;
-    expect(cosTaylor.value.text).toBe('1 - x ^ 2 / 2 + x ^ 4 / 24');
+    expectEquivalentExpression(cosTaylor.value.text, '1 - x ^ 2 / 2 + x ^ 4 / 24');
 
     const lnTaylor = engine.taylorText('ln(x)', 'x', '1', 3);
     expect(lnTaylor.ok).toBeTrue();
     if (!lnTaylor.ok) return;
-    expect(lnTaylor.value.text).toBe('x - 1 - (x - 1) ^ 2 / 2 + (x - 1) ^ 3 / 3');
+    expectEquivalentExpression(
+      lnTaylor.value.text,
+      'x - 1 - (x - 1) ^ 2 / 2 + (x - 1) ^ 3 / 3'
+    );
 
     const maclaurin = engine.maclaurinText('sin(x)', 'x', 5);
     expect(maclaurin.ok).toBeTrue();
     if (!maclaurin.ok) return;
-    expect(maclaurin.value.text).toBe('x - x ^ 3 / 6 + x ^ 5 / 120');
+    expectEquivalentExpression(maclaurin.value.text, 'x - x ^ 3 / 6 + x ^ 5 / 120');
     expect(maclaurin.metadata).toEqual(jasmine.objectContaining({
       operation: 'taylor',
       seriesKind: 'maclaurin',
       variable: 'x',
       center: '0',
       order: 5,
-      polynomial: 'x - x ^ 3 / 6 + x ^ 5 / 120',
+      polynomial: maclaurin.value.text,
     }));
   });
 

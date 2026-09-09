@@ -31,10 +31,13 @@ describe('CAS series convergence', () => {
 
   it('recognizes entire functions with arbitrary constant centers', () => {
     const exp = analyzeSeriesConvergenceText('exp(x)', 'x', '0', parser);
+    const shiftedExp = analyzeSeriesConvergenceText('exp(x)', 'x', '2', parser);
+    const shiftedSin = analyzeSeriesConvergenceText('sin(x)', 'x', '-1', parser);
+    const rationalCos = analyzeSeriesConvergenceText('cos(x)', 'x', '1 / 2', parser);
     const sin = analyzeSeriesConvergenceText('sin(x)', 'x', '0', parser);
     const cos = analyzeSeriesConvergenceText('cos(x)', 'x', '2', parser);
 
-    for (const result of [exp, sin, cos]) {
+    for (const result of [exp, shiftedExp, shiftedSin, rationalCos, sin, cos]) {
       expect(result.ok).toBeTrue();
       if (!result.ok) continue;
 

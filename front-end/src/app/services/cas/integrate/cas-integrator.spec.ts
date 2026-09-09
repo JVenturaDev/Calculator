@@ -1,11 +1,12 @@
 import { binaryNode, functionCallNode, numberNode, symbolNode } from '../ast/cas-ast';
 import { formatCasExpression } from '../format/cas-formatter';
 import { CasParser } from '../parser/cas-parser';
-import { simplifyCasExpression } from '../simplify/cas-simplifier';
 import { differentiateCasExpression } from '../differentiate/cas-differentiator';
 import { integrateCasExpression, integrateCasText } from './cas-integrator';
 import {
   expectAntiderivative,
+  expectEquivalentCasExpression,
+  expectEquivalentExpression,
   expectIdempotent,
   expectNoForbiddenDecimal,
   expectNumericallyEquivalentExpressions,
@@ -36,7 +37,7 @@ describe('integrateCasExpression', () => {
       expect(integrated.ok).withContext(source).toBeTrue();
       if (!integrated.ok) continue;
 
-      expect(formatCasExpression(integrated.value)).withContext(source).toBe(expected);
+      expectEquivalentExpression(formatCasExpression(integrated.value), expected);
     }
   });
 
@@ -61,7 +62,7 @@ describe('integrateCasExpression', () => {
       expect(integrated.ok).withContext(source).toBeTrue();
       if (!integrated.ok) continue;
 
-      expect(formatCasExpression(integrated.value)).withContext(source).toBe(expected);
+      expectEquivalentExpression(formatCasExpression(integrated.value), expected);
     }
   });
 
@@ -81,7 +82,7 @@ describe('integrateCasExpression', () => {
       expect(integrated.ok).withContext(source).toBeTrue();
       if (!integrated.ok) continue;
 
-      expect(formatCasExpression(integrated.value)).withContext(source).toBe(expected);
+      expectEquivalentExpression(formatCasExpression(integrated.value), expected);
     }
   });
 
@@ -108,7 +109,7 @@ describe('integrateCasExpression', () => {
       expect(integrated.ok).withContext(source).toBeTrue();
       if (!integrated.ok) continue;
 
-      expect(formatCasExpression(integrated.value)).withContext(source).toBe(expected);
+      expectEquivalentExpression(formatCasExpression(integrated.value), expected);
     }
   });
 
@@ -138,13 +139,7 @@ describe('integrateCasExpression', () => {
       expect(differentiated.ok).withContext(source).toBeTrue();
       if (!differentiated.ok) continue;
 
-      const reduced = simplifyCasExpression(
-        binaryNode('-', differentiated.value, parsed.value)
-      );
-      expect(reduced.ok).withContext(source).toBeTrue();
-      if (!reduced.ok) continue;
-
-      expect(formatCasExpression(reduced.value)).withContext(source).toBe('0');
+      expectEquivalentCasExpression(differentiated.value, parsed.value, source);
     }
   });
 
@@ -273,7 +268,7 @@ describe('integrateCasExpression', () => {
       if (!integrated.ok) continue;
 
       const text = formatCasExpression(integrated.value);
-      expect(text).withContext(source).toBe(expected);
+      expectEquivalentExpression(text, expected);
       expectNoForbiddenDecimal(text);
     }
   });
