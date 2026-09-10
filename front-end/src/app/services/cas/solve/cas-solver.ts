@@ -183,6 +183,15 @@ function solveSpecialEquation(
     return functionResult;
   }
 
+  const rationalResult = solveConstantDenominatorEquation(
+    originalEquation,
+    variable,
+    limits
+  );
+  if (rationalResult) {
+    return rationalResult;
+  }
+
   const productResult = solveProductEquation(
     normalizedExpression,
     variable,
@@ -339,6 +348,18 @@ function solvePowerEquationSide(
 
   const base = powerExpression.left;
   const exponent = powerExpression.right;
+  const integerPowerResult = solveSimpleIntegerPowerEquation(
+    base,
+    exponent,
+    otherExpression,
+    variable,
+    limits,
+    equation
+  );
+  if (integerPowerResult) {
+    return integerPowerResult;
+  }
+
   const normalizedBase = normalizeSolutionExpression(base, limits);
   const baseValue = tryEvaluateConstantNumber(normalizedBase);
   if (baseValue === null) {
@@ -412,6 +433,38 @@ function solvePowerEquationSide(
   );
 }
 
+function solveSimpleIntegerPowerEquation(
+  base: CasExpression,
+  exponent: CasExpression,
+  otherExpression: CasExpression,
+  variable: string,
+  limits: CasLimits,
+  equation: CasExpression
+): CasSolveResult | null {
+  if (
+    base.kind !== 'symbol' ||
+    base.name !== variable ||
+    exponent.kind !== 'number' ||
+    exponent.value !== 3 ||
+    containsVariable(otherExpression, variable)
+  ) {
+    return null;
+  }
+
+  const normalizedOther = normalizeSolutionExpression(otherExpression, limits);
+  const otherValue = tryEvaluateConstantNumber(normalizedOther);
+  if (otherValue === null) {
+    return null;
+  }
+
+  const root = Math.cbrt(otherValue);
+  const exactRoot = Number.isInteger(root) && root * root * root === otherValue
+    ? numberNode(root)
+    : functionCallNode('cbrt', [normalizedOther]);
+
+  return buildFiniteSolutionResult(variable, equation, [exactRoot], limits);
+}
+
 function solveTransformedEquation(
   originalEquation: CasExpression,
   transformedEquation: CasExpression,
@@ -463,6 +516,81 @@ function solveFunctionEquation(
   );
 }
 
+function solveConstantDenominatorEquation(
+  equation: CasExpression,
+  variable: string,
+  limits: CasLimits
+): CasSolveResult | null {
+  if (equation.kind !== 'equation') {
+    return null;
+  }
+
+  const direct = solveConstantDenominatorSide(
+    equation.left,
+    equation.right,
+    variable,
+    limits,
+    equation
+  );
+  if (direct) {
+    return direct;
+  }
+
+  return solveConstantDenominatorSide(
+    equation.right,
+    equation.left,
+    variable,
+    limits,
+    equation
+  );
+}
+
+function solveConstantDenominatorSide(
+  quotient: CasExpression,
+  other: CasExpression,
+  variable: string,
+  limits: CasLimits,
+  originalEquation: CasExpression
+): CasSolveResult | null {
+  if (
+    quotient.kind !== 'binary' ||
+    quotient.operator !== '/' ||
+    containsVariable(quotient.right, variable)
+  ) {
+    return null;
+  }
+
+  const denominator = normalizeSolutionExpression(quotient.right, limits);
+  if (isZeroExpression(denominator)) {
+    return null;
+  }
+
+  const transformed = equationNode(
+    quotient.left,
+    buildProductExpression([other, denominator], limits)
+  );
+  const solved = solveCasExpression(transformed, variable, { limits });
+  if (!solved.ok) {
+    return solved;
+  }
+
+  if (solved.kind !== 'finite') {
+    return createSolveResult(solved.kind, variable, originalEquation);
+  }
+
+  const conditions = [
+    ...(solved.conditions ?? []),
+    `${formatCasExpression(denominator)} ≠ 0`,
+  ];
+  return buildFiniteSolutionResult(
+    variable,
+    originalEquation,
+    solved.solutions,
+    limits,
+    conditions
+  );
+}
+
 function solveFunctionEquationSide(
   functionExpression: CasExpression,
   otherExpression: CasExpression,
@@ -482,16 +610,17 @@ function solveFunctionEquationSide(
 
   switch (functionExpression.name) {
     case 'sqrt': {
-      if (normalizedOther.kind !== 'number') {
-        return null;
-      }
-
-      if (normalizedOther.value < 0) {
+      const negativeOther = extractNegativeCasExpression(normalizedOther);
+      if (negativeOther.negative && negativeOther.magnitude.kind === 'number') {
         return createSolveResult(
           'none',
           variable,
           equationNode(functionExpression, otherExpression)
         );
+      }
+
+      if (normalizedOther.kind !== 'number') {
+        return null;
       }
 
       const squared = buildPowerExpression(normalizedOther, 2, limits);

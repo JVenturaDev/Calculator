@@ -7,6 +7,7 @@ import {
   expectAntiderivative,
   expectEquivalentCasExpression,
   expectEquivalentExpression,
+  expectIntegratesTo,
   expectIdempotent,
   expectNoForbiddenDecimal,
   expectNumericallyEquivalentExpressions,
@@ -273,13 +274,114 @@ describe('integrateCasExpression', () => {
     }
   });
 
+  it('integrates rational powers exactly', () => {
+    const cases: Array<[string, string]> = [
+      ['x ^ (1 / 2)', '2 * x ^ (3 / 2) / 3'],
+      ['x ^ (-1 / 2)', '2 * sqrt(x)'],
+      ['x ^ (1 / 3)', '3 * x ^ (4 / 3) / 4'],
+      ['x ^ -1', 'ln(abs(x))'],
+    ];
+
+    for (const [source, expected] of cases) {
+      expectIntegratesTo(source, 'x', expected);
+      expectAntiderivative(source, 'x');
+      const parsed = parser.parse(source);
+      if (!parsed.ok) continue;
+      const integrated = integrateCasExpression(parsed.value, 'x');
+      if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+    }
+  });
+
+  it('integrates exact linear families', () => {
+    const cases: Array<[string, string]> = [
+      ['(2 * x + 1) ^ 2', '(2 * x + 1) ^ 3 / 6'],
+      ['(3 * x - 2) ^ 3', '(3 * x - 2) ^ 4 / 12'],
+      ['sqrt(2 * x + 1)', '(2 * x + 1) ^ (3 / 2) / 3'],
+      ['1 / (2 * x + 1)', 'ln(abs(2 * x + 1)) / 2'],
+      ['exp(2 * x + 1)', 'exp(2 * x + 1) / 2'],
+      ['sin(3 * x - 1)', '-cos(3 * x - 1) / 3'],
+      ['cos(4 * x + 2)', 'sin(4 * x + 2) / 4'],
+      ['tan(2 * x)', '-ln(abs(cos(2 * x))) / 2'],
+      ['ln(2 * x + 1)', '((2 * x + 1) * ln(2 * x + 1) - (2 * x + 1)) / 2'],
+    ];
+
+    for (const [source, expected] of cases) {
+      expectIntegratesTo(source, 'x', expected);
+      expectAntiderivative(source, 'x');
+    }
+  });
+
+  it('extracts independent factors, preserves linearity and applies bounded structural patterns', () => {
+    const cases: Array<[string, string]> = [
+      ['a * b * sin(x)', '-a * b * cos(x)'],
+      ['x ^ 2 + 2 * x + 1', 'x ^ 3 / 3 + x ^ 2 + x'],
+      ['sin(x) + exp(x)', '-cos(x) + exp(x)'],
+      ['x ^ 2 * exp(x)', 'exp(x) * (x ^ 2 - 2 * x + 2)'],
+      ['2 * x * cos(x ^ 2)', 'sin(x ^ 2)'],
+      ['4 * x * exp(x ^ 2)', '2 * exp(x ^ 2)'],
+      ['2 * x / (x ^ 2 + 1)', 'ln(abs(x ^ 2 + 1))'],
+      ['6 * x / (x ^ 2 + 1)', '3 * ln(abs(x ^ 2 + 1))'],
+      ['3 * x ^ 2 / (x ^ 3 + 4)', 'ln(abs(x ^ 3 + 4))'],
+    ];
+
+    for (const [source, expected] of cases) {
+      expectIntegratesTo(source, 'x', expected);
+      expectAntiderivative(source, 'x');
+    }
+  });
+
+  it('keeps the bounded by-parts dispatch mathematically valid', () => {
+    for (const source of ['x * sin(x)', 'x * cos(x)', 'x ^ 2 * exp(x)']) {
+      expectAntiderivative(source, 'x');
+    }
+  });
+
+  it('integrates controlled exact rational families', () => {
+    const cases = [
+      '(x ^ 2 + 1) / x',
+      '(x ^ 2 + 2) / x',
+      '(x ^ 3 + x) / x',
+      '(x ^ 2 + x + 1) / x',
+      '(x ^ 2 + 3 * x + 2) / (x + 1)',
+      '1 / (x * (x + 1))',
+      '1 / ((x - 1) * (x + 1))',
+      '(3 * x + 1) / (x * (x + 1))',
+      '1 / (x + 1) ^ 2',
+      'x / (x + 1) ^ 2',
+      '1 / ((x + 1) * x)',
+      '1 / ((x + 1) * (x - 1))',
+    ];
+
+    for (const source of cases) {
+      expectAntiderivative(source, 'x');
+      const parsed = parser.parse(source);
+      if (!parsed.ok) continue;
+      const integrated = integrateCasExpression(parsed.value, 'x');
+      if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+    }
+  });
+
   it('reports unsupported integrals for cases outside the limited rules', () => {
     for (const source of [
       'x * ln(x)',
-      'x ^ 2 * exp(x)',
       'x ^ 2 * sin(x)',
       'x ^ 2 * cos(x)',
+      'sin(x) * x ^ 2',
+      'cos(x) * x ^ 2',
+      'exp(x ^ 2)',
+      'sin(x ^ 2)',
+      '1 / (x ^ 2 + 1)',
+      'x ^ x',
+      'sqrt(x ^ 2 + 1)',
+      '(x + 1) * cos(x ^ 2)',
+      'x ^ 4 * exp(x)',
       'factorial(x)',
+      '1 / (x ^ 2 + x + 1)',
+      '1 / (x ^ 3 + 1)',
+      '1 / (sin(x) + 1)',
+      'x ^ x / (x + 1)',
+      'exp(x) / (x + 1)',
+      '1 / ((x ^ 2 + 1) * (x + 1))',
     ]) {
       const parsed = parser.parse(source);
       expect(parsed.ok).withContext(source).toBeTrue();

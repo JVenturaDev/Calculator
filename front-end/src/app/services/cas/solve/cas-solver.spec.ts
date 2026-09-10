@@ -82,6 +82,30 @@ describe('CAS solver', () => {
     }
   });
 
+  it('solves linear equations with constant denominators exactly', () => {
+    const cases: Array<[string, string[]]> = [
+      ['x / 2 = 3', ['6']],
+      ['(x + 1) / 2 = 3', ['5']],
+      ['(2 * x + 1) / 3 = 5', ['7']],
+      ['3 = (x - 1) / 2', ['7']],
+      ['x / 2 + 1 = 4', ['6']],
+    ];
+
+    for (const [source, expected] of cases) {
+      expectFiniteSolutions(source, 'x', expected);
+    }
+  });
+
+  it('keeps domain conditions for symbolic constant denominators', () => {
+    const result = solveCasText('(x + 1) / a = b', 'x', parser);
+    expect(result.ok).toBeTrue();
+    if (!result.ok) return;
+
+    expect(result.kind).toBe('finite');
+    expectSolutionsEquivalent('(x + 1) / a = b', result.text, ['a * b - 1']);
+    expect(result.conditions).toContain('a ≠ 0');
+  });
+
   it('solves linear equations with symbolic coefficients', () => {
     const linear = solveCasText('y * x + 2 = 0', 'x', parser);
     expect(linear.ok).toBeTrue();
@@ -122,7 +146,9 @@ describe('CAS solver', () => {
   it('solves quadratic equations exactly when the discriminant is real', () => {
     const cases: Array<[string, string[]]> = [
       ['x ^ 2 - 1 = 0', ['-1', '1']],
+      ['x ^ 2 - 5 * x + 6 = 0', ['2', '3']],
       ['x ^ 2 - 2 * x + 1 = 0', ['1']],
+      ['x ^ 2 + 2 * x + 1 = 0', ['-1']],
       ['2 * x ^ 2 - 8 = 0', ['-2', '2']],
       ['x ^ 2 - 2 = 0', ['-sqrt(2)', 'sqrt(2)']],
     ];
@@ -172,8 +198,11 @@ describe('CAS solver', () => {
     expectFiniteSolutions('(x - 2) * (x + 3) = 0', 'x', ['-3', '2']);
     expectFiniteSolutions('(x - 1) * (x - 1) = 0', 'x', ['1']);
     expectFiniteSolutions('(x - 1) ^ 2 = 0', 'x', ['1']);
+    expectFiniteSolutions('(x - 1) ^ 2 = 4', 'x', ['-1', '3']);
     expectFiniteSolutions('sqrt(x) = 3', 'x', ['9']);
     expectFiniteSolutions('sqrt(x + 1) = 3', 'x', ['8']);
+    expectFiniteSolutions('sqrt(2 * x + 1) = 3', 'x', ['4']);
+    expectFiniteSolutions('sqrt(x - 2) = 0', 'x', ['2']);
     expectFiniteSolutions('abs(x - 1) = 2', 'x', ['-1', '3']);
     expectFiniteSolutions('abs(x) = 3', 'x', ['-3', '3']);
     expectFiniteSolutions('abs(x) = 0', 'x', ['0']);
@@ -184,13 +213,21 @@ describe('CAS solver', () => {
     expectFiniteSolutions('ln(x) = 1', 'x', ['e']);
     expectFiniteSolutions('ln(x) = 2', 'x', ['exp(2)']);
     expectFiniteSolutions('ln(x + 1) = 0', 'x', ['0']);
+    expectFiniteSolutions('ln(2 * x + 1) = 0', 'x', ['0']);
     expectFiniteSolutions('exp(2 * x) = 4', 'x', ['ln(4) / 2']);
     expectFiniteSolutions('exp(2 * x + 1) = 3', 'x', ['(ln(3) - 1) / 2']);
+    expectFiniteSolutions('exp(x + 1) = 2', 'x', ['ln(2) - 1']);
     expectFiniteSolutions('2 ^ x = 8', 'x', ['ln(8) / ln(2)']);
     expectFiniteSolutions('2 ^ x = 1', 'x', ['0']);
     expectFiniteSolutions('2 ^ (x + 1) = 2 ^ 3', 'x', ['2']);
     expectFiniteSolutions('exp(2 * x) = exp(6)', 'x', ['3']);
     expectFiniteSolutions('ln(x + 1) = ln(3)', 'x', ['2']);
+  });
+
+  it('solves direct cubic powers exactly without numerical approximation', () => {
+    expectFiniteSolutions('x ^ 3 = 8', 'x', ['2']);
+    expectFiniteSolutions('x ^ 3 = -8', 'x', ['-2']);
+    expectFiniteSolutions('x ^ 3 = 2', 'x', ['cbrt(2)']);
   });
 
   it('treats 1^x = 1 as infinitely many solutions in the supported real domain', () => {
@@ -205,6 +242,11 @@ describe('CAS solver', () => {
     expect(negative.ok).toBeTrue();
     if (!negative.ok) return;
     expect(negative.kind).toBe('none');
+
+    const negativeSquareRoot = solveCasText('sqrt(x) = -1', 'x', parser);
+    expect(negativeSquareRoot.ok).toBeTrue();
+    if (!negativeSquareRoot.ok) return;
+    expect(negativeSquareRoot.kind).toBe('none');
   });
 
   it('deduplicates repeated roots', () => {

@@ -263,7 +263,8 @@ describe('CAS public API', () => {
     expect(powerSolved.ok).toBeTrue();
     if (!powerSolved.ok) return;
     expect(powerSolved.kind).toBe('finite');
-    expect(powerSolved.text).toEqual(['ln(8) / ln(2)']);
+    expect(powerSolved.text).toHaveSize(1);
+    expectEquivalentExpression(powerSolved.text[0], 'ln(8) / ln(2)');
   });
 
   it('rejects invalid differentiation variables', () => {

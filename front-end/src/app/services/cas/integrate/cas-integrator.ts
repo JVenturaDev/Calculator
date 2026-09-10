@@ -14,6 +14,8 @@ import { DEFAULT_CAS_LIMITS, resolveCasLimits, type CasLimits } from '../limits/
 import { casFailure, casSuccess, type CasResult } from '../result/cas-result';
 import { simplifyCasExpression, type CasTextResult } from '../simplify/cas-simplifier';
 import { buildExactDivision } from '../rational/cas-rational';
+import { buildExactRationalExpression } from '../rational/cas-rational';
+import { toPolynomial } from '../polynomial/cas-polynomial';
 import { validateCasVariable } from '../variable/cas-variable';
 import { dependsOnCasExpression, differentiateCasExpression, type CasOperationOptions } from '../differentiate/cas-differentiator';
 import { formatCasExpression } from '../format/cas-formatter';
@@ -194,6 +196,11 @@ function integrateProduct(
     return byPartsIntegration;
   }
 
+  const substitutionIntegration = tryIntegrateProportionalProduct(left, right, variable, limits);
+  if (substitutionIntegration.ok) {
+    return substitutionIntegration;
+  }
+
   if (!leftDepends && isNumericExpression(left)) {
     const rightIntegration = integrateNode(right, variable, limits);
     if (!rightIntegration.ok) {
@@ -249,7 +256,7 @@ function tryIntegrateByPartsProduct(
   const factors = collectMultiplicationFactors(binaryNode('*', left, right));
   let numericFactor = 1;
   const independentFactors: CasExpression[] = [];
-  let variableFactorCount = 0;
+  let variablePower = 0;
   let matchedFunction: CasFunctionCallNode | null = null;
 
   for (const factor of factors) {
@@ -263,8 +270,9 @@ function tryIntegrateByPartsProduct(
       continue;
     }
 
-    if (isVariableSymbol(factor, variable)) {
-      variableFactorCount += 1;
+    const degree = readVariablePower(factor, variable);
+    if (degree !== null) {
+      variablePower += degree;
       continue;
     }
 
@@ -276,11 +284,11 @@ function tryIntegrateByPartsProduct(
     return unsupportedIntegralError();
   }
 
-  if (variableFactorCount !== 1 || !matchedFunction) {
+  if (!matchedFunction || variablePower < 1 || variablePower > 2) {
     return unsupportedIntegralError();
   }
 
-  const coreIntegration = integrateByPartsFunction(matchedFunction.name, variable);
+  const coreIntegration = integrateByPartsFunction(matchedFunction.name, variablePower, variable);
   if (!coreIntegration.ok) {
     return coreIntegration;
   }
@@ -325,18 +333,246 @@ function integrateDivision(
 
   if (!numeratorDepends) {
     const reciprocal = integrateReciprocalLike(denominator, variable, limits);
-    if (!reciprocal.ok) {
-      return reciprocal;
-    }
+    if (reciprocal.ok) {
+      if (isNumericExpression(numerator)) {
+        return casSuccess(attachIndependentFactor(
+          buildExactRationalExpression(numerator.value),
+          reciprocal.value
+        ));
+      }
 
-    if (isNumericExpression(numerator)) {
-      return casSuccess(scaleExpressionByInteger(reciprocal.value, numerator.value));
+      return casSuccess(binaryNode('*', cloneCasExpression(numerator), reciprocal.value));
     }
+  }
 
-    return casSuccess(binaryNode('*', cloneCasExpression(numerator), reciprocal.value));
+  const rationalIntegration = tryIntegrateControlledRational(
+    numerator,
+    denominator,
+    variable,
+    limits
+  );
+  if (rationalIntegration.ok) {
+    return rationalIntegration;
+  }
+
+  // Restricted f'(x) / f(x): only an exact integer proportional factor.
+  const denominatorDerivative = differentiateCasExpression(denominator, variable, { limits });
+  if (denominatorDerivative.ok) {
+    const ratio = extractExactProportionalRatio([numerator], denominatorDerivative.value);
+    if (ratio !== null) {
+      return casSuccess(scaleExpressionByInteger(
+        functionCallNode('ln', [functionCallNode('abs', [cloneCasExpression(denominator)])]),
+        ratio
+      ));
+    }
   }
 
   return unsupportedIntegralError();
+}
+
+interface NumericLinearFactor {
+  readonly coefficient: number;
+  readonly constant: number;
+  readonly expression: CasExpression;
+}
+
+/** Deliberately small exact rational integration surface: numeric univariate inputs only. */
+function tryIntegrateControlledRational(
+  numerator: CasExpression,
+  denominator: CasExpression,
+  variable: string,
+  limits: CasLimits
+): CasResult<CasExpression> {
+  const numeratorCoefficients = readUnivariatePolynomial(numerator, variable);
+  const denominatorCoefficients = readUnivariatePolynomial(denominator, variable);
+  if (!numeratorCoefficients || !denominatorCoefficients || denominatorCoefficients.length === 0) {
+    return unsupportedIntegralError();
+  }
+
+  if (numeratorCoefficients.length >= denominatorCoefficients.length) {
+    const division = divideCoefficientPolynomials(numeratorCoefficients, denominatorCoefficients);
+    if (!division) return unsupportedIntegralError();
+    const quotient = integrateCoefficientPolynomial(division.quotient, variable);
+    if (division.remainder.length === 0) return casSuccess(quotient);
+    const remainder = integrateProperRational(
+      division.remainder,
+      denominator,
+      denominatorCoefficients,
+      variable,
+      limits
+    );
+    if (!remainder.ok) return remainder;
+    return casSuccess(binaryNode('+', quotient, remainder.value));
+  }
+
+  return integrateProperRational(
+    numeratorCoefficients,
+    denominator,
+    denominatorCoefficients,
+    variable,
+    limits
+  );
+}
+
+function integrateProperRational(
+  numeratorCoefficients: readonly number[],
+  denominator: CasExpression,
+  denominatorCoefficients: readonly number[],
+  variable: string,
+  limits: CasLimits
+): CasResult<CasExpression> {
+  if (numeratorCoefficients.length === 1 && denominatorCoefficients.length === 2) {
+    const reciprocal = integrateReciprocalLike(denominator, variable, limits);
+    if (!reciprocal.ok) return reciprocal;
+    return casSuccess(attachIndependentFactor(
+      buildExactRationalExpression(numeratorCoefficients[0]),
+      reciprocal.value
+    ));
+  }
+
+  const factors = extractExplicitLinearDenominator(denominator, variable);
+  if (!factors || numeratorCoefficients.length > 2) return unsupportedIntegralError();
+
+  const [first, second] = factors;
+  const numeratorLinear = {
+    constant: numeratorCoefficients[0] ?? 0,
+    coefficient: numeratorCoefficients[1] ?? 0,
+  };
+
+  if (sameLinearFactor(first, second)) {
+    const a = numeratorLinear.coefficient / first.coefficient;
+    const b = numeratorLinear.constant - a * first.constant;
+    return integrateDecomposedRational([
+      { coefficient: a, denominator: first.expression },
+      { coefficient: b, denominator: binaryNode('^', cloneCasExpression(first.expression), numberNode(2)) },
+    ], variable, limits);
+  }
+
+  const determinant = first.constant * second.coefficient - first.coefficient * second.constant;
+  if (determinant === 0) return unsupportedIntegralError();
+  const a = (numeratorLinear.coefficient * first.constant - first.coefficient * numeratorLinear.constant) / determinant;
+  const b = (second.coefficient * numeratorLinear.constant - numeratorLinear.coefficient * second.constant) / determinant;
+  return integrateDecomposedRational([
+    { coefficient: a, denominator: first.expression },
+    { coefficient: b, denominator: second.expression },
+  ], variable, limits);
+}
+
+function integrateCoefficientPolynomial(
+  coefficients: readonly number[],
+  variable: string
+): CasExpression {
+  let result: CasExpression | null = null;
+  coefficients.forEach((coefficient, exponent) => {
+    if (coefficient === 0) return;
+    const term = integrateVariablePower(exponent, variable, coefficient);
+    result = result === null ? term : binaryNode('+', result, term);
+  });
+  return result ?? numberNode(0);
+}
+
+function integrateDecomposedRational(
+  terms: readonly { readonly coefficient: number; readonly denominator: CasExpression }[],
+  variable: string,
+  limits: CasLimits
+): CasResult<CasExpression> {
+  let result: CasExpression | null = null;
+  for (const term of terms) {
+    if (!Number.isFinite(term.coefficient)) return unsupportedIntegralError();
+    if (term.coefficient === 0) continue;
+    const baseIntegration = term.denominator.kind === 'binary' &&
+      term.denominator.operator === '^' &&
+      term.denominator.right.kind === 'number'
+      ? integratePowerNode(
+          term.denominator.left,
+          numberNode(-term.denominator.right.value),
+          variable
+        )
+      : integrateReciprocalLike(term.denominator, variable, limits);
+    if (!baseIntegration.ok) return baseIntegration;
+    const integrated = casSuccess(
+      attachIndependentFactor(buildExactRationalExpression(term.coefficient), baseIntegration.value)
+    );
+    if (!integrated.ok) return integrated;
+    result = result === null ? integrated.value : binaryNode('+', result, integrated.value);
+  }
+  return result === null ? casSuccess(numberNode(0)) : casSuccess(result);
+}
+
+function extractExplicitLinearDenominator(expression: CasExpression, variable: string): readonly [NumericLinearFactor, NumericLinearFactor] | null {
+  if (expression.kind === 'binary' && expression.operator === '*') {
+    const factors = collectMultiplicationFactors(expression);
+    if (factors.length !== 2) return null;
+    const first = readNumericLinearFactor(factors[0], variable);
+    const second = readNumericLinearFactor(factors[1], variable);
+    return first && second ? [first, second] : null;
+  }
+  if (expression.kind === 'binary' && expression.operator === '^' && expression.right.kind === 'number' && expression.right.value === 2) {
+    const factor = readNumericLinearFactor(expression.left, variable);
+    return factor ? [factor, factor] : null;
+  }
+  return null;
+}
+
+function readNumericLinearFactor(expression: CasExpression, variable: string): NumericLinearFactor | null {
+  const coefficients = readUnivariatePolynomial(expression, variable);
+  if (!coefficients || coefficients.length !== 2 || coefficients[1] === 0) return null;
+  return { coefficient: coefficients[1], constant: coefficients[0] ?? 0, expression: cloneCasExpression(expression) };
+}
+
+function sameLinearFactor(left: NumericLinearFactor, right: NumericLinearFactor): boolean {
+  return left.coefficient === right.coefficient && left.constant === right.constant;
+}
+
+function readUnivariatePolynomial(expression: CasExpression, variable: string): number[] | null {
+  const polynomial = toPolynomial(expression);
+  if (!polynomial.ok) return null;
+  const coefficients: number[] = [];
+  for (const term of polynomial.value.terms) {
+    const names = Object.keys(term.powers);
+    if (names.some(name => name !== variable)) return null;
+    const degree = term.powers[variable] ?? 0;
+    if (!Number.isInteger(degree) || degree < 0) return null;
+    coefficients[degree] = (coefficients[degree] ?? 0) + term.coefficient;
+  }
+  return normalizeCoefficientPolynomial(coefficients);
+}
+
+function divideCoefficientPolynomials(numerator: readonly number[], denominator: readonly number[]): { quotient: number[]; remainder: number[] } | null {
+  const divisor = normalizeCoefficientPolynomial([...denominator]);
+  if (!divisor || divisor.length === 0 || divisor[divisor.length - 1] === 0) return null;
+  const remainder = normalizeCoefficientPolynomial([...numerator]);
+  if (!remainder) return null;
+  const quotient: number[] = [];
+  while (remainder.length >= divisor.length) {
+    const previousDegree = remainder.length - 1;
+    const degree = remainder.length - divisor.length;
+    const coefficient = remainder[remainder.length - 1] / divisor[divisor.length - 1];
+    if (!Number.isFinite(coefficient)) return null;
+    quotient[degree] = coefficient;
+    for (let index = 0; index < divisor.length; index++) {
+      remainder[index + degree] = (remainder[index + degree] ?? 0) - coefficient * (divisor[index] ?? 0);
+    }
+    if (!normalizeCoefficientPolynomial(remainder)) return null;
+    if (remainder.length === 0) break;
+    if (remainder.length - 1 >= previousDegree) {
+      return null;
+    }
+  }
+  const normalizedQuotient = normalizeCoefficientPolynomial(quotient);
+  const normalizedRemainder = normalizeCoefficientPolynomial(remainder);
+  if (!normalizedQuotient || !normalizedRemainder) return null;
+  return { quotient: normalizedQuotient, remainder: normalizedRemainder };
+}
+
+function normalizeCoefficientPolynomial(coefficients: number[]): number[] | null {
+  for (let index = 0; index < coefficients.length; index++) {
+    const coefficient = coefficients[index] ?? 0;
+    if (!Number.isFinite(coefficient)) return null;
+    coefficients[index] = coefficient;
+  }
+  while (coefficients.length > 0 && coefficients[coefficients.length - 1] === 0) coefficients.pop();
+  return coefficients;
 }
 
 function integrateReciprocalLike(
@@ -390,16 +626,36 @@ function integratePowerNode(
   exponent: CasExpression,
   variable: string
 ): CasResult<CasExpression> {
-  if (
-    base.kind === 'symbol' &&
-    base.name === variable &&
-    exponent.kind === 'number' &&
-    Number.isInteger(exponent.value)
-  ) {
-    return casSuccess(integrateVariablePower(exponent.value, variable, 1));
+  const rationalExponent = readExactRational(exponent);
+  if (!rationalExponent) {
+    return unsupportedIntegralError();
   }
 
-  return unsupportedIntegralError();
+  const linear = extractNumericLinearArgument(base, variable);
+  if (!linear) {
+    return unsupportedIntegralError();
+  }
+
+  if (rationalExponent.numerator === -rationalExponent.denominator) {
+    return casSuccess(buildExactDivision(
+      functionCallNode('ln', [functionCallNode('abs', [cloneCasExpression(base)])]),
+      linear.coefficient
+    ));
+  }
+
+  if (linear.coefficient === 1 && isVariableSymbol(base, variable) && rationalExponent.denominator === 1) {
+    return casSuccess(integrateVariablePower(rationalExponent.numerator, variable, 1));
+  }
+
+  const nextNumerator = rationalExponent.numerator + rationalExponent.denominator;
+  const nextExponent = buildExactDivision(numberNode(nextNumerator), rationalExponent.denominator);
+  const power = binaryNode('^', cloneCasExpression(base), nextExponent);
+  return casSuccess(buildExactDivision(
+    rationalExponent.denominator === 1
+      ? power
+      : binaryNode('*', numberNode(rationalExponent.denominator), power),
+    linear.coefficient * nextNumerator
+  ));
 }
 
 function integrateFunction(
@@ -418,55 +674,50 @@ function integrateFunction(
   const argument = node.arguments[0];
 
   if (node.name === 'sqrt') {
-    if (!isVariableSymbol(argument, variable)) {
+    const linear = extractNumericLinearArgument(argument, variable);
+    if (!linear) {
       return unsupportedIntegralError(node.name);
     }
 
-    return casSuccess(
-      buildExactDivision(
-        binaryNode(
-          '*',
-          numberNode(2),
-          binaryNode(
-            '*',
-            symbolNode(variable),
-            functionCallNode('sqrt', [symbolNode(variable)])
-          )
-        ),
-        3
-      )
+    const numerator = binaryNode(
+      '*',
+      numberNode(2),
+      binaryNode('*', cloneCasExpression(argument), functionCallNode('sqrt', [cloneCasExpression(argument)]))
     );
+    return casSuccess(buildExactDivision(numerator, 3 * linear.coefficient));
   }
 
   if (node.name === 'ln') {
-    if (!isVariableSymbol(argument, variable)) {
+    const linear = extractNumericLinearArgument(argument, variable);
+    if (!linear) {
       return unsupportedIntegralError(node.name);
     }
 
-    return casSuccess(
-      binaryNode(
-        '-',
-        binaryNode('*', symbolNode(variable), functionCallNode('ln', [symbolNode(variable)])),
-        symbolNode(variable)
-      )
-    );
+    return casSuccess(buildExactDivision(
+      binaryNode('-',
+        binaryNode('*', cloneCasExpression(argument), functionCallNode('ln', [cloneCasExpression(argument)])),
+        cloneCasExpression(argument)
+      ),
+      linear.coefficient
+    ));
   }
 
   if (node.name === 'tan') {
-    if (!isVariableSymbol(argument, variable)) {
+    const linear = extractNumericLinearArgument(argument, variable);
+    if (!linear) {
       return unsupportedIntegralError(node.name);
     }
-
-    return casSuccess(
+    return casSuccess(buildExactDivision(
       unaryNode(
         '-',
         functionCallNode('ln', [
           functionCallNode('abs', [
-            functionCallNode('cos', [symbolNode(variable)]),
+            functionCallNode('cos', [cloneCasExpression(argument)]),
           ]),
         ])
-      )
-    );
+      ),
+      linear.coefficient
+    ));
   }
 
   const derivative = differentiateCasExpression(argument, variable, { limits });
@@ -532,6 +783,7 @@ function integrateFunction(
 
 function integrateByPartsFunction(
   functionName: string,
+  degree: number,
   variable: string
 ): CasResult<CasExpression> {
   const variableSymbol = symbolNode(variable);
@@ -541,6 +793,10 @@ function integrateByPartsFunction(
   switch (functionName) {
     case 'exp':
     case 'expe':
+      if (degree === 2) {
+        return casSuccess(binaryNode('*', functionExpression,
+          binaryNode('+', binaryNode('-', binaryNode('^', variableSymbol, numberNode(2)), binaryNode('*', numberNode(2), symbolNode(variable))), numberNode(2))));
+      }
       return casSuccess(
         binaryNode(
           '-',
@@ -549,6 +805,9 @@ function integrateByPartsFunction(
         )
       );
     case 'sin':
+      if (degree !== 1) {
+        return unsupportedIntegralError(functionName);
+      }
       return casSuccess(
         binaryNode(
           '+',
@@ -564,6 +823,9 @@ function integrateByPartsFunction(
         )
       );
     case 'cos':
+      if (degree !== 1) {
+        return unsupportedIntegralError(functionName);
+      }
       return casSuccess(
         binaryNode(
           '+',
@@ -578,6 +840,89 @@ function integrateByPartsFunction(
     default:
       return unsupportedIntegralError(functionName);
   }
+}
+
+/** Restricted structural u-substitution: c * f'(x) * F(f(x)). */
+function tryIntegrateProportionalProduct(
+  left: CasExpression,
+  right: CasExpression,
+  variable: string,
+  limits: CasLimits
+): CasResult<CasExpression> {
+  const factors = collectMultiplicationFactors(binaryNode('*', left, right));
+  for (let index = 0; index < factors.length; index++) {
+    const outer = factors[index];
+    if (outer.kind !== 'function' || outer.arguments.length !== 1 || !['sin', 'cos', 'exp', 'expe'].includes(outer.name)) {
+      continue;
+    }
+    const inner = outer.arguments[0];
+    const derivative = differentiateCasExpression(inner, variable, { limits });
+    if (!derivative.ok) continue;
+    const remaining = factors.filter((_, candidateIndex) => candidateIndex !== index);
+    const ratio = extractExactProportionalRatio(remaining, derivative.value);
+    if (ratio === null) continue;
+
+    const primitive = outer.name === 'sin'
+      ? unaryNode('-', functionCallNode('cos', [cloneCasExpression(inner)]))
+      : outer.name === 'cos'
+        ? functionCallNode('sin', [cloneCasExpression(inner)])
+        : functionCallNode(outer.name, [cloneCasExpression(inner)]);
+    return casSuccess(scaleExpressionByInteger(primitive, ratio));
+  }
+  return unsupportedIntegralError();
+}
+
+function extractExactProportionalRatio(factors: readonly CasExpression[], derivative: CasExpression): number | null {
+  const actual = factors.reduce<CasExpression | null>((result, factor) => result ? binaryNode('*', result, factor) : factor, null);
+  if (!actual) return null;
+  const actualParts = extractNumericCoefficient(actual);
+  const derivativeParts = extractNumericCoefficient(derivative);
+  if (!structurallySameAfterSimplification(actualParts.core, derivativeParts.core)) return null;
+  if (derivativeParts.coefficient === 0) return null;
+  const ratio = actualParts.coefficient / derivativeParts.coefficient;
+  return Number.isInteger(ratio) ? ratio : null;
+}
+
+function extractNumericCoefficient(expression: CasExpression): { coefficient: number; core: CasExpression } {
+  const factors = collectMultiplicationFactors(expression);
+  let coefficient = 1;
+  const remaining: CasExpression[] = [];
+  for (const factor of factors) {
+    if (factor.kind === 'number') coefficient *= factor.value;
+    else remaining.push(cloneCasExpression(factor));
+  }
+  return { coefficient, core: remaining.length === 0 ? numberNode(1) : remaining.reduce((left, right) => binaryNode('*', left, right)) };
+}
+
+function structurallySameAfterSimplification(left: CasExpression, right: CasExpression): boolean {
+  const simplifiedLeft = simplifyCasExpression(left);
+  const simplifiedRight = simplifyCasExpression(right);
+  return simplifiedLeft.ok && simplifiedRight.ok && formatCasExpression(simplifiedLeft.value) === formatCasExpression(simplifiedRight.value);
+}
+
+function extractNumericLinearArgument(expression: CasExpression, variable: string): { coefficient: number } | null {
+  const derivative = differentiateCasExpression(expression, variable);
+  if (!derivative.ok) return null;
+  const coefficient = readConstantNumericValue(derivative.value);
+  return coefficient === null || coefficient === 0 ? null : { coefficient };
+}
+
+function readExactRational(expression: CasExpression): { numerator: number; denominator: number } | null {
+  if (expression.kind === 'number' && Number.isInteger(expression.value)) return { numerator: expression.value, denominator: 1 };
+  if (expression.kind === 'unary' && expression.operator === '-') {
+    const value = readExactRational(expression.operand);
+    return value ? { numerator: -value.numerator, denominator: value.denominator } : null;
+  }
+  if (expression.kind === 'binary' && expression.operator === '/' && expression.left.kind === 'number' && expression.right.kind === 'number' && Number.isInteger(expression.left.value) && Number.isInteger(expression.right.value) && expression.right.value !== 0) {
+    return { numerator: expression.left.value, denominator: expression.right.value };
+  }
+  return null;
+}
+
+function readVariablePower(expression: CasExpression, variable: string): number | null {
+  if (isVariableSymbol(expression, variable)) return 1;
+  if (expression.kind === 'binary' && expression.operator === '^' && isVariableSymbol(expression.left, variable) && expression.right.kind === 'number' && Number.isInteger(expression.right.value)) return expression.right.value;
+  return null;
 }
 
 function integrateVariablePower(

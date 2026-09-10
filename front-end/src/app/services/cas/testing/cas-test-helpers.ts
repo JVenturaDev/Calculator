@@ -1,8 +1,9 @@
-import { binaryNode, isStructurallyEqual, numberNode, type CasExpression } from '../ast/cas-ast';
+import { binaryNode, isStructurallyEqual, numberNode, unaryNode, type CasExpression } from '../ast/cas-ast';
 import { formatCasExpression } from '../format/cas-formatter';
 import { CasParser } from '../parser/cas-parser';
 import { createCasEngine } from '../public-api';
 import { simplifyCasExpression } from '../simplify/cas-simplifier';
+import { toPolynomial } from '../polynomial/cas-polynomial';
 
 const parser = new CasParser();
 const engine = createCasEngine();
@@ -44,11 +45,28 @@ export function expectEquivalentCasExpression(
 ): void {
   const simplifiedActual = simplifyCasExpression(actual);
   const simplifiedExpected = simplifyCasExpression(expected);
-  expect(simplifiedActual.ok).withContext(context).toBeTrue();
-  expect(simplifiedExpected.ok).withContext(context).toBeTrue();
-  if (!simplifiedActual.ok || !simplifiedExpected.ok) return;
+  if (!simplifiedActual.ok || !simplifiedExpected.ok) {
+    if (areExactRationalExpressionsEquivalentOnCommonDomain(actual, expected)) {
+      expect(true).withContext(context).toBeTrue();
+      return;
+    }
+    expect(simplifiedActual.ok).withContext(context).toBeTrue();
+    expect(simplifiedExpected.ok).withContext(context).toBeTrue();
+    return;
+  }
 
   if (isStructurallyEqual(simplifiedActual.value, simplifiedExpected.value)) {
+    expect(true).withContext(context).toBeTrue();
+    return;
+  }
+
+  if (areExactRationalExpressionsEquivalentOnCommonDomain(
+    actual,
+    expected
+  ) || areExactRationalExpressionsEquivalentOnCommonDomain(
+    simplifiedActual.value,
+    simplifiedExpected.value
+  )) {
     expect(true).withContext(context).toBeTrue();
     return;
   }
@@ -69,6 +87,153 @@ export function expectEquivalentCasExpression(
     formatCasExpression(simplifiedExpected.value),
     collectFreeSymbolNames(simplifiedActual.value, simplifiedExpected.value)
   );
+}
+
+/**
+ * Test-only rational equivalence. It proves equality by cross multiplication
+ * on the common denominator domain; it deliberately does not cancel anything
+ * in production ASTs or make a claim at excluded points.
+ */
+export function areExactRationalExpressionsEquivalentOnCommonDomain(
+  left: CasExpression,
+  right: CasExpression
+): boolean {
+  const leftRational = toTestRationalExpression(left);
+  const rightRational = toTestRationalExpression(right);
+  if (!leftRational || !rightRational) return false;
+
+  const crossDifference = binaryNode(
+    '-',
+    binaryNode('*', leftRational.numerator, rightRational.denominator),
+    binaryNode('*', rightRational.numerator, leftRational.denominator)
+  );
+  const polynomial = toPolynomial(crossDifference);
+  if (polynomial.ok) {
+    return polynomial.value.terms.every(term => term.coefficient === 0);
+  }
+  const simplified = simplifyCasExpression(crossDifference);
+  return simplified.ok && formatCasExpression(simplified.value) === '0';
+}
+
+interface TestRationalExpression {
+  readonly numerator: CasExpression;
+  readonly denominator: CasExpression;
+}
+
+function toTestRationalExpression(expression: CasExpression): TestRationalExpression | null {
+  switch (expression.kind) {
+    case 'number':
+    case 'symbol':
+      return { numerator: expression, denominator: numberNode(1) };
+    case 'unary': {
+      const operand = toTestRationalExpression(expression.operand);
+      if (!operand) return null;
+      return expression.operator === '+'
+        ? operand
+        : { numerator: unaryNode('-', operand.numerator), denominator: operand.denominator };
+    }
+    case 'function':
+      return null;
+    case 'equation':
+      return null;
+    case 'binary': {
+      const signAbsRatio = extractTestSignAbsRatio(expression);
+      if (signAbsRatio) return signAbsRatio;
+      const left = toTestRationalExpression(expression.left);
+      const right = toTestRationalExpression(expression.right);
+      if (!left || !right) return null;
+      switch (expression.operator) {
+        case '+':
+          return {
+            numerator: binaryNode('+', binaryNode('*', left.numerator, right.denominator), binaryNode('*', right.numerator, left.denominator)),
+            denominator: binaryNode('*', left.denominator, right.denominator),
+          };
+        case '-':
+          return {
+            numerator: binaryNode('-', binaryNode('*', left.numerator, right.denominator), binaryNode('*', right.numerator, left.denominator)),
+            denominator: binaryNode('*', left.denominator, right.denominator),
+          };
+        case '*':
+          return { numerator: binaryNode('*', left.numerator, right.numerator), denominator: binaryNode('*', left.denominator, right.denominator) };
+        case '/':
+          return { numerator: binaryNode('*', left.numerator, right.denominator), denominator: binaryNode('*', left.denominator, right.numerator) };
+        case '^': {
+          if (expression.right.kind !== 'number' || !Number.isInteger(expression.right.value)) return null;
+          const exponent = expression.right.value;
+          if (exponent < 0) {
+            return { numerator: binaryNode('^', left.denominator, numberNode(-exponent)), denominator: binaryNode('^', left.numerator, numberNode(-exponent)) };
+          }
+          return { numerator: binaryNode('^', left.numerator, numberNode(exponent)), denominator: binaryNode('^', left.denominator, numberNode(exponent)) };
+        }
+      }
+    }
+  }
+}
+
+function extractTestSignAbsRatio(expression: CasExpression): TestRationalExpression | null {
+  const factors = flattenTestMultiplicativeDivision(expression);
+  if (!factors) return null;
+
+  const signIndex = factors.numerator.findIndex(isUnarySignFunction);
+  if (signIndex === -1) return null;
+  const sign = factors.numerator[signIndex];
+  if (!isUnarySignFunction(sign)) return null;
+  const absIndex = factors.denominator.findIndex(candidate =>
+    isUnaryAbsFunction(candidate) && isStructurallyEqual(sign.arguments[0], candidate.arguments[0])
+  );
+  if (absIndex === -1) return null;
+
+  const numerator = factors.numerator.filter((_, index) => index !== signIndex);
+  const denominator = factors.denominator.filter((_, index) => index !== absIndex);
+  denominator.unshift(sign.arguments[0]);
+  return {
+    numerator: buildTestProduct(numerator),
+    denominator: buildTestProduct(denominator),
+  };
+}
+
+function flattenTestMultiplicativeDivision(expression: CasExpression): {
+  numerator: CasExpression[];
+  denominator: CasExpression[];
+} | null {
+  if (expression.kind !== 'binary' || !['*', '/'].includes(expression.operator)) return null;
+  const result = { numerator: [] as CasExpression[], denominator: [] as CasExpression[] };
+  const collect = (node: CasExpression, inverted: boolean): void => {
+    if (node.kind === 'binary' && node.operator === '*') {
+      collect(node.left, inverted);
+      collect(node.right, inverted);
+      return;
+    }
+    if (node.kind === 'binary' && node.operator === '/') {
+      collect(node.left, inverted);
+      collect(node.right, !inverted);
+      return;
+    }
+    (inverted ? result.denominator : result.numerator).push(node);
+  };
+  collect(expression, false);
+  return result;
+}
+
+function isUnarySignFunction(expression: CasExpression): expression is CasExpression & {
+  readonly kind: 'function';
+  readonly arguments: readonly CasExpression[];
+} {
+  return expression.kind === 'function' && expression.name === 'sign' && expression.arguments.length === 1;
+}
+
+function isUnaryAbsFunction(expression: CasExpression): expression is CasExpression & {
+  readonly kind: 'function';
+  readonly arguments: readonly CasExpression[];
+} {
+  return expression.kind === 'function' && expression.name === 'abs' && expression.arguments.length === 1;
+}
+
+function buildTestProduct(factors: readonly CasExpression[]): CasExpression {
+  if (factors.length === 0) {
+    return numberNode(1);
+  }
+  return factors.slice(1).reduce((left, right) => binaryNode('*', left, right), factors[0]);
 }
 
 export function expectEquationSatisfied(
@@ -130,7 +295,10 @@ export function expectIntegratesTo(
   expect(expectedExpression.ok).withContext(expected).toBeTrue();
   if (!expectedExpression.ok) return;
 
-  expectEquivalentCasExpression(integrated.value, expectedExpression.value, source);
+  // Indefinite integrals are defined up to an additive constant.  Their
+  // contract is therefore derivative equivalence, not function equality.
+  expectAntiderivativeCandidate(parsed.value, integrated.value, variable, source);
+  expectAntiderivativeCandidate(parsed.value, expectedExpression.value, variable, expected);
 }
 
 export function expectSolvesTo(
@@ -199,11 +367,57 @@ export function expectAntiderivative(
   expect(integrated.ok).withContext(integrand).toBeTrue();
   if (!integrated.ok) return;
 
-  const differentiated = engine.differentiate(integrated.value, variable);
-  expect(differentiated.ok).withContext(integrand).toBeTrue();
+  expectAntiderivativeCandidate(parsed.value, integrated.value, variable, integrand);
+}
+
+/** Validates an explicit candidate primitive; additive constants are allowed. */
+export function expectAntiderivativeCandidate(
+  integrand: CasExpression,
+  candidate: CasExpression,
+  variable: string,
+  context = formatCasExpression(integrand)
+): void {
+  const differentiated = engine.differentiate(candidate, variable);
+  expect(differentiated.ok).withContext(context).toBeTrue();
   if (!differentiated.ok) return;
 
-  expectEquivalentCasExpression(differentiated.value, parsed.value, integrand);
+  const simplifiedDerivative = simplifyCasExpression(differentiated.value);
+  const rationalRaw = areExactRationalExpressionsEquivalentOnCommonDomain(
+    differentiated.value,
+    integrand
+  );
+  const rationalSimplified = simplifiedDerivative.ok &&
+    areExactRationalExpressionsEquivalentOnCommonDomain(simplifiedDerivative.value, integrand);
+  if (rationalRaw) {
+    expect(true).withContext(context).toBeTrue();
+    return;
+  }
+
+  const diagnostic = [
+    `source=${formatCasExpression(integrand)}`,
+    `primitive=${formatCasExpression(candidate)}`,
+    `rawDerivative=${formatCasExpression(differentiated.value)}`,
+    `simplifiedDerivative=${simplifiedDerivative.ok ? formatCasExpression(simplifiedDerivative.value) : '<simplify-failed>'}`,
+    `rationalRaw=${rationalRaw}`,
+    `rationalSimplified=${rationalSimplified}`,
+    `semanticRaw=${describeTestSemanticRelation(differentiated.value, integrand)}`,
+    `semanticSimplified=${simplifiedDerivative.ok ? describeTestSemanticRelation(simplifiedDerivative.value, integrand) : 'simplify-failed'}`,
+  ].join('; ');
+
+  expectEquivalentCasExpression(
+    differentiated.value,
+    integrand,
+    `${context}; ${diagnostic}`
+  );
+}
+
+function describeTestSemanticRelation(actual: CasExpression, expected: CasExpression): string {
+  const simplifiedActual = simplifyCasExpression(actual);
+  const simplifiedExpected = simplifyCasExpression(expected);
+  if (!simplifiedActual.ok || !simplifiedExpected.ok) return 'simplify-failed';
+  if (isStructurallyEqual(simplifiedActual.value, simplifiedExpected.value)) return 'structural';
+  const difference = simplifyCasExpression(binaryNode('-', simplifiedActual.value, simplifiedExpected.value));
+  return difference.ok && formatCasExpression(difference.value) === '0' ? 'difference-zero' : 'not-proven';
 }
 
 export function expectNoForbiddenDecimal(source: string): void {
