@@ -17,6 +17,7 @@ import {
   type GraphFunctionSample,
   type GraphLineTraceData,
 } from './graph-sampling';
+import { isEffectivelyRealGraphValue } from './graph-numeric-value';
 
 interface SampledValue {
   value: number;
@@ -176,8 +177,7 @@ export class GraphFunctionSamplerService {
 
       if (
         result instanceof Complex &&
-        result.im === 0 &&
-        Number.isFinite(result.re)
+        isEffectivelyRealGraphValue(result)
       ) {
         return { value: result.re };
       }

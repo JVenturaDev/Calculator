@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 import { GraphWorkspacePageComponent } from './graph-workspace-page';
@@ -58,6 +59,7 @@ describe('GraphWorkspacePageComponent', () => {
   let stateSubject: BehaviorSubject<GraphWorkspaceState>;
   let vmSubject: BehaviorSubject<GraphWorkspaceSamplingViewModel>;
   let facade: FakeGraphWorkspaceFacade;
+  let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
     stateSubject = new BehaviorSubject<GraphWorkspaceState>(
@@ -79,11 +81,13 @@ describe('GraphWorkspacePageComponent', () => {
       setViewMode: jasmine.createSpy('setViewMode'),
       clear: jasmine.createSpy('clear'),
     };
+    router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
       imports: [GraphWorkspacePageComponent],
       providers: [
         { provide: GraphWorkspaceFacade, useValue: facade },
+        { provide: Router, useValue: router },
         {
           provide: GraphWorkspaceSamplingViewModelService,
           useValue: { vm$: vmSubject.asObservable() },
@@ -179,6 +183,17 @@ describe('GraphWorkspacePageComponent', () => {
       .not.toBeNull();
   });
 
+  it('navigates back to Calculator with an accessible native button', () => {
+    const back = nativeElement().querySelector<HTMLButtonElement>('.gw-back')!;
+
+    expect(back.type).toBe('button');
+    expect(back.getAttribute('aria-label')).toBe('Volver a Calculator');
+
+    back.click();
+
+    expect(router.navigate).toHaveBeenCalledOnceWith(['/main']);
+  });
+
   it('keeps a shared canvas shell and only swaps the active canvas component', () => {
     emitState(createState({ functions: [], viewMode: '2d' }));
 
@@ -186,8 +201,7 @@ describe('GraphWorkspacePageComponent', () => {
     const context = nativeElement().querySelector<HTMLElement>('.gw-canvas__context');
 
     expect(shell).not.toBeNull();
-    expect(context).not.toBeNull();
-    expect(context?.classList.contains('gw-canvas__context--hidden')).toBeTrue();
+    expect(context).toBeNull();
     expect(nativeElement().querySelector('app-graph-canvas-container'))
       .not.toBeNull();
     expect(nativeElement().querySelector('app-graph-canvas-container-3d'))
@@ -203,8 +217,6 @@ describe('GraphWorkspacePageComponent', () => {
       .toBeNull();
     expect(nativeElement().querySelector('app-graph-canvas-container-3d'))
       .not.toBeNull();
-    expect(nativeElement().querySelector<HTMLElement>('.gw-canvas__context')
-      ?.classList.contains('gw-canvas__context--hidden')).toBeFalse();
   });
 
   it('keeps functions, canvas and inspector as sibling regions', () => {
@@ -296,9 +308,29 @@ describe('GraphWorkspacePageComponent', () => {
     expect(labelInputs[0].value).toBe('f1');
     expect(labelInputs[1].value).toBe('f2');
     expect(expressionInputs[0].getAttribute('aria-label'))
-      .toBe('expresión de f1');
+      .toBe('Expresión f(x) de f1');
     expect(expressionInputs[1].getAttribute('aria-label'))
-      .toBe('expresión de f2');
+      .toBe('Expresión f(x) de f2');
+  });
+
+  it('makes the right-hand-side graph expression contract explicit', () => {
+    emitState(createState({
+      functions: [
+        graphFunction('fn-1', { plotKind: 'line' }),
+        graphFunction('fn-2', { plotKind: 'contour' }),
+      ],
+    }));
+
+    const cards = Array.from(nativeElement().querySelectorAll<HTMLElement>('.gf-card'));
+    const lineInput = cards[0].querySelector<HTMLInputElement>('.gf-expr input')!;
+    const contourInput = cards[1].querySelector<HTMLInputElement>('.gf-expr input')!;
+
+    expect(cards[0].querySelector('.gf-prefix')?.textContent?.trim()).toBe('f(x) =');
+    expect(lineInput.placeholder).toBe('sin(x)');
+    expect(lineInput.getAttribute('aria-label')).toBe('Expresión f(x) de f1');
+    expect(cards[1].querySelector('.gf-prefix')?.textContent?.trim()).toBe('f(x,y) =');
+    expect(contourInput.placeholder).toBe('sin(x) * cos(y)');
+    expect(contourInput.getAttribute('aria-label')).toBe('Expresión f(x,y) de f2');
   });
 
   it('updates an expression from the input', () => {
@@ -487,7 +519,7 @@ describe('GraphWorkspacePageComponent', () => {
     const buttons = Array.from(nativeElement().querySelectorAll('button'));
 
     expect(expressionInput.getAttribute('aria-label'))
-      .toBe('expresión de f1');
+      .toBe('Expresión f(x) de f1');
     expect(labelInput.getAttribute('aria-label')).toBe('Etiqueta de f1');
     expect(expressionInput).not.toBeNull();
     expect(labelInput).not.toBeNull();

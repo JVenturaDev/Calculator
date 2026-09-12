@@ -16,6 +16,12 @@ import type {
   GraphFunction,
   GraphViewport2D,
 } from './graph-workspace-state';
+import { PolishCalculationEngine } from '../engine-services/polish-calculation-engine';
+import { PreprocessModule } from '../polish-services/preprocess-module';
+import { Tokenizer } from '../polish-services/tokenizer';
+import { parser } from '../polish-services/polish-notation-parser-service';
+import { evaluator } from '../polish-services/polish-evaluator';
+import { isEffectivelyRealGraphValue } from './graph-numeric-value';
 
 describe('GraphFunctionSamplerService', () => {
   let service: GraphFunctionSamplerService;
@@ -228,6 +234,83 @@ describe('GraphFunctionSamplerService', () => {
     expect(trace.y.every(value => value === 7)).toBeTrue();
   });
 
+  it('accepts negligible imaginary residue in numeric graph results', () => {
+    engine.evaluate.and.returnValue(new Complex(7, Number.EPSILON * 7));
+
+    const sample = service.sampleFunction(createFunction(), viewport);
+
+    expect(sample.status).toBe('ready');
+    expect(sample.invalidSamples).toBe(0);
+    expect(sample.firstError).toBeUndefined();
+  });
+
+  it('keeps documented radial expressions free of residual complex diagnostics', () => {
+    useRealEngine();
+    const expressions = [
+      'exp(-0.06*(x^2+y^2))*cos(2*sqrt(x^2+y^2))',
+      'exp(-0.06*(x*x+y*y))*cos(2*sqrt(x*x+y*y))',
+      'sin(x)*cos(y)',
+      'sin(x^2+y^2)/(1+0.15*(x^2+y^2))',
+    ];
+
+    for (const expression of expressions) {
+      const sample = service.sampleFunction(
+        createFunction({ expression, plotKind: 'contour' }),
+        viewport
+      );
+
+      expect(sample.status).withContext(expression).toBe('ready');
+      expect(sample.invalidSamples).withContext(expression).toBe(0);
+      expect(sample.firstError).withContext(expression).toBeUndefined();
+    }
+  });
+
+  it('classifies negative-coordinate numeric residue as effectively real', () => {
+    const realEngine = createRealEngine();
+    const expressions = [
+      'x^2+y^2',
+      'exp(-0.06*(x^2+y^2))*cos(2*sqrt(x^2+y^2))',
+    ];
+    const points = [
+      { x: -1, y: 0 },
+      { x: 0, y: -1 },
+      { x: -1, y: -1 },
+      { x: -4, y: 2 },
+    ];
+
+    for (const expression of expressions) {
+      for (const variables of points) {
+        const result = realEngine.evaluate(expression, { variables });
+        const complex = result instanceof Complex ? result : new Complex(result);
+        const scale = Math.max(1, Math.abs(complex.re));
+        const context = [
+          `expression=${expression}`,
+          `x=${variables.x}`,
+          `y=${variables.y}`,
+          `re=${complex.re}`,
+          `im=${complex.im}`,
+          `scale=${scale}`,
+        ].join('; ');
+
+        expect(isEffectivelyRealGraphValue(complex))
+          .withContext(context)
+          .toBeTrue();
+      }
+    }
+  });
+
+  it('preserves the non-real diagnostic for genuinely complex expressions', () => {
+    useRealEngine();
+    const sample = service.sampleFunction(
+      createFunction({ expression: 'sqrt(-1)' }),
+      viewport
+    );
+
+    expect(sample.status).toBe('invalid');
+    expect(sample.invalidSamples).toBe(GRAPH_LINE_SAMPLE_COUNT);
+    expect(sample.firstError).toBe('Non-real complex result');
+  });
+
   it('converts non-real Complex results to NaN', () => {
     engine.evaluate.and.returnValue(new Complex(7, 2));
 
@@ -282,5 +365,21 @@ describe('GraphFunctionSamplerService', () => {
       updatedAt: timestamp,
       ...overrides,
     };
+  }
+
+  function createRealEngine(): PolishCalculationEngine {
+    return new PolishCalculationEngine(
+      new PreprocessModule(),
+      new Tokenizer(),
+      new parser(),
+      new evaluator()
+    );
+  }
+
+  function useRealEngine(): void {
+    const realEngine = createRealEngine();
+    engine.evaluate.and.callFake((expression, options) =>
+      realEngine.evaluate(expression, options)
+    );
   }
 });

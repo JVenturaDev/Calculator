@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ViewChild, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { GraphCanvasContainerComponent } from '../graph-canvas-container/graph-canvas-container';
 import { GraphCanvasContainer3DComponent } from '../graph-canvas-container-3d/graph-canvas-container-3d';
@@ -27,6 +28,7 @@ import { type GraphCanvasHover } from '../graph-canvas/graph-canvas';
 export class GraphWorkspacePageComponent {
   private readonly facade = inject(GraphWorkspaceFacade);
   private readonly viewModel = inject(GraphWorkspaceSamplingViewModelService);
+  private readonly router = inject(Router);
 
   @ViewChild('graphCanvasContainer2d')
   graphCanvasContainer2d?: { hoveredPoint: GraphCanvasHover | null };
@@ -39,6 +41,10 @@ export class GraphWorkspacePageComponent {
 
   addFunction(): void {
     this.facade.addFunction();
+  }
+
+  backToCalculator(): void {
+    this.router.navigate(['/main']);
   }
 
   setViewMode(mode: GraphViewMode): void {

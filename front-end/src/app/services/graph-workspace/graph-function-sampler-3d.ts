@@ -14,6 +14,7 @@ import {
   type GraphSurfaceSample,
   type GraphSurfaceTraceData,
 } from './graph-sampling-3d';
+import { isEffectivelyRealGraphValue } from './graph-numeric-value';
 
 interface SampledValue {
   value: number;
@@ -117,8 +118,7 @@ export class GraphFunctionSampler3DService {
 
       if (
         result instanceof Complex &&
-        result.im === 0 &&
-        Number.isFinite(result.re)
+        isEffectivelyRealGraphValue(result)
       ) {
         return { value: result.re };
       }

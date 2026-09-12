@@ -15,6 +15,11 @@ import {
   type GraphSurfaceTraceData,
 } from './graph-sampling-3d';
 import { GraphFunctionSampler3DService } from './graph-function-sampler-3d';
+import { PolishCalculationEngine } from '../engine-services/polish-calculation-engine';
+import { PreprocessModule } from '../polish-services/preprocess-module';
+import { Tokenizer } from '../polish-services/tokenizer';
+import { parser } from '../polish-services/polish-notation-parser-service';
+import { evaluator } from '../polish-services/polish-evaluator';
 
 describe('GraphFunctionSampler3DService', () => {
   let service: GraphFunctionSampler3DService;
@@ -67,6 +72,69 @@ describe('GraphFunctionSampler3DService', () => {
       expect(Object.keys(options?.variables ?? {}).sort()).toEqual(['x', 'y']);
       expect(options?.variables?.['x']).toEqual(jasmine.any(Number));
       expect(options?.variables?.['y']).toEqual(jasmine.any(Number));
+    }
+  });
+
+  it('generates finite surfaces for the documented expression contract', () => {
+    const realEngine = new PolishCalculationEngine(
+      new PreprocessModule(),
+      new Tokenizer(),
+      new parser(),
+      new evaluator()
+    );
+    const realSampler = new GraphFunctionSampler3DService(realEngine);
+    const expressions = [
+      'sin(x)*cos(y)',
+      'sin(x^2+y^2)/(1+0.15*(x^2+y^2))',
+      'exp(-0.08*(x^2+y^2))*cos(2*sqrt(x^2+y^2))',
+    ];
+
+    for (const expression of expressions) {
+      const sample = realSampler.sampleFunction(
+        createFunction({ expression, plotKind: 'contour' }),
+        scene
+      );
+
+      expect(sample.status).withContext(expression).toBe('ready');
+      expect(sample.invalidSamples).withContext(expression).toBe(0);
+    }
+  });
+
+  it('evaluates the radial expression progressively at representative points', () => {
+    const realEngine = new PolishCalculationEngine(
+      new PreprocessModule(),
+      new Tokenizer(),
+      new parser(),
+      new evaluator()
+    );
+    const expressions = [
+      'x^2+y^2',
+      'sin(x^2+y^2)',
+      '1+0.15*(x^2+y^2)',
+      'sin(x^2+y^2)/(1+0.15*(x^2+y^2))',
+    ];
+    const points = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 1, y: 1 },
+      { x: -2, y: 3 },
+    ];
+
+    for (const expression of expressions) {
+      for (const variables of points) {
+        const result = realEngine.evaluate(expression, { variables });
+        const real = typeof result === 'number' ? result : result.re;
+        const imaginary = typeof result === 'number' ? 0 : result.im;
+
+        expect(real)
+          .withContext(`${expression}; x=${variables.x}; y=${variables.y}`)
+          .toEqual(jasmine.any(Number));
+        expect(Number.isFinite(real)).toBeTrue();
+        expect(Math.abs(imaginary))
+          .withContext(`${expression}; x=${variables.x}; y=${variables.y}`)
+          .toBeLessThan(1e-12 * Math.max(1, Math.abs(real)));
+      }
     }
   });
 
@@ -206,6 +274,18 @@ describe('GraphFunctionSampler3DService', () => {
     expect(sample.status).toBe('ready');
     expect(sample.invalidSamples).toBe(0);
     expect(trace.z.every(row => row.every(value => value === 7))).toBeTrue();
+  });
+
+  it('accepts negligible imaginary residue from real-valued operations', () => {
+    engine.evaluate.and.returnValue(new Complex(7, Number.EPSILON * 7));
+
+    const sample = service.sampleFunction(
+      createFunction({ plotKind: 'contour' }),
+      scene
+    );
+
+    expect(sample.status).toBe('ready');
+    expect(sample.invalidSamples).toBe(0);
   });
 
   it('converts non-real Complex results to NaN', () => {

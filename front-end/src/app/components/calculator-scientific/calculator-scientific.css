@@ -131,8 +131,11 @@
 }
 
 .cas-action {
+  height: auto;
+  min-width: 0;
   min-height: 60px;
   padding: 9px 10px 8px;
+  flex-direction: column;
   align-items: start;
   justify-content: start;
   text-align: left;
@@ -151,6 +154,8 @@
 .cas-action-example {
   display: block;
   width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .cas-action-label {

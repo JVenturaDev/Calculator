@@ -49,7 +49,7 @@ export class PolishCalculationEngine implements CalculationEngine {
   }
 
   private normalize(expression: string): string {
-    const normalizedAliases = expression
+    const normalizedAliases = this.normalizeExponentialAlias(expression)
       .replace(/\be\^\(/g, 'expe(')
       .replace(/\bMOD\(/g, 'mod(')
       .replace(/2\^x/g, '2^')
@@ -61,5 +61,50 @@ export class PolishCalculationEngine implements CalculationEngine {
       .preprocessExpression(normalizedAliases)
       .replaceAll('__TEN_POWER__', '10^')
       .replaceAll('**', '^');
+  }
+
+  private normalizeExponentialAlias(expression: string): string {
+    let normalized = '';
+
+    for (let index = 0; index < expression.length; index++) {
+      const isFunctionStart = expression.startsWith('exp(', index) &&
+        (index === 0 || !/[a-zA-Z0-9_]/.test(expression[index - 1]));
+
+      if (
+        isFunctionStart &&
+        this.hasTopLevelArgumentSeparator(expression, index + 3) === false
+      ) {
+        normalized += 'expe(';
+        index += 3;
+        continue;
+      }
+
+      normalized += expression[index];
+    }
+
+    return normalized;
+  }
+
+  private hasTopLevelArgumentSeparator(
+    expression: string,
+    openingParenthesisIndex: number
+  ): boolean | null {
+    let depth = 0;
+
+    for (let index = openingParenthesisIndex; index < expression.length; index++) {
+      const character = expression[index];
+      if (character === '(') {
+        depth++;
+      } else if (character === ')') {
+        depth--;
+        if (depth === 0) {
+          return false;
+        }
+      } else if (character === ',' && depth === 1) {
+        return true;
+      }
+    }
+
+    return null;
   }
 }

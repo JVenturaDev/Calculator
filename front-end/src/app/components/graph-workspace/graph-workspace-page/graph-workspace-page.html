@@ -6,6 +6,15 @@
       <p class="gw-subtitle">Crea y compara varias funciones sobre un mismo canvas.</p>
     </div>
 
+    <button
+      class="gw-back"
+      type="button"
+      aria-label="Volver a Calculator"
+      (click)="backToCalculator()"
+    >
+      ← Volver
+    </button>
+
     <button class="gw-add" type="button" (click)="addFunction()">
       <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
         <path d="M12 5v14M5 12h14" />
@@ -96,16 +105,21 @@
               </div>
 
               <div class="gf-expr">
-                <span class="gf-prefix" aria-hidden="true">(x)=</span>
+                <span class="gf-prefix" aria-hidden="true">
+                  {{ graphFunction.plotKind === 'line' ? 'f(x) =' : 'f(x,y) =' }}
+                </span>
                 <input
                   [id]="'graph-expression-' + graphFunction.id"
                   type="text"
                   autocomplete="off"
                   spellcheck="false"
-                  [attr.aria-label]="'expresión de ' + graphFunction.label"
+                  [attr.aria-label]="
+                    (graphFunction.plotKind === 'line' ? 'Expresión f(x) de ' : 'Expresión f(x,y) de ')
+                      + graphFunction.label
+                  "
                   [value]="graphFunction.expression"
                   [attr.placeholder]="
-                    graphFunction.plotKind === 'line' ? 'sin(x)' : 'x^2 + y^2'
+                    graphFunction.plotKind === 'line' ? 'sin(x)' : 'sin(x) * cos(y)'
                   "
                   (input)="updateExpression(graphFunction.id, $event)"
                 />
@@ -175,8 +189,6 @@
               </div>
               <div>Las funciones Contour se muestran como superficies z = f(x, y) en 3D.</div>
             </div>
-          } @else {
-            <div class="gw-canvas__context gw-canvas__context--hidden" aria-hidden="true"></div>
           }
 
           @if (state.viewMode === '2d') {

@@ -166,6 +166,15 @@ describe('CalculatorScientificComponent', () => {
     expect(actions.some(action => action.textContent?.includes('Límite'))).toBeTrue();
     expect(actions.some(action => action.textContent?.includes('Taylor'))).toBeTrue();
     expect(actions.some(action => action.textContent?.includes('Maclaurin'))).toBeTrue();
+    const convergenceAction = actions.find(action =>
+      action.dataset['casAction'] === 'convergence'
+    )!;
+    const convergenceSyntax = convergenceAction.querySelector<HTMLElement>(
+      '.cas-action-syntax'
+    )!;
+    expect(getComputedStyle(convergenceAction).minWidth).toBe('0px');
+    expect(getComputedStyle(convergenceAction).flexDirection).toBe('column');
+    expect(getComputedStyle(convergenceSyntax).overflowWrap).toBe('anywhere');
     expect(
       nativeElement()
         .querySelector<HTMLButtonElement>('[data-cas-action="differentiate"]')

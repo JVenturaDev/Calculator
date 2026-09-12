@@ -53,4 +53,19 @@ describe('PolishCalculationEngine', () => {
     expect(engine.evaluate('2x+1', { variables: { x: 3 } })).toBe(7);
     expect(engine.evaluate('sin(90)', { angleMode: 'DEG' })).toBeCloseTo(1);
   });
+
+  it('supports unary exp without changing two-argument scientific notation', () => {
+    expect(engine.evaluate('exp(0)')).toBe(1);
+    expect(engine.evaluate('2 + exp(0)')).toBe(3);
+    expect(engine.evaluate('exp(2, 3)')).toBe(2000);
+  });
+
+  it('evaluates the exponential surface expression with x and y variables', () => {
+    const result = engine.evaluate(
+      'exp(-0.08*(x^2+y^2))*cos(2*sqrt(x^2+y^2))',
+      { variables: { x: 0, y: 0 } }
+    );
+
+    expect(result).toBeCloseTo(1);
+  });
 });
