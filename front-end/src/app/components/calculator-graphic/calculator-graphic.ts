@@ -187,8 +187,12 @@ export class GraphicComponent implements OnInit, OnDestroy {
         case '=':
           const expr = this.calculator.snapshot.expression;
           if (this.casCommandRouter.canHandle(expr)) {
-            const result = this.calculator.evaluate();
-            this.storeHistory(expr, result);
+            try {
+              const result = this.calculator.evaluate();
+              this.storeHistory(expr, result);
+            } catch {
+              // CalculatorFacade already stores the typed, user-facing CAS error.
+            }
             return;
           }
 

@@ -377,6 +377,31 @@ describe('CalculatorFacade', () => {
     });
   });
 
+  it('distinguishes unsupported CAS input from invalid syntax and recovers normally', () => {
+    facade.setExpression('integrate(exp(x ^ 2), x)');
+
+    expect(() => facade.evaluate()).toThrow();
+    const unsupported = facade.snapshot.error;
+    expect(unsupported?.code).toBe('CAS_UNSUPPORTED_INTEGRAL');
+    expect(unsupported?.message).not.toContain('CAS_UNSUPPORTED_INTEGRAL');
+    expect(facade.snapshot.expression).toBe('integrate(exp(x ^ 2), x)');
+    expect(facade.snapshot.calculationResult).toBeNull();
+
+    facade.setExpression('integrate(sin((x, x)');
+    expect(() => facade.evaluate()).toThrow();
+    const invalid = facade.snapshot.error;
+    expect(invalid?.code).toBe('CAS_COMMAND_SYNTAX_ERROR');
+    expect(invalid?.message).not.toContain('CAS_COMMAND_SYNTAX_ERROR');
+    expect(invalid?.message).not.toBe(unsupported?.message);
+
+    engine.evaluate.and.returnValue(4);
+    facade.setExpression('2 + 2');
+    expect(facade.evaluate()).toBe(4);
+    expect(facade.snapshot.status).toBe('idle');
+    expect(facade.snapshot.error).toBeNull();
+    expect(facade.snapshot.calculationResult?.kind).toBe('numeric');
+  });
+
   it('evaluates solve CAS commands and stores the structured metadata', () => {
     facade.setExpression('solve(x^2 - 1 = 0, x)');
 

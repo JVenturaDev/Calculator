@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { HistoryService } from './history';
+import { HistoryItem, HistoryService } from './history';
 
 describe('HistoryService', () => {
   let service: HistoryService;
@@ -81,5 +81,91 @@ describe('HistoryService', () => {
         calculationResult,
       },
     ]);
+  });
+
+  it('falls back to empty history when persisted JSON is corrupt', () => {
+    localStorage.setItem('historial', '{invalid');
+    const consoleError = spyOn(console, 'error');
+
+    const restored = new HistoryService();
+
+    expect(restored.getHistory()).toEqual([]);
+    expect(consoleError).toHaveBeenCalled();
+  });
+
+  it('falls back to empty history when persisted data is not an array', () => {
+    localStorage.setItem('historial', JSON.stringify({ expression: '2+2' }));
+    const consoleError = spyOn(console, 'error');
+
+    const restored = new HistoryService();
+
+    expect(restored.getHistory()).toEqual([]);
+    expect(consoleError).toHaveBeenCalled();
+  });
+
+  it('keeps valid legacy entries and ignores malformed array entries', () => {
+    localStorage.setItem(
+      'historial',
+      JSON.stringify([
+        { idi: 1, expression: '2+2', result: 4, unknown: true },
+        { idi: 2, expression: null, result: 5 },
+      ])
+    );
+    const consoleError = spyOn(console, 'error');
+
+    const restored = new HistoryService();
+
+    expect(restored.getHistory()).toEqual([
+      { idi: 1, expression: '2+2', result: 4, unknown: true } as HistoryItem,
+    ]);
+    expect(consoleError).toHaveBeenCalledWith(
+      'Some invalid persisted history entries were ignored.'
+    );
+  });
+
+  it('falls back to empty history when localStorage reads are blocked', () => {
+    const storageError = new DOMException('Blocked', 'SecurityError');
+    spyOn(Storage.prototype, 'getItem').and.throwError(storageError);
+    const consoleError = spyOn(console, 'error');
+
+    const restored = new HistoryService();
+
+    expect(restored.getHistory()).toEqual([]);
+    expect(consoleError).toHaveBeenCalledWith(
+      'Error loading history from localStorage:',
+      storageError
+    );
+  });
+
+  it('keeps new entries in memory when localStorage writes are blocked', () => {
+    const storageError = new DOMException('Blocked', 'SecurityError');
+    spyOn(Storage.prototype, 'setItem').and.throwError(storageError);
+    const consoleError = spyOn(console, 'error');
+
+    expect(() => service.addToHistory(4, '3+3', 6)).not.toThrow();
+    expect(service.getHistory()).toEqual([
+      { idi: 4, expression: '3+3', result: 6 },
+    ]);
+    expect(consoleError).toHaveBeenCalledWith(
+      'Error saving history to localStorage:',
+      storageError
+    );
+  });
+
+  it('keeps history cleared in memory when localStorage removal is blocked', () => {
+    service.addToHistory(5, '4+4', 8);
+    const storageError = new DOMException('Blocked', 'SecurityError');
+    const removeItem = spyOn(Storage.prototype, 'removeItem').and.throwError(
+      storageError
+    );
+    const consoleError = spyOn(console, 'error');
+
+    expect(() => service.clearHistory()).not.toThrow();
+    expect(service.getHistory()).toEqual([]);
+    expect(consoleError).toHaveBeenCalledWith(
+      'Error clearing history from localStorage:',
+      storageError
+    );
+    removeItem.and.callThrough();
   });
 });

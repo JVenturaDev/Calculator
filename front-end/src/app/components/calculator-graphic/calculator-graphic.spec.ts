@@ -341,6 +341,23 @@ describe('GraphicComponent', () => {
     );
   });
 
+  it('preserves the typed facade error when a CAS command fails in Graphic', () => {
+    calculatorState.expression = 'integrate(exp(x ^ 2), x)';
+    calculatorState.status = 'error';
+    calculatorState.error = {
+      code: 'CAS_UNSUPPORTED_INTEGRAL',
+      message: 'Esta integral todavía no está soportada.',
+    };
+    calculator.evaluate.and.throwError(calculatorState.error.message);
+
+    expect(() => component.handleButtonClick('=')).not.toThrow();
+
+    expect(calculator.evaluate).toHaveBeenCalledOnceWith();
+    expect(calculator.reportError).not.toHaveBeenCalled();
+    expect(history.agregarId).not.toHaveBeenCalled();
+    expect(calculatorState.error.code).toBe('CAS_UNSUPPORTED_INTEGRAL');
+  });
+
   it('keeps graphical evaluation and sends the preprocessed expression to the plot', () => {
     calculatorState.expression = 'x^2';
     preprocess.preprocessExpression.and.returnValue('x^2');

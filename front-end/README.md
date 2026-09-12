@@ -100,14 +100,20 @@ Calculator/
 # Clone the repository
 git clone https://github.com/JVenturaDev/Calculator.git
 
-# Navigate to the project folder
-cd Calculator
+# Navigate to the Angular project
+cd Calculator/front-end
 
 # Install dependencies
 npm install
 
-# Run locally
-ng serve
+# Run locally (with the development API proxy)
+npm start
+
+# Run the test suite
+npm test
+
+# Create a production build
+npm run build
 ```
 
 Then open your browser at [http://localhost:4200](http://localhost:4200).

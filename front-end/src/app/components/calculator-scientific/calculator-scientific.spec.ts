@@ -222,6 +222,63 @@ describe('CalculatorScientificComponent', () => {
     });
   });
 
+  it('keeps every CAS quick action aligned with its public command signature', () => {
+    expect(CAS_QUICK_ACTIONS.map(action => [action.id, action.template])).toEqual([
+      ['differentiate', 'diff(,x)'],
+      ['integrate', 'integrate(,x)'],
+      ['simplify', 'simplify()'],
+      ['expand', 'expand()'],
+      ['factor', 'factor()'],
+      ['solve', 'solve(,x)'],
+      ['limit', 'limit(,x,)'],
+      ['taylor', 'taylor(,x,0,4)'],
+      ['maclaurin', 'maclaurin(,x,4)'],
+      ['convergence', 'convergence(,x,0)'],
+    ]);
+
+    component.showCasTools = true;
+    fixture.detectChanges();
+    const buttons = Array.from(
+      nativeElement().querySelectorAll<HTMLButtonElement>('[data-cas-action]')
+    );
+    expect(buttons.length).toBe(CAS_QUICK_ACTIONS.length);
+    expect(buttons.every(button => button.type === 'button')).toBeTrue();
+    expect(buttons.every(button => Boolean(button.getAttribute('aria-label')?.trim()))).toBeTrue();
+  });
+
+  it('inserts CAS actions at start, middle and end without evaluating automatically', () => {
+    const action = CAS_QUICK_ACTIONS.find(candidate => candidate.id === 'integrate')!;
+
+    expect(buildCasInsertion('x+1', 0, 0, action)).toEqual({
+      expression: 'integrate(,x)x+1',
+      caretStart: 10,
+      caretEnd: 10,
+    });
+    expect(buildCasInsertion('x+1', 1, 1, action)).toEqual({
+      expression: 'xintegrate(,x)+1',
+      caretStart: 11,
+      caretEnd: 11,
+    });
+    expect(buildCasInsertion('x+1', 3, 3, action)).toEqual({
+      expression: 'x+1integrate(,x)',
+      caretStart: 13,
+      caretEnd: 13,
+    });
+    expect(buildCasInsertion('before x^2 after', 7, 10, action)).toEqual({
+      expression: 'before integrate(x^2,x) after',
+      caretStart: 23,
+      caretEnd: 23,
+    });
+
+    calculatorState.expression = 'x^2';
+    const input = attachExpressionInput('x^2', 0, 3);
+    component.insertCasAction(action);
+    expect(mockCalculator.setExpression).toHaveBeenCalledOnceWith('integrate(x^2,x)');
+    expect(mockCalculator.evaluate).not.toHaveBeenCalled();
+    expect(mockHistory.agregarId).not.toHaveBeenCalled();
+    input.remove();
+  });
+
   it('keeps every scientific token unchanged', () => {
     const handler = spyOn(component, 'handleButtonClick');
     const buttons = Array.from(

@@ -267,6 +267,64 @@ describe('HistoryComponent', () => {
     );
   });
 
+  it('restores symbolic derivative, integral and limit metadata without using display text as input', () => {
+    const items: HistoryItem[] = [
+      {
+        idi: 3,
+        expression: 'diff(x^2,x)',
+        result: '2 * x',
+        calculationResult: {
+          kind: 'symbolic',
+          operation: 'differentiate',
+          source: 'diff(x^2,x)',
+          display: '2 * x',
+          exact: true,
+          expression: '2 * x',
+          latex: '2 * x',
+        },
+      },
+      {
+        idi: 4,
+        expression: 'integrate(x^2,x)',
+        result: 'x ^ 3 / 3',
+        calculationResult: {
+          kind: 'symbolic',
+          operation: 'integrate',
+          source: 'integrate(x^2,x)',
+          display: 'x ^ 3 / 3',
+          exact: true,
+          expression: 'x ^ 3 / 3',
+          latex: 'x ^ 3 / 3',
+        },
+      },
+      {
+        idi: 5,
+        expression: 'limit(1/x,x,0,right)',
+        result: '+∞',
+        calculationResult: {
+          kind: 'symbolic',
+          operation: 'limit',
+          source: 'limit(1/x,x,0,right)',
+          display: '+∞',
+          exact: true,
+          expression: '+∞',
+          latex: '+∞',
+        },
+      },
+    ];
+    renderHistory(items);
+
+    const restoreButtons = Array.from(
+      fixture.nativeElement.querySelectorAll('.restore-history') as NodeListOf<HTMLButtonElement>
+    );
+    restoreButtons.forEach(button => button.click());
+
+    expect(calculator.restoreCalculation.calls.allArgs()).toEqual(
+      items.map(item => [item.expression, item.result, item.calculationResult])
+    );
+    expect(fixture.nativeElement.textContent).not.toContain('[object Object]');
+  });
+
   it('delegates delete and clear bindings to the repository', () => {
     renderHistory([
       {
