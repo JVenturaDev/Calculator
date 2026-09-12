@@ -1,11 +1,11 @@
 # Calculator
 
+Calculator is a full-stack mathematical workspace with basic, scientific, and graphic calculators, a controlled computer algebra system (CAS), interactive 2D/3D plotting, and persistent calculation workspaces. The client is built with Angular and the authenticated workspace API is provided by Spring Boot.
+
 [![Release](https://img.shields.io/badge/release-v0.1.0-2563eb)](https://github.com/JVenturaDev/Calculator/tree/v0.1.0)
 [![Angular](https://img.shields.io/badge/Angular-20.3-dd0031?logo=angular)](https://angular.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6?logo=typescript)](https://www.typescriptlang.org/)
-[![License](https://img.shields.io/badge/license-GPL--3.0--or--later-4c1)](front-end/LICENSE)
-
-Calculator is a full-stack mathematical workspace with basic, scientific, and graphic calculators, a controlled computer algebra system (CAS), interactive 2D/3D plotting, and persistent calculation workspaces. The client is built with Angular and the authenticated workspace API is provided by Spring Boot.
+[![License](https://img.shields.io/badge/license-GPL--3.0--or--later-4c1)](LICENSE)
 
 ## Live Demo
 
@@ -175,4 +175,4 @@ Current release: [v0.1.0](https://github.com/JVenturaDev/Calculator/tree/v0.1.0)
 
 ## License
 
-The existing project declaration licenses Calculator under GNU GPL version 3 or any later version. The currently tracked license text is available at [front-end/LICENSE](front-end/LICENSE); consolidating it into a canonical root license is intentionally deferred to a separate legal/documentation pass.
+Calculator is licensed under GNU GPL version 3 or any later version. See [LICENSE](LICENSE).
