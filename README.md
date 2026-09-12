@@ -13,7 +13,7 @@ Try the frontend at [jventuradev.github.io/Calculator](https://jventuradev.githu
 
 The GitHub Pages deployment supports an offline guest session and browser-backed features. Real login, registration, and authenticated workspace persistence require the backend and are not part of the static Pages deployment.
 
-![Full Calculator Graph Workspace with a 3D surface, function list, and graph inspector](docs/images/graph-workspace-3d.jpeg)
+![Full Calculator Graph Workspace with a 3D surface, function list, and graph inspector](docs/images/graph-workspace-3d.png)
 
 <p align="center"><em>Full Graph Workspace with function management, interactive 3D visualization, and inspection.</em></p>
 
