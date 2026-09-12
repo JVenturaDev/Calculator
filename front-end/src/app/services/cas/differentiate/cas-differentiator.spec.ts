@@ -15,6 +15,24 @@ import {
 describe('CAS differentiation', () => {
   const parser = new CasParser();
 
+  it('derives atan with the chain rule', () => {
+    expectDifferentiatesTo('atan(x)', 'x', '1 / (1 + x ^ 2)');
+    expectDifferentiatesTo('atan(2 * x)', 'x', '2 / (1 + 4 * x ^ 2)');
+  });
+
+  it('derives rational primitives used by squared-quadratic reduction', () => {
+    expectDifferentiatesTo(
+      '1 / (x ^ 2 + 1)',
+      'x',
+      '-2 * x / (x ^ 2 + 1) ^ 2'
+    );
+    expectDifferentiatesTo(
+      'x / (x ^ 2 + 1)',
+      'x',
+      '(1 - x ^ 2) / (x ^ 2 + 1) ^ 2'
+    );
+  });
+
   it('derives constants, variables and other variables', () => {
     const cases: Array<[string, string, string]> = [
       ['5', 'x', '0'],

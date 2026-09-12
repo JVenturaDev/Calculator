@@ -361,6 +361,203 @@ describe('integrateCasExpression', () => {
     }
   });
 
+  it('integrates exact partial fractions with three explicit linear factors', () => {
+    const cases = [
+      '1 / (x * (x + 1) * (x + 2))',
+      '(3 * x + 2) / (x * (x + 1) * (x + 2))',
+      '1 / ((x + 2) * x * (x + 1))',
+    ];
+
+    for (const source of cases) {
+      expectAntiderivative(source, 'x');
+      const parsed = parser.parse(source);
+      expect(parsed.ok).withContext(source).toBeTrue();
+      if (!parsed.ok) continue;
+      const integrated = integrateCasExpression(parsed.value, 'x');
+      expect(integrated.ok).withContext(source).toBeTrue();
+      if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+    }
+  });
+
+  it('integrates an explicit repeated linear factor with one distinct factor', () => {
+    for (const source of [
+      '1 / (x ^ 2 * (x + 1))',
+      '1 / (x * (x + 1) ^ 2)',
+      '1 / ((x / 2 + 1) * (x + 1) * (x + 2))',
+      '1 / ((2 * x + 4) * (x + 1) * (x + 2))',
+      '1 / ((3 * x + 6) * (x + 1) * (x + 2))',
+      '1 / ((x + 1) * (x / 2 + 1) * (x + 2))',
+    ]) {
+      expectAntiderivative(source, 'x');
+    }
+  });
+
+  it('integrates controlled irreducible quadratic denominators exactly', () => {
+    for (const source of [
+      '1 / (x ^ 2 + 1)',
+      '1 / (x ^ 2 + 4)',
+      '1 / (4 * x ^ 2 + 1)',
+      '1 / (x ^ 2 + 2 * x + 2)',
+      '1 / (x ^ 2 - 4 * x + 5)',
+      '3 / (x ^ 2 + 1)',
+      '1 / (2 * x ^ 2 + 2)',
+      '(x + 1) / (x ^ 2 + 1)',
+      '(2 * x + 3) / (x ^ 2 + 2 * x + 2)',
+      '(x ^ 2 + x + 2) / (x ^ 2 + 1)',
+    ]) {
+      expectAntiderivative(source, 'x');
+      const parsed = parser.parse(source);
+      expect(parsed.ok).withContext(source).toBeTrue();
+      if (!parsed.ok) continue;
+      const integrated = integrateCasExpression(parsed.value, 'x');
+      expect(integrated.ok).withContext(source).toBeTrue();
+      if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+    }
+  });
+
+  it('integrates explicit linear times irreducible quadratic denominators', () => {
+    for (const source of [
+      '1 / (x * (x ^ 2 + 1))',
+      '1 / ((x + 1) * (x ^ 2 + 1))',
+    ]) {
+      expectAntiderivative(source, 'x');
+    }
+  });
+
+  it('integrates squared irreducible quadratics with bounded exact reduction', () => {
+    for (const source of [
+      '1 / (x ^ 2 + 1) ^ 2',
+      '1 / (x ^ 2 + 4) ^ 2',
+      '1 / (x ^ 2 + 2 * x + 2) ^ 2',
+      '1 / (4 * x ^ 2 + 1) ^ 2',
+      'x / (x ^ 2 + 1) ^ 2',
+      '2 * x / (x ^ 2 + 1) ^ 2',
+      '(x + 1) / (x ^ 2 + 1) ^ 2',
+      'x ^ 2 / (x ^ 2 + 1) ^ 2',
+      '(x ^ 2 + 2) / (x ^ 2 + 1) ^ 2',
+    ]) {
+      expectAntiderivative(source, 'x');
+      const parsed = parser.parse(source);
+      expect(parsed.ok).withContext(source).toBeTrue();
+      if (!parsed.ok) continue;
+      const integrated = integrateCasExpression(parsed.value, 'x');
+      expect(integrated.ok).withContext(source).toBeTrue();
+      if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+    }
+  });
+
+  it('integrates explicit linear times squared irreducible quadratic factors', () => {
+    for (const source of [
+      '1 / ((x + 1) * (x ^ 2 + 1) ^ 2)',
+      '1 / (x * (x ^ 2 + 1) ^ 2)',
+      '(x + 1) / (x * (x ^ 2 + 1) ^ 2)',
+      '(2 * x + 3) / ((x + 1) * (x ^ 2 + 1) ^ 2)',
+      '(x ^ 3 + 1) / ((x + 1) * (x ^ 2 + 1) ^ 2)',
+      '1 / ((x ^ 2 + 1) ^ 2 * (x + 1))',
+      '1 / ((x + 1) * (x ^ 2 + 1) * (x ^ 2 + 1))',
+      '1 / ((2 * x + 2) * (x ^ 2 + 1) ^ 2)',
+      '1 / ((x / 2 + 1) * (x ^ 2 + 1) ^ 2)',
+      '1 / ((x - 1) * (x ^ 2 + 2 * x + 2) ^ 2)',
+    ]) {
+      expectAntiderivative(source, 'x');
+      const parsed = parser.parse(source);
+      expect(parsed.ok).withContext(source).toBeTrue();
+      if (!parsed.ok) continue;
+      const integrated = integrateCasExpression(parsed.value, 'x');
+      expect(integrated.ok).withContext(source).toBeTrue();
+      if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+    }
+  });
+
+  it('integrates two distinct explicit irreducible quadratic factors exactly', () => {
+    for (const source of [
+      '1 / ((x ^ 2 + 1) * (x ^ 2 + 4))',
+      'x / ((x ^ 2 + 1) * (x ^ 2 + 4))',
+      '(x ^ 2 + 2) / ((x ^ 2 + 1) * (x ^ 2 + 4))',
+      '(x ^ 3 + x + 1) / ((x ^ 2 + 1) * (x ^ 2 + 4))',
+      '1 / ((x ^ 2 + 4) * (x ^ 2 + 1))',
+      '1 / ((x ^ 2 + 1) * (x ^ 2 + 2 * x + 2))',
+      '1 / ((x ^ 2 + 1) * (x ^ 2 / 2 + 2))',
+    ]) {
+      expectAntiderivative(source, 'x');
+      const parsed = parser.parse(source);
+      expect(parsed.ok).withContext(source).toBeTrue();
+      if (!parsed.ok) continue;
+      const integrated = integrateCasExpression(parsed.value, 'x');
+      expect(integrated.ok).withContext(source).toBeTrue();
+      if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+    }
+  });
+
+  it('routes proportional explicit quadratics through exact squared reduction', () => {
+    const source = '1 / ((x ^ 2 + 1) * (2 * x ^ 2 + 2))';
+    expectAntiderivative(source, 'x');
+    const parsed = parser.parse(source);
+    expect(parsed.ok).toBeTrue();
+    if (!parsed.ok) return;
+    const integrated = integrateCasExpression(parsed.value, 'x');
+    expect(integrated.ok).toBeTrue();
+    if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+  });
+
+  it('integrates one squared and one distinct irreducible quadratic factor exactly', () => {
+    for (const source of [
+      '1 / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4))',
+      'x / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4))',
+      '(x + 1) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4))',
+      '(x ^ 2 + 2) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4))',
+      '(x ^ 3 + x + 1) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4))',
+      '(x ^ 5 + x ^ 2 + 1) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4))',
+      '1 / ((x ^ 2 + 4) * (x ^ 2 + 1) ^ 2)',
+      '1 / ((x ^ 2 + 1) * (x ^ 2 + 1) * (x ^ 2 + 4))',
+      '1 / ((x ^ 2 + 4) ^ 2 * (x ^ 2 + 1))',
+      '1 / ((x ^ 2 + 2 * x + 2) ^ 2 * (x ^ 2 + 1))',
+      '1 / ((2 * x ^ 2 + 2) ^ 2 * (x ^ 2 + 4))',
+    ]) {
+      expectAntiderivative(source, 'x');
+      const parsed = parser.parse(source);
+      expect(parsed.ok).withContext(source).toBeTrue();
+      if (!parsed.ok) continue;
+      const integrated = integrateCasExpression(parsed.value, 'x');
+      expect(integrated.ok).withContext(source).toBeTrue();
+      if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+    }
+  });
+
+  it('integrates two distinct squared irreducible quadratic factors exactly', () => {
+    for (const source of [
+      '1 / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)',
+      'x / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)',
+      '(x + 1) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)',
+      '(x ^ 2 + 2) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)',
+      '(x ^ 3 + x + 1) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)',
+      '(x ^ 7 + x + 1) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)',
+      '1 / ((x ^ 2 + 4) ^ 2 * (x ^ 2 + 1) ^ 2)',
+      '1 / ((x ^ 2 + 1) * (x ^ 2 + 4) * (x ^ 2 + 1) * (x ^ 2 + 4))',
+      '1 / ((x ^ 2 + 2 * x + 2) ^ 2 * (x ^ 2 + 1) ^ 2)',
+      '1 / ((2 * x ^ 2 + 2) ^ 2 * (x ^ 2 + 4) ^ 2)',
+    ]) {
+      expectAntiderivative(source, 'x');
+      const parsed = parser.parse(source);
+      expect(parsed.ok).withContext(source).toBeTrue();
+      if (!parsed.ok) continue;
+      const integrated = integrateCasExpression(parsed.value, 'x');
+      expect(integrated.ok).withContext(source).toBeTrue();
+      if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+    }
+  });
+
+  it('uses polynomial division before integrating two squared quadratics', () => {
+    const source = '(x ^ 8 + x + 1) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)';
+    expectAntiderivative(source, 'x');
+    const parsed = parser.parse(source);
+    expect(parsed.ok).toBeTrue();
+    if (!parsed.ok) return;
+    const integrated = integrateCasExpression(parsed.value, 'x');
+    expect(integrated.ok).toBeTrue();
+    if (integrated.ok) expectNoForbiddenDecimal(formatCasExpression(integrated.value));
+  });
+
   it('reports unsupported integrals for cases outside the limited rules', () => {
     for (const source of [
       'x * ln(x)',
@@ -370,7 +567,6 @@ describe('integrateCasExpression', () => {
       'cos(x) * x ^ 2',
       'exp(x ^ 2)',
       'sin(x ^ 2)',
-      '1 / (x ^ 2 + 1)',
       'x ^ x',
       'sqrt(x ^ 2 + 1)',
       '(x + 1) * cos(x ^ 2)',
@@ -381,7 +577,57 @@ describe('integrateCasExpression', () => {
       '1 / (sin(x) + 1)',
       'x ^ x / (x + 1)',
       'exp(x) / (x + 1)',
-      '1 / ((x ^ 2 + 1) * (x + 1))',
+      '1 / (x * (x + 1) * (x ^ 2 + 1))',
+      '1 / (x ^ 4 + 1)',
+      '1 / (x ^ 2 - x)',
+      '1 / (x ^ 2 - 1)',
+      '1 / (x ^ 2 - 4)',
+      '1 / (x ^ 2 + sqrt(2))',
+      '1 / (x ^ 2 + x + 1) ^ 2',
+      '1 / (sin(x) ^ 2 + 1)',
+      'exp(x) / (x ^ 2 + 1)',
+      'x ^ x / (x ^ 2 + 1)',
+      '1 / (x ^ 2 + 1) ^ 3',
+      '1 / (x ^ 2 + x + 1) ^ 3',
+      '1 / (x ^ 4 + 1) ^ 2',
+      'exp(x) / (x ^ 2 + 1) ^ 2',
+      'sin(x) / (x ^2 + 1) ^ 2',
+      'x ^ x / (x ^ 2 + 1) ^ 2',
+      '1 / (x ^ 2 - 1) ^ 2',
+      '1 / (x ^ 2 - x) ^ 2',
+      '1 / ((x ^ 2 + 1) ^ 3 * (x + 1))',
+      '1 / ((x ^ 4 + 1) * (x + 1))',
+      '1 / (sin(x) * (x ^ 2 + 1) ^ 2)',
+      'exp(x) / ((x + 1) * (x ^ 2 + 1) ^ 2)',
+      'x ^ x / ((x + 1) * (x ^ 2 + 1) ^ 2)',
+      '1 / ((x ^ 2 - 1) ^ 2 * (x + 1))',
+      '1 / ((x ^ 2 + 1) * (x ^ 2 + 4) * (x ^ 2 + 9))',
+      '1 / (x ^ 4 + 5 * x ^ 2 + 4)',
+      '1 / ((x ^ 2 - 1) * (x ^ 2 + 1))',
+      '1 / ((x ^ 4 + 1) * (x ^ 2 + 1))',
+      'exp(x) / ((x ^ 2 + 1) * (x ^ 2 + 4))',
+      'x ^ x / ((x ^ 2 + 1) * (x ^ 2 + 4))',
+      'sin(x) / ((x ^ 2 + 1) * (x ^ 2 + 4))',
+      '1 / ((x ^ 2 + 1) ^ 3 * (x ^ 2 + 4))',
+      '1 / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) * (x ^ 2 + 9))',
+      '1 / ((x ^ 2 + 1) ^ 2 * (2 * x ^ 2 + 2))',
+      '1 / ((x ^ 2 + 1) * (x ^ 2 + 1) * (2 * x ^ 2 + 2))',
+      '1 / ((x ^ 2 - 1) ^ 2 * (x ^ 2 + 1))',
+      '1 / ((x ^ 4 + 1) ^ 2 * (x ^ 2 + 1))',
+      'exp(x) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4))',
+      'sin(x) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4))',
+      'x ^ x / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4))',
+      '1 / ((x ^ 2 + 1) ^ 3 * (x ^ 2 + 4) ^ 2)',
+      '1 / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 3)',
+      '1 / ((x ^ 2 + 1) ^ 3 * (x ^ 2 + 4) ^ 3)',
+      '1 / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2 * (x ^ 2 + 9))',
+      '1 / ((x ^ 2 + 1) ^ 2 * (2 * x ^ 2 + 2) ^ 2)',
+      '1 / (x ^ 2 + 1) ^ 4',
+      '1 / ((x ^ 2 - 1) ^ 2 * (x ^ 2 + 1) ^ 2)',
+      '1 / ((x ^ 4 + 1) ^ 2 * (x ^ 2 + 1) ^ 2)',
+      'exp(x) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)',
+      'sin(x) / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)',
+      'x ^ x / ((x ^ 2 + 1) ^ 2 * (x ^ 2 + 4) ^ 2)',
     ]) {
       const parsed = parser.parse(source);
       expect(parsed.ok).withContext(source).toBeTrue();
