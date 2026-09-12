@@ -13,6 +13,10 @@ Try the frontend at [jventuradev.github.io/Calculator](https://jventuradev.githu
 
 The GitHub Pages deployment supports an offline guest session and browser-backed features. Real login, registration, and authenticated workspace persistence require the backend and are not part of the static Pages deployment.
 
+![Full Calculator Graph Workspace with a 3D surface, function list, and graph inspector](docs/images/graph-workspace-3d.jpeg)
+
+<p align="center"><em>Full Graph Workspace with function management, interactive 3D visualization, and inspection.</em></p>
+
 ## Features
 
 - Basic, scientific, and graphic calculator modes with keyboard input.
@@ -53,7 +57,35 @@ Calculator includes a purpose-built CAS with deliberately controlled scope. It s
 - convergence analysis for supported series families;
 - typed errors for unsupported operations.
 
+### Symbolic workflow with 2D inspection
+
+![Full Calculator workspace with a symbolic integral, calculation tree, CAS actions, and quick 2D graph](docs/images/cas-symbolic-1.png)
+
+<p align="center"><em>Scientific Calculator with a symbolic command and result, calculation tree, CAS actions, and quick 2D inspection.</em></p>
+
+### Symbolic workflow with 3D inspection
+
+![Full Calculator workspace with symbolic integration, calculation tree, CAS actions, and quick 3D graph](docs/images/cas-symbolic-2.png)
+
+<p align="center"><em>Scientific Calculator with symbolic integration, structured steps, CAS actions, and a quick 3D surface.</em></p>
+
 This is not a general-purpose CAS. Unsupported symbolic families fail explicitly rather than falling back to an approximate or invented result.
+
+## Calculation Steps
+
+Calculator can present the same calculation process as a readable sequence of operations or as a structural expression tree.
+
+### Human View
+
+![Full Calculator workspace with readable Human View calculation steps, scientific controls, and graph inspector](docs/images/steps-human.jpeg)
+
+<p align="center"><em>The complete scientific workspace with sequential Human View steps and quick 3D inspection.</em></p>
+
+### Tree View
+
+![Full Calculator workspace with structural Tree View calculation steps, scientific controls, and graph inspector](docs/images/steps-tree.png)
+
+<p align="center"><em>The same workspace centered on structural Tree View steps and their expression hierarchy.</em></p>
 
 ## Graphing and Workspaces
 
@@ -63,6 +95,10 @@ The quick plot in the calculator Inspector provides transient 2D and 3D visualiz
 - `contour`: 2D contour plots for supported `f(x, y)` expressions.
 - 3D view: renders compatible contour functions as surfaces `z = f(x, y)`.
 - Persistent functions, selection, 2D viewport, 3D camera, and scene ranges.
+
+![Full Calculator Graph Workspace 2D with multiple contour functions, controls, and graph inspector](docs/images/graph-workspace-2d.jpeg)
+
+<p align="center"><em>Full Graph Workspace in 2D with multiple contour functions, selection controls, and detailed inspection.</em></p>
 
 Implicit 3D equations, parametric surfaces, and general 3D line rendering are not currently supported.
 
