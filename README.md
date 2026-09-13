@@ -60,7 +60,7 @@ Calculator includes a purpose-built CAS with deliberately controlled scope. It s
 
 ### Symbolic workflow
 
-![Full Calculator workspace with symbolic integration, calculation tree, CAS actions, and quick 3D graph](docs/images/cas-symbolic-2.png)
+![Full Calculator workspace with symbolic integration, calculation tree, CAS actions, and quick 3D graph](docs/images/cas-symbolic-1.png)
 
 <p align="center"><em>Scientific Calculator with symbolic integration, structured steps, CAS actions, and a quick 3D surface.</em></p>
 
@@ -140,7 +140,7 @@ For frontend-specific architecture and commands, see [front-end/README.md](front
 
 ### Prerequisites
 
-- Node.js 22 LTS and npm.
+- Node.js 24.x and npm 11.x.
 - Java 21.
 - PostgreSQL.
 
