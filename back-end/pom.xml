@@ -13,9 +13,9 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.tuapp</groupId>
+    <groupId>com.calculator</groupId>
     <artifactId>backend</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <name>backend</name>
     <description>Backend project for Calculator app</description>
 

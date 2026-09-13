@@ -58,13 +58,7 @@ Calculator includes a purpose-built CAS with deliberately controlled scope. It s
 - convergence analysis for supported series families;
 - typed errors for unsupported operations.
 
-### Symbolic workflow with 2D inspection
-
-![Full Calculator workspace with a symbolic integral, calculation tree, CAS actions, and quick 2D graph](docs/images/cas-symbolic-1.png)
-
-<p align="center"><em>Scientific Calculator with a symbolic command and result, calculation tree, CAS actions, and quick 2D inspection.</em></p>
-
-### Symbolic workflow with 3D inspection
+### Symbolic workflow
 
 ![Full Calculator workspace with symbolic integration, calculation tree, CAS actions, and quick 3D graph](docs/images/cas-symbolic-2.png)
 
@@ -132,7 +126,7 @@ The GL3D Plotly bundle is loaded lazily so 3D support does not become part of th
 
 ```text
 Calculator/
-|-- .github/workflows/   # GitHub Pages deployment workflow
+|-- .github/workflows/   # Frontend/backend CI and GitHub Pages deployment
 |-- front-end/           # Angular application, browser persistence, tests, and UI
 |-- back-end/            # Spring Boot authentication and workspace API
 |-- nginx/               # Reverse-proxy and certificate configuration
@@ -146,20 +140,32 @@ For frontend-specific architecture and commands, see [front-end/README.md](front
 
 ### Prerequisites
 
-- Node.js 20 or a compatible current LTS release and npm.
+- Node.js 22 LTS and npm.
 - Java 21.
 - PostgreSQL.
 
 ### Backend
 
-Configure the datasource properties shown in `back-end/src/main/resources/application-example.properties` and provide `security.jwt.secret` in your local Spring configuration. Then start the API on port `8080`:
+The backend requires `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `JWT_SECRET`. `JWT_EXPIRATION_MINUTES` is optional and defaults to `60`. The committed example is in `back-end/src/main/resources/application-example.properties`; use only local or deployment environment values for secrets.
+
+Spring Boot and Maven do not load the repository `.env` file automatically. Export the variables in the current shell or configure them through your IDE/deployment environment before starting the API on port `8080`. For example, with fictitious local values in PowerShell:
+
+```powershell
+$env:DB_URL = 'jdbc:postgresql://localhost:5432/workspace_db'
+$env:DB_USERNAME = 'calculator_app'
+$env:DB_PASSWORD = 'replace-with-a-local-password'
+$env:JWT_SECRET = 'replace-with-a-long-random-local-secret'
+$env:JWT_EXPIRATION_MINUTES = '60'
+```
+
+Then run:
 
 ```powershell
 cd back-end
 .\mvnw.cmd spring-boot:run
 ```
 
-On macOS or Linux, use `./mvnw spring-boot:run`.
+On macOS or Linux, use `bash ./mvnw spring-boot:run` after exporting the same variables.
 
 ### Frontend
 
@@ -187,6 +193,22 @@ npm run build
 
 Release `v0.1.0` was stabilized with the full Karma suite, Angular compiler checks, TypeScript checks, and the production build passing in the maintainer's environment.
 
+Backend tests use `back-end/src/test/resources/application-test.properties` and require an isolated PostgreSQL database through `TEST_DB_URL`, `TEST_DB_USERNAME`, `TEST_DB_PASSWORD`, and `TEST_JWT_SECRET`. They do not use H2. Once those test-only variables point to a disposable PostgreSQL database, run from `back-end/`:
+
+```powershell
+.\mvnw.cmd test
+.\mvnw.cmd package
+```
+
+On macOS or Linux:
+
+```bash
+bash ./mvnw test
+bash ./mvnw package
+```
+
+GitHub Actions runs the frontend validation and backend tests against an ephemeral PostgreSQL 16 service before allowing the Pages deployment.
+
 ## Docker and Deployment
 
 The repository includes Dockerfiles, Docker Compose, Nginx configuration, and a GitHub Actions workflow for the static GitHub Pages frontend. Treat the current Docker/Nginx setup as infrastructure pending dedicated deployment validation rather than a turnkey production configuration.
@@ -205,8 +227,6 @@ Current release: [v0.1.0](https://github.com/JVenturaDev/Calculator/tree/v0.1.0)
 ## Roadmap
 
 - Harden and validate the containerized deployment.
-- Add complete public CI validation.
-- Continue documentation cleanup.
 - Refine responsive behavior and interaction details.
 - Extend the CAS through controlled, regression-tested families.
 

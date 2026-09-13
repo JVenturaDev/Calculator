@@ -190,18 +190,27 @@
   align-items: baseline;
   justify-content: flex-end;
   gap: 10px;
-  overflow-x: auto;
   color: var(--display-accent);
   font-family: "JetBrains Mono", Consolas, monospace;
   font-size: clamp(1.65rem, 4vw, 2.35rem);
   font-weight: 700;
   line-height: 1.2;
-  white-space: nowrap;
 }
 
-.result-value.result-multiline {
+.result-text {
+  min-width: 0;
+  max-width: 100%;
+  text-align: right;
+}
+
+span.result-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.result-value > app-cas-math-result.result-text {
+  width: 100%;
+  flex: 1 1 100%;
 }
 
 .result-symbol {

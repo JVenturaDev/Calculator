@@ -11,6 +11,7 @@ import { map } from 'rxjs';
 import { HistoryService } from '../../services/history-services/history';
 import { InputService } from '../../services/input-services/input-services';
 import { CalculatorFacade } from '../../services/calculator-state/calculator-facade';
+import { CasMathResultComponent } from '../cas-math-result/cas-math-result';
 import type {
   CalculatorEquationSolutionsComputationResult,
   CalculatorState,
@@ -25,6 +26,7 @@ interface DisplayViewModel {
   status: CalculatorStatus;
   statusLabel: string;
   solveResult: CalculatorEquationSolutionsComputationResult | null;
+  symbolicResult: boolean;
 }
 
 @Component({
@@ -32,7 +34,7 @@ interface DisplayViewModel {
   templateUrl: './display.html',
   styleUrls: ['./display.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule]
+  imports: [CommonModule, FormsModule, CasMathResultComponent]
 })
 export class DisplayComponent implements AfterViewInit, OnDestroy {
   readonly viewModel$;
@@ -116,6 +118,7 @@ export class DisplayComponent implements AfterViewInit, OnDestroy {
         state.calculationResult?.kind === 'equation-solutions'
           ? state.calculationResult
           : null,
+      symbolicResult: state.calculationResult?.kind === 'symbolic',
     };
   }
 

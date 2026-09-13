@@ -86,6 +86,29 @@ describe('DisplayComponent', () => {
     );
   });
 
+  it('wraps a complete long single-line CAS result instead of clipping it', async () => {
+    const longCasResult =
+      'ln(abs(x + 1)) * 1 / 2 + ln(abs(x ^ 2 + 1)) * -1 / 4 + atan(2 * x * 1 / 2) * 1 / 2';
+
+    emitState({
+      expression: longCasResult,
+      lastExpression: 'integrate(1/((x+1)*(x^2+1)),x)',
+      result: longCasResult,
+      phase: 'result',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const result = fixture.nativeElement.querySelector('.result-value') as HTMLElement;
+    const text = result.querySelector('.result-text') as HTMLElement;
+
+    expect(text.textContent?.trim()).toBe(longCasResult);
+    expect(result.classList).not.toContain('result-multiline');
+    expect(getComputedStyle(text).whiteSpace).toBe('pre-wrap');
+    expect(getComputedStyle(text).overflowWrap).toBe('anywhere');
+  });
+
   it('renders the original expression and result when phase is result', async () => {
     emitState({
       expression: '4',
@@ -101,6 +124,79 @@ describe('DisplayComponent', () => {
     expect(
       fixture.nativeElement.querySelector('.result-value').textContent.trim()
     ).toContain('4');
+  });
+
+  it('uses mathematical rendering only for typed symbolic CAS results', async () => {
+    const symbolicResult = 'x ^ 2 / 2';
+    emitState({
+      expression: symbolicResult,
+      result: symbolicResult,
+      phase: 'result',
+      calculationResult: {
+        kind: 'symbolic',
+        operation: 'integrate',
+        source: 'integrate(x,x)',
+        display: symbolicResult,
+        exact: true,
+        expression: symbolicResult,
+        latex: symbolicResult,
+      },
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const mathResult = fixture.nativeElement.querySelector(
+      'app-cas-math-result'
+    ) as HTMLElement;
+    expect(mathResult).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.result-symbol')).toBeNull();
+    expect(getComputedStyle(mathResult).overflowX).toBe('auto');
+    expect(getComputedStyle(mathResult).overflowY).toBe('hidden');
+
+    emitState({
+      expression: '4',
+      result: 4,
+      phase: 'result',
+      calculationResult: {
+        kind: 'numeric',
+        operation: 'evaluate',
+        source: '2+2',
+        display: '4',
+        exact: true,
+        value: 4,
+      },
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-cas-math-result')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.result-symbol')?.textContent.trim()).toBe('=');
+    expect(fixture.nativeElement.querySelector('.result-text').textContent.trim()).toBe('4');
+  });
+
+  it('keeps a mathematical equals operator inside a symbolic CAS result', async () => {
+    const symbolicEquation = 'x = 2';
+    emitState({
+      expression: symbolicEquation,
+      result: symbolicEquation,
+      phase: 'result',
+      calculationResult: {
+        kind: 'symbolic',
+        operation: 'simplify',
+        source: 'simplify(x = 2)',
+        display: symbolicEquation,
+        exact: true,
+        expression: symbolicEquation,
+        latex: symbolicEquation,
+      },
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const result = fixture.nativeElement.querySelector('app-cas-math-result');
+    expect(fixture.nativeElement.querySelector('.result-symbol')).toBeNull();
+    expect(result.textContent).toContain('x = 2');
   });
 
   it('renders the real calculator error', () => {

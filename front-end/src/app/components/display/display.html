@@ -88,8 +88,21 @@
           [class.result-empty]="vm.result === null"
           [class.result-multiline]="vm.resultIsMultiline"
         >
-          <span class="result-symbol" *ngIf="vm.result !== null" aria-hidden="true">=</span>
-          {{ vm.result ?? '—' }}
+          <span
+            class="result-symbol"
+            *ngIf="vm.result !== null && !vm.symbolicResult"
+            aria-hidden="true"
+          >
+            =
+          </span>
+          <app-cas-math-result
+            *ngIf="vm.symbolicResult && vm.result !== null; else plainResultText"
+            class="result-text"
+            [text]="vm.result"
+          ></app-cas-math-result>
+          <ng-template #plainResultText>
+            <span class="result-text">{{ vm.result ?? '—' }}</span>
+          </ng-template>
         </output>
       </ng-template>
     </ng-template>
