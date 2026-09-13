@@ -6,6 +6,7 @@ Calculator is a full-stack mathematical workspace with basic, scientific, and gr
 [![Angular](https://img.shields.io/badge/Angular-20.3-dd0031?logo=angular)](https://angular.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6?logo=typescript)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-GPL--3.0--or--later-4c1)](LICENSE)
+[![CI](https://github.com/JVenturaDev/Calculator/actions/workflows/deploy-pages.yml/badge.svg?branch=main)](https://github.com/JVenturaDev/Calculator/actions/workflows/deploy-pages.yml)
 
 ## Live Demo
 
