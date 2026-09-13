@@ -64,9 +64,54 @@ jobs:
         with:
           path: front-end/dist/angular-calculator
 
+  validate-backend:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: back-end
+    env:
+      TEST_DB_URL: jdbc:postgresql://localhost:5432/calculator_test
+      TEST_DB_USERNAME: calculator_test_user
+      TEST_DB_PASSWORD: calculator_ci_test_password
+      TEST_JWT_SECRET: calculator-ci-only-jwt-secret-not-for-production-0123456789abcdef
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: calculator_test
+          POSTGRES_USER: calculator_test_user
+          POSTGRES_PASSWORD: calculator_ci_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U calculator_test_user -d calculator_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: back-end/pom.xml
+
+      - name: Backend tests
+        run: bash ./mvnw --batch-mode test
+
+      - name: Backend package
+        run: bash ./mvnw --batch-mode package -DskipTests
+
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: validate-build
+    needs:
+      - validate-build
+      - validate-backend
     runs-on: ubuntu-24.04
     permissions:
       pages: write
