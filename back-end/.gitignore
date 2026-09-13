@@ -15,10 +15,13 @@ replay_pid*
 src/main/resources/application.properties
 src/main/resources/application.yml
 src/main/resources/application-*.properties
+!src/main/resources/application.properties
 !src/main/resources/application-example.properties
 
 # Environment
 .env
+.env.*
+!.env.example
 
 
 # IDEs

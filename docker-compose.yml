@@ -36,9 +36,9 @@ services:
     container_name: db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: workspace_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-workspace_db}
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -49,9 +49,11 @@ services:
     container_name: backend
     restart: unless-stopped
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://workspace-postgres:5432/workspace_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SECURITY_JWT_SECRET: ${JWT_SECRET}
+      SECURITY_JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-60}
     depends_on:
       - db
     expose:
